@@ -18,10 +18,17 @@
 
 namespace atlaas {
 
-typedef std::array<double, 2> point_xy_t;  // XY
-typedef std::array<double, 3> point_xyz_t; // XYZ
-typedef std::vector<point_xyz_t> points;   // PointsXYZ
-typedef std::array<float, 4> point_info_t; // N_POINTS, Z_MAX, Z_MEAN, SIGMA_Z
+std::vector<std::string> MAP_NAMES =
+     {"N_POINTS", "Z_MIN", "Z_MAX", "Z_MEAN", "SIGMA_Z"};
+enum { N_POINTS,   Z_MIN,   Z_MAX,   Z_MEAN,   SIGMA_Z,   N_RASTER};
+// internal use only
+enum { H_STATE=N_RASTER, N_INTERNAL};
+
+typedef std::array<double, 2> point_xy_t;   // XY
+typedef std::array<double, 3> point_xyz_t;  // XYZ
+typedef std::array<double, 4> point_xyzi_t; // XYZI
+typedef std::vector<point_xyz_t> points;    // PointsXYZ
+typedef std::array<float, N_INTERNAL> point_info_t;
 typedef std::vector<point_info_t> points_info_t;
 
 /*
@@ -55,11 +62,11 @@ public:
               int utm_zone, bool utm_north = true) {
         size_t width  = std::ceil(size_x / scale);
         size_t height = std::ceil(size_y / scale);
-        map.set_size(width, height, 4);
-        map.set_transform(utm_x, utm_y, scale, scale);
+        map.set_size(width, height, N_RASTER);
+        map.set_transform(utm_x, utm_y, scale, -scale);
         map.set_utm(utm_zone, utm_zone);
         map.set_custom_origin(custom_x, custom_y);
-        map.names = {"N_POINTS", "Z_MAX", "Z_MEAN", "SIGMA_Z"};
+        map.names = MAP_NAMES;
         // set internal points info structure size to map (gdal) size
         internal.resize( width * height );
     }
@@ -69,9 +76,15 @@ public:
      */
     void init(std::string filepath) {
         map.load(filepath);
-        // set internal size (same as map.get_width * map.get_height )
-        internal.resize( map.get_width() * map.get_height() );
         _fill_internal();
+    }
+    void init(const gdalwrap::gdal& gmap) {
+        map = gmap;
+        _fill_internal();
+    }
+
+    void set_rotation(double rotation) {
+        // TODO map.set_rotation(rotation);
     }
 
     /**
@@ -92,6 +105,11 @@ public:
      * merge point-cloud in internal structure
      */
     void merge(const points& cloud);
+
+    /**
+     * merge existing dtm
+     */
+    void merge(const gdalwrap::gdal& gmap);
 };
 
 } // namespace atlaas
