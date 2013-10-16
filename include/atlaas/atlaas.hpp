@@ -109,7 +109,7 @@ public:
     /**
      * merge existing dtm
      */
-    void merge(const gdalwrap::gdal& gmap);
+    void merge(const atlaas& from);
 };
 
 } // namespace atlaas

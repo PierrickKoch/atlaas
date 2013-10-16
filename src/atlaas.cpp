@@ -14,6 +14,11 @@
 
 namespace atlaas {
 
+/**
+ * Merge a point cloud in the internal model
+ *
+ * @param cloud: point cloud in the custom frame
+ */
 void atlaas::merge(const points& cloud) {
     float z_mean, n_pts;
     double new_z;
@@ -49,33 +54,34 @@ void atlaas::merge(const points& cloud) {
     }
 }
 
-void atlaas::merge(const gdalwrap::gdal& gmap) {
+void atlaas::merge(const atlaas& from) {
     assert( map.names == MAP_NAMES );
     // merge existing dtm
     size_t idx = 0;
-    double scale_x = gmap.get_scale_x();
-    double scale_y = gmap.get_scale_y();
-    point_xy_t utm = gmap.point_pix2utm(0, 0);
+    double scale_x = from.map.get_scale_x();
+    double scale_y = from.map.get_scale_y();
+    point_xy_t utm = from.map.point_pix2utm(0, 0);
     double x_origin = utm[0];
-    float z_mean, n_pts, gmap_n_pts;
+    float z_mean, n_pts, from_n_pts;
 
-    for (size_t ix = 0; ix < gmap.get_width();  ix++) {
-        for (size_t iy = 0; iy < gmap.get_height(); iy++) {
+    for (size_t ix = 0; ix < from.map.get_width();  ix++) {
+        for (size_t iy = 0; iy < from.map.get_height(); iy++) {
             utm[0] += scale_x;
             idx += 1;
             try {
                 // XXX index_utm() must take care of orientation (near future)
                 auto& info = internal[ map.index_utm(utm[0], utm[1]) ];
+                const auto& info_from = from.internal[idx];
                 n_pts = info[N_POINTS];
                 z_mean = info[Z_MEAN];
-                gmap_n_pts = gmap.bands[N_POINTS][idx];
-                info[N_POINTS] += gmap_n_pts;
-                if (info[Z_MAX] < gmap.bands[Z_MAX][idx])
-                    info[Z_MAX] = gmap.bands[Z_MAX][idx];
-                if (info[Z_MIN] > gmap.bands[Z_MIN][idx])
-                    info[Z_MIN] = gmap.bands[Z_MIN][idx];
-                info[Z_MEAN] = ( (z_mean * n_pts) + (gmap.bands[Z_MEAN][idx] *
-                    gmap_n_pts) ) / info[N_POINTS];
+                from_n_pts = info_from[N_POINTS];
+                info[N_POINTS] += from_n_pts;
+                if (info[Z_MAX] < info_from[Z_MAX])
+                    info[Z_MAX] = info_from[Z_MAX];
+                if (info[Z_MIN] > info_from[Z_MIN])
+                    info[Z_MIN] = info_from[Z_MIN];
+                info[Z_MEAN] = ( (z_mean * n_pts) + (info_from[Z_MEAN] *
+                    from_n_pts) ) / info[N_POINTS];
                 // TODO SIGMA_Z
             } catch (std::out_of_range oor) {
                 // point is outside the map
