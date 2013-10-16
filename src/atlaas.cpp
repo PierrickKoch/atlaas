@@ -62,7 +62,7 @@ void atlaas::merge(const atlaas& from) {
     double scale_y = from.map.get_scale_y();
     point_xy_t utm = from.map.point_pix2utm(0, 0);
     double x_origin = utm[0];
-    float z_mean, n_pts, from_n_pts;
+    float z_mean, d_mean, n_pts, from_n_pts;
 
     for (size_t ix = 0; ix < from.map.get_width();  ix++) {
         for (size_t iy = 0; iy < from.map.get_height(); iy++) {
@@ -82,7 +82,13 @@ void atlaas::merge(const atlaas& from) {
                     info[Z_MIN] = info_from[Z_MIN];
                 info[Z_MEAN] = ( (z_mean * n_pts) + (info_from[Z_MEAN] *
                     from_n_pts) ) / info[N_POINTS];
-                // TODO SIGMA_Z
+                /* The actual variance will later be divided by the number of
+                   samples plus 1. */
+                d_mean = info_from[Z_MEAN] - z_mean;
+                info[SIGMA_Z] = info[SIGMA_Z] * info[SIGMA_Z] * n_pts +
+                    info_from[SIGMA_Z] * info_from[SIGMA_Z] * from_n_pts +
+                    d_mean * d_mean * n_pts * from_n_pts / info[N_POINTS];
+
             } catch (std::out_of_range oor) {
                 // point is outside the map
             }
