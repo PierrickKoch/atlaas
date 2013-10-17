@@ -62,7 +62,7 @@ public:
               int utm_zone, bool utm_north = true) {
         size_t width  = std::ceil(size_x / scale);
         size_t height = std::ceil(size_y / scale);
-        map.set_size(width, height, N_RASTER);
+        map.set_size(N_RASTER, width, height);
         map.set_transform(utm_x, utm_y, scale, -scale);
         map.set_utm(utm_zone, utm_zone);
         map.set_custom_origin(custom_x, custom_y);
