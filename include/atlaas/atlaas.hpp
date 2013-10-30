@@ -24,9 +24,8 @@ enum { N_POINTS,   Z_MIN,   Z_MAX,   Z_MEAN,   SIGMA_Z,   N_RASTER};
 // internal use only
 enum { H_STATE=N_RASTER, N_INTERNAL};
 
-typedef std::array<double, 2> point_xy_t;   // XY
-typedef std::array<double, 3> point_xyz_t;  // XYZ
-typedef std::array<double, 4> point_xyzi_t; // XYZI
+typedef std::array<double, 2> point_xy_t;   // XY (for UTM frame)
+typedef std::array<float,  3> point_xyz_t;  // XYZ (custom frame)
 typedef std::vector<point_xyz_t> points;    // PointsXYZ
 typedef std::array<float, N_INTERNAL> point_info_t;
 typedef std::vector<point_info_t> points_info_t;
@@ -79,7 +78,7 @@ public:
         _fill_internal();
     }
     void init(const gdalwrap::gdal& gmap) {
-        map = gmap;
+        map = gmap; // copy (!)
         _fill_internal();
     }
 
