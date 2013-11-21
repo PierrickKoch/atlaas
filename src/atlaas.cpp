@@ -26,7 +26,7 @@ void atlaas::merge(const points& cloud) {
     for (const auto& point : cloud) {
         try {
             auto& info = internal[ map.index_custom(point[0], point[1]) ];
-            new_z = point[3];
+            new_z = point[2];
             n_pts = info[N_POINTS];
             z_mean = info[Z_MEAN];
             // increment N_POINTS
@@ -52,6 +52,7 @@ void atlaas::merge(const points& cloud) {
             // point is outside the map
         }
     }
+    map_sync = false;
 }
 
 void atlaas::merge(const atlaas& from) {
@@ -96,6 +97,7 @@ void atlaas::merge(const atlaas& from) {
         utm[0] = x_origin;
         utm[1] += scale_y;
     }
+    map_sync = false;
 }
 
 void atlaas::update() {
@@ -108,6 +110,7 @@ void atlaas::update() {
         map.bands[Z_MEAN][idx]      = internal[idx][Z_MEAN];
         map.bands[SIGMA_Z][idx]     = internal[idx][SIGMA_Z];
     }
+    map_sync = true;
 }
 
 void atlaas::_fill_internal() {
@@ -123,6 +126,7 @@ void atlaas::_fill_internal() {
         internal[idx][Z_MEAN]       = map.bands[Z_MEAN][idx];
         internal[idx][SIGMA_Z]      = map.bands[SIGMA_Z][idx];
     }
+    map_sync = true;
 }
 
 } // namespace atlaas

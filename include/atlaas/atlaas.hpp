@@ -14,7 +14,7 @@
 #include <vector>
 #include <string>
 
-#include "gdalwrap/gdal.hpp"
+#include <gdalwrap/gdal.hpp>
 
 namespace atlaas {
 
@@ -36,6 +36,7 @@ typedef std::vector<point_info_t> points_info_t;
 class atlaas {
     gdalwrap::gdal map;
     points_info_t internal;
+    bool map_sync; // need update ?
 
     /**
      * fill internal from map
@@ -68,6 +69,7 @@ public:
         map.names = MAP_NAMES;
         // set internal points info structure size to map (gdal) size
         internal.resize( width * height );
+        map_sync = true;
     }
 
     /**
@@ -90,9 +92,17 @@ public:
      * get a const ref on the map after updating its values
      */
     const gdalwrap::gdal& get() {
-        // might want to check if update is needed ?
-        update(); // on-demand update
+        if (not map_sync)
+            update(); // on-demand update
         return map;
+    }
+
+    /**
+     * get a const ref on the internal data (aligned points)
+     * used for our local planner message conversion
+     */
+    const points_info_t& get_internal() {
+        return internal;
     }
 
     /**
