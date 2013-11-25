@@ -20,8 +20,7 @@ namespace atlaas {
  * @param cloud: point cloud in the custom frame
  */
 void atlaas::merge(const points& cloud) {
-    float z_mean, n_pts;
-    double new_z;
+    float z_mean, n_pts, new_z;
     // merge point-cloud in internal structure
     for (const auto& point : cloud) {
         try {

@@ -98,6 +98,13 @@ public:
     }
 
     /**
+     * get a const ref on the map without updating its values
+     */
+    const gdalwrap::gdal& get_unsynced_map() const {
+        return map;
+    }
+
+    /**
      * get a const ref on the internal data (aligned points)
      * used for our local planner message conversion
      */
