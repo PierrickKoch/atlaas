@@ -108,8 +108,15 @@ public:
      * get a const ref on the internal data (aligned points)
      * used for our local planner message conversion
      */
-    const points_info_t& get_internal() {
+    const points_info_t& get_internal() const {
         return internal;
+    }
+
+    /**
+     * Save Z_MEAN as a grayscale image (for display)
+     */
+    void export8u(const std::string& filepath) {
+        get().export8u(filepath, Z_MEAN);
     }
 
     /**
