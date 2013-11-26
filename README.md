@@ -48,3 +48,5 @@ LICENSE
 -------
 
 [BSD 3-Clause](http://opensource.org/licenses/BSD-3-Clause)
+
+Copyright © 2013 CNRS-LAAS
