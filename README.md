@@ -10,6 +10,8 @@ ATLAAS
 * http://www.openrobots.org/wiki
 * http://trac.laas.fr/git/atlaas
 
+[![youtube](https://i2.ytimg.com/vi/k1-6gbYnmMU/sddefault.jpg "youtube")](http://youtube.com/embed/k1-6gbYnmMU?rel=0)
+
 
 INSTALL
 -------
@@ -47,6 +49,6 @@ Other ideas can be found in Google Guides:
 LICENSE
 -------
 
-[BSD 3-Clause](http://opensource.org/licenses/BSD-3-Clause)
+[BSD 2-Clause](http://opensource.org/licenses/BSD-2-Clause)
 
 Copyright © 2013 CNRS-LAAS
