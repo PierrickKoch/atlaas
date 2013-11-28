@@ -10,9 +10,59 @@
 #include <cassert>
 #include <stdexcept>        // for out_of_range
 
+#include <fstream>
+
 #include "atlaas/atlaas.hpp"
 
 namespace atlaas {
+
+static std::ofstream tmplog("/tmp/libatlaas.log");
+
+/**
+ * Merge a point cloud in the internal model
+ * and slide, save, load submodels.
+ *
+ * @param cloud: point cloud in the custom frame
+ * @param robx:  robot x pose in the custom frame
+ * @param roby:  robot y pose in the custom frame
+ */
+void atlaas::merge(const points& cloud, double robx, double roby) {
+    const point_xy_t& pixr = map.point_custom2pix(robx, roby);
+    size_t width  = map.get_width();  // x
+    size_t height = map.get_height(); // y
+    float wlow = width  / 4.0;
+    float hlow = height / 4.0;
+    int subx = 0;
+    int suby = 0;
+    // check, slide, save, load
+    if ( pixr[0] < wlow ) {
+        subx = -1; // west
+    } else if ( pixr[0] > (width - wlow) ) {
+        subx = +1; // east
+    }
+    if ( pixr[1] < hlow ) {
+        suby = -1; // north
+    } else if ( pixr[1] > (height - hlow) ) {
+        suby = +1; // south
+    }
+
+    if (subx or suby) {
+        tmplog << __func__ << " " << robx << ", " << roby << std::endl;
+        tmplog << __func__ << " " << pixr[0] << ", " << pixr[1] << std::endl;
+        slide_to(subx, suby);
+    }
+
+    merge(cloud);
+}
+
+/**
+ * Slide, save, load submodels
+ */
+void atlaas::slide_to(int subx, int suby) {
+    tmplog << __func__ << " " << subx << ", " << suby << std::endl;
+    // current[0] += subx;
+    // current[1] += suby;
+}
 
 /**
  * Merge a point cloud in the internal model

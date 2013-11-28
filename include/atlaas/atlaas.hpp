@@ -11,6 +11,7 @@
 #define ATLAAS_HPP
 
 #include <array> // C++11
+#include <map>
 #include <vector>
 #include <string>
 
@@ -29,14 +30,33 @@ typedef std::array<float,  3> point_xyz_t;  // XYZ (custom frame)
 typedef std::vector<point_xyz_t> points;    // PointsXYZ
 typedef std::array<float, N_INTERNAL> point_info_t;
 typedef std::vector<point_info_t> points_info_t;
+typedef std::map<std::string, std::string> map_str_t;
+typedef std::array<int, 2> point_id_t; // submodels location
 
-/*
+/**
  * atlaas
  */
 class atlaas {
+    /**
+     * I/O data model
+     */
     gdalwrap::gdal map;
+
+    /**
+     * internal data model
+     */
     points_info_t internal;
-    bool map_sync; // need update ?
+
+    /**
+     * history of saved submodels, to load them back
+     */
+    map_str_t submodels;
+    point_id_t current;
+
+    /**
+     * need update I/O ?
+     */
+    bool map_sync;
 
     /**
      * fill internal from map
@@ -46,6 +66,8 @@ class atlaas {
 public:
     /**
      * init the georeferenced map meta-data
+     * we recomment width and height being 3 times the range of the sensor
+     * for a Velodyne, we recommend 90x90m @ 0.1m/pixel resolution.
      *
      * @param size_x    width  in meters
      * @param size_y    height in meters
@@ -70,6 +92,7 @@ public:
         // set internal points info structure size to map (gdal) size
         internal.resize( width * height );
         map_sync = true;
+        current = {{0,0}};
     }
 
     /**
@@ -128,6 +151,16 @@ public:
      * merge point-cloud in internal structure
      */
     void merge(const points& cloud);
+
+    /**
+     * merge and slide, save, load submodels
+     */
+    void merge(const points& cloud, double robx, double roby);
+
+    /**
+     * slide, save, load submodels
+     */
+    void slide_to(int subx, int suby);
 
     /**
      * merge existing dtm
