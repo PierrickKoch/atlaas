@@ -32,6 +32,7 @@ typedef std::array<float, N_INTERNAL> point_info_t;
 typedef std::vector<point_info_t> points_info_t;
 typedef std::map<std::string, std::string> map_str_t;
 typedef std::array<int, 2> point_id_t; // submodels location
+typedef std::vector<point_id_t> points_id_t;
 
 /**
  * atlaas
@@ -66,7 +67,7 @@ class atlaas {
 public:
     /**
      * init the georeferenced map meta-data
-     * we recomment width and height being 3 times the range of the sensor
+     * we recommend width and height being 3 times the range of the sensor
      * for a Velodyne, we recommend 90x90m @ 0.1m/pixel resolution.
      *
      * @param size_x    width  in meters
@@ -160,7 +161,7 @@ public:
     /**
      * slide, save, load submodels
      */
-    void slide_to(int subx, int suby);
+    void slide_to(double robx, double roby);
 
     /**
      * merge existing dtm

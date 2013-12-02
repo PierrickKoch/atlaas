@@ -10,7 +10,9 @@
 #include <cassert>
 #include <stdexcept>        // for out_of_range
 
-#include <fstream>
+#include <fstream>          // ofstream, tmplog
+#include <algorithm>        // copy{,_backward}
+#include <cmath>            // floor
 
 #include "atlaas/atlaas.hpp"
 
@@ -27,41 +29,74 @@ static std::ofstream tmplog("/tmp/libatlaas.log");
  * @param roby:  robot y pose in the custom frame
  */
 void atlaas::merge(const points& cloud, double robx, double roby) {
-    const point_xy_t& pixr = map.point_custom2pix(robx, roby);
-    size_t width  = map.get_width();  // x
-    size_t height = map.get_height(); // y
-    float wlow = width  / 4.0;
-    float hlow = height / 4.0;
-    int subx = 0;
-    int suby = 0;
-    // check, slide, save, load
-    if ( pixr[0] < wlow ) {
-        subx = -1; // west
-    } else if ( pixr[0] > (width - wlow) ) {
-        subx = +1; // east
-    }
-    if ( pixr[1] < hlow ) {
-        suby = -1; // north
-    } else if ( pixr[1] > (height - hlow) ) {
-        suby = +1; // south
-    }
-
-    if (subx or suby) {
-        tmplog << __func__ << " " << robx << ", " << roby << std::endl;
-        tmplog << __func__ << " " << pixr[0] << ", " << pixr[1] << std::endl;
-        slide_to(subx, suby);
-    }
-
+    slide_to(robx, roby);
     merge(cloud);
 }
 
 /**
  * Slide, save, load submodels
+ *
+ * @param robx:  robot x pose in the custom frame
+ * @param roby:  robot y pose in the custom frame
  */
-void atlaas::slide_to(int subx, int suby) {
-    tmplog << __func__ << " " << subx << ", " << suby << std::endl;
-    // current[0] += subx;
-    // current[1] += suby;
+void atlaas::slide_to(double robx, double roby) {
+    const point_xy_t& pixr = map.point_custom2pix(robx, roby);
+    size_t width  = map.get_width();  // x
+    size_t height = map.get_height(); // y
+    float cx = pixr[0] / width;
+    float cy = pixr[1] / height;
+    // check, slide, save, load
+    if ( ( cx > 0.25 ) && ( cx < 0.75 ) &&
+         ( cy > 0.25 ) && ( cy < 0.75 ) )
+        return; // robot is in "center" square
+
+    int sw = width  / 3; // x
+    int sh = height / 3; // y
+    int dx = 0, dy = 0;
+    point_info_t internal_reset;
+    // 1/3 maplet
+    atlaas subatlaas;
+    subatlaas.map.copy_meta(map, sw, sh);
+    // TMP save the full map
+    get().save("atlaas."+std::to_string(current[0])+"x"+std::to_string(current[1])+".tif");
+    if (cx < 0.33) {
+        // TODO save 1/3 maplets [ 1,-1], [ 1, 0], [ 1, 1]
+        for (auto it = internal.begin(); it < internal.end(); it += width) {
+            std::copy_backward(it, it + 2 * sw, it + width - 1);
+            // reset(it, it + sw); TODO load saved map
+            std::fill(it, it + sw - 1, internal_reset);
+        }
+        dx = -1;
+    } else if (cx > 0.66) {
+        // TODO save 1/3 maplets [-1,-1], [-1, 0], [-1, 1]
+        for (auto it = internal.begin(); it < internal.end(); it += width) {
+            std::copy(it + sw, it + width - 1, it);
+            // reset(it + 2 * sw, it + width); TODO load saved map
+            std::fill(it + 2 * sw, it + width - 1, internal_reset);
+        }
+        dx = +1;
+    }
+    if (cy < 0.33) {
+        // TODO save 1/3 maplets [-1,-1], [ 0,-1], [ 1,-1]
+        std::copy_backward(internal.begin(), internal.end() - sh * width,
+                           internal.end());
+        // reset(internal.begin(), internal.begin() + sh * width); TODO load saved map
+        std::fill(internal.begin(), internal.begin() + sh * width - 1, internal_reset);
+        dy = -1;
+    } else if (cy > 0.66) {
+        // TODO save 1/3 maplets [-1, 1], [ 0, 1], [ 1, 1]
+        std::copy(internal.begin() + sh * width, internal.end(), internal.begin());
+        // reset(internal.end() - sh * width, internal.end()); TODO load saved map
+        std::fill(internal.end() - sh * width, internal.end(), internal_reset);
+        dy = +1;
+    }
+    current[0] += dx;
+    current[1] += dy;
+    const auto& utm = map.point_pix2utm(sw * dx, sh * dy);
+    // update map transform used for merging the pointcloud
+    map.set_transform(utm[0], utm[1], map.get_scale_x(), map.get_scale_y());
+    map_sync = false;
+    tmplog << __func__ << " utm " << utm[0] << ", " << utm[1] << std::endl;
 }
 
 /**
