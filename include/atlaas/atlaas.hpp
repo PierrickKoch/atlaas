@@ -14,6 +14,8 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <sstream> // ostringstream
+#include <sys/stat.h> // stat
 
 #include <gdalwrap/gdal.hpp>
 
@@ -63,6 +65,12 @@ class atlaas {
      * fill internal from map
      */
     void _fill_internal();
+
+    std::string sub_name(int x, int y) {
+        std::ostringstream oss;
+        oss << "atlaas." << x << "x" << y << ".tif";
+        return oss.str();
+    }
 
 public:
     /**
@@ -162,12 +170,19 @@ public:
      * slide, save, load submodels
      */
     void slide_to(double robx, double roby);
+    void sub_load(int width, int sw, int sh, int sx, int sy, int lsx, int lsy);
+    void sub_save(atlaas& sub, int width, int sw, int sh, int sx, int sy);
 
     /**
      * merge existing dtm
      */
     void merge(const atlaas& from);
 };
+
+inline bool file_exists(const std::string& name) {
+    struct stat buffer;
+    return ( stat(name.c_str(), &buffer) == 0 );
+}
 
 } // namespace atlaas
 

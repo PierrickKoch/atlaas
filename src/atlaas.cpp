@@ -33,6 +33,34 @@ void atlaas::merge(const points& cloud, double robx, double roby) {
     merge(cloud);
 }
 
+void atlaas::sub_load(int width, int sw, int sh, int sx, int sy, int lsx, int lsy) {
+    std::string filepath = sub_name(current[0] + lsx, current[1] + lsy);
+    if ( ! file_exists( filepath ) )
+        return; // no file to load
+    atlaas subin;
+    subin.init(filepath);
+    for (auto it  = internal.begin() + sw * (sx + 1) + sh * width * (sy + 1),
+              end = it + sh * width, sit = subin.internal.begin();
+              it < end; it += width, sit += sw) {
+        // sub to map
+        std::copy(sit, sit + sw, it);
+    }
+}
+
+void atlaas::sub_save(atlaas& sub, int width, int sw, int sh, int sx, int sy) {
+    for (auto it  = internal.begin() + sw * (sx + 1) + sh * width * (sy + 1),
+              end = it + sh * width, sit = sub.internal.begin();
+              it < end; it += width, sit += sw) {
+        // map to sub
+        std::copy(it, it + sw, sit);
+    }
+    sub.update();
+    const auto& utm = map.point_pix2utm( sx * sw, sy * sh);
+    // update map transform used for merging the pointcloud
+    sub.map.set_transform(utm[0], utm[1], map.get_scale_x(), map.get_scale_y());
+    sub.map.save( sub_name(current[0] + sx, current[1] + sy) );
+}
+
 /**
  * Slide, save, load submodels
  *
@@ -52,45 +80,91 @@ void atlaas::slide_to(double robx, double roby) {
 
     int sw = width  / 3; // x
     int sh = height / 3; // y
-    int dx = 0, dy = 0;
+    int dx = (cx < 0.33) ? -1 : (cx > 0.66) ? 1 : 0; // W/E
+    int dy = (cy < 0.33) ? -1 : (cy > 0.66) ? 1 : 0; // N/S
     point_info_t internal_reset;
     // 1/3 maplet
-    atlaas subatlaas;
-    subatlaas.map.copy_meta(map, sw, sh);
-    // TMP save the full map
-    get().save("atlaas."+std::to_string(current[0])+"x"+std::to_string(current[1])+".tif");
-    if (cx < 0.33) {
-        // TODO save 1/3 maplets [ 1,-1], [ 1, 0], [ 1, 1]
-        for (auto it = internal.begin(); it < internal.end(); it += width) {
-            std::copy_backward(it, it + 2 * sw, it + width - 1);
-            // reset(it, it + sw); TODO load saved map
-            std::fill(it, it + sw - 1, internal_reset);
+    atlaas subout;
+    subout.map.copy_meta(map, sw, sh);
+    subout.internal.resize(sw * sh);
+
+    // the following save/move/load need to be optimized
+
+    if (dx == -1) {
+        // save EAST 1/3 maplets [ 1,-1], [ 1, 0], [ 1, 1]
+        sub_save(subout, width, sw, sh,  1, -1);
+        sub_save(subout, width, sw, sh,  1,  0);
+        sub_save(subout, width, sw, sh,  1,  1);
+        if (dy == -1) {
+            // save SOUTH
+            sub_save(subout, width, sw, sh, -1,  1);
+            sub_save(subout, width, sw, sh,  0,  1);
+        } else if (dy == 1) {
+            // save NORTH
+            sub_save(subout, width, sw, sh, -1, -1);
+            sub_save(subout, width, sw, sh,  0, -1);
         }
-        dx = -1;
-    } else if (cx > 0.66) {
-        // TODO save 1/3 maplets [-1,-1], [-1, 0], [-1, 1]
+        // move the map to the WEST
         for (auto it = internal.begin(); it < internal.end(); it += width) {
-            std::copy(it + sw, it + width - 1, it);
-            // reset(it + 2 * sw, it + width); TODO load saved map
-            std::fill(it + 2 * sw, it + width - 1, internal_reset);
+            std::copy_backward(it, it + 2 * sw, it + width);
+            // reset(it, it + sw);
+            std::fill(it, it + sw, internal_reset);
         }
-        dx = +1;
+        // load WEST maplets
+        // TODO check dy
+        sub_load(width, sw, sh, -1, -1, -2, -1);
+        sub_load(width, sw, sh, -1,  0, -2,  0);
+        sub_load(width, sw, sh, -1,  1, -2,  1);
+    } else if (dx == 1) {
+        // save WEST 1/3 maplets [-1,-1], [-1, 0], [-1, 1]
+        sub_save(subout, width, sw, sh, -1, -1);
+        sub_save(subout, width, sw, sh, -1,  0);
+        sub_save(subout, width, sw, sh, -1,  1);
+        if (dy == -1) {
+            // save SOUTH
+            sub_save(subout, width, sw, sh,  0,  1);
+            sub_save(subout, width, sw, sh,  1,  1);
+        } else if (dy == 1) {
+            // save NORTH
+            sub_save(subout, width, sw, sh,  0, -1);
+            sub_save(subout, width, sw, sh,  1, -1);
+        }
+        // move the map to the EAST
+        for (auto it = internal.begin(); it < internal.end(); it += width) {
+            std::copy(it + sw, it + width, it);
+            // reset(it + 2 * sw, it + width);
+            std::fill(it + 2 * sw, it + width, internal_reset);
+        }
+        // load EAST maplets
+        // TODO check dy
+        sub_load(width, sw, sh,  1, -1,  2, -1);
+        sub_load(width, sw, sh,  1,  0,  2,  0);
+        sub_load(width, sw, sh,  1,  1,  2,  1);
     }
-    if (cy < 0.33) {
-        // TODO save 1/3 maplets [-1,-1], [ 0,-1], [ 1,-1]
+
+    current[0] += dx;
+
+    if (dy == -1) {
         std::copy_backward(internal.begin(), internal.end() - sh * width,
                            internal.end());
         // reset(internal.begin(), internal.begin() + sh * width); TODO load saved map
         std::fill(internal.begin(), internal.begin() + sh * width - 1, internal_reset);
-        dy = -1;
-    } else if (cy > 0.66) {
-        // TODO save 1/3 maplets [-1, 1], [ 0, 1], [ 1, 1]
+        // load NORTH
+        // TODO check dx
+        sub_load(width, sw, sh, -1, -1, -1, -2);
+        sub_load(width, sw, sh,  0, -1,  0, -2);
+        sub_load(width, sw, sh,  1, -1,  1, -2);
+    } else if (dy == 1) {
         std::copy(internal.begin() + sh * width, internal.end(), internal.begin());
         // reset(internal.end() - sh * width, internal.end()); TODO load saved map
         std::fill(internal.end() - sh * width, internal.end(), internal_reset);
-        dy = +1;
+        // load SOUTH
+        // TODO check dx
+        sub_load(width, sw, sh, -1,  1, -1,  2);
+        sub_load(width, sw, sh,  0,  1,  0,  2);
+        sub_load(width, sw, sh,  1,  1,  1,  2);
     }
-    current[0] += dx;
+
     current[1] += dy;
     const auto& utm = map.point_pix2utm(sw * dx, sh * dy);
     // update map transform used for merging the pointcloud
