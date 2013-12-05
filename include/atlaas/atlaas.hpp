@@ -62,6 +62,14 @@ class atlaas {
     bool map_sync;
 
     /**
+     * {x,y} size of the map
+     */
+    size_t width;
+    size_t height;
+    int sw;
+    int sh;
+
+    /**
      * fill internal from map
      */
     void _fill_internal();
@@ -91,8 +99,8 @@ public:
     void init(double size_x, double size_y, double scale,
               double custom_x, double custom_y, double utm_x, double utm_y,
               int utm_zone, bool utm_north = true) {
-        size_t width  = std::ceil(size_x / scale);
-        size_t height = std::ceil(size_y / scale);
+        width  = std::ceil(size_x / scale);
+        height = std::ceil(size_y / scale);
         map.set_size(N_RASTER, width, height);
         map.set_transform(utm_x, utm_y, scale, -scale);
         map.set_utm(utm_zone, utm_zone);
@@ -105,17 +113,17 @@ public:
         // load maplets if any
         // works if we init with the same parameters,
         // even if the robot is at a different pose.
-        int sw = width  / 3; // x
-        int sh = height / 3; // y
-        sub_load(width, sw, sh, -1, -1, -1, -1);
-        sub_load(width, sw, sh, -1,  0, -1,  0);
-        sub_load(width, sw, sh, -1,  1, -1,  1);
-        sub_load(width, sw, sh,  0, -1,  0, -1);
-        sub_load(width, sw, sh,  0,  0,  0,  0);
-        sub_load(width, sw, sh,  0,  1,  0,  1);
-        sub_load(width, sw, sh,  1, -1,  1, -1);
-        sub_load(width, sw, sh,  1,  0,  1,  0);
-        sub_load(width, sw, sh,  1,  1,  1,  1);
+        sw = width  / 3; // x
+        sh = height / 3; // y
+        sub_load(-1, -1);
+        sub_load(-1,  0);
+        sub_load(-1,  1);
+        sub_load( 0, -1);
+        sub_load( 0,  0);
+        sub_load( 0,  1);
+        sub_load( 1, -1);
+        sub_load( 1,  0);
+        sub_load( 1,  1);
     }
 
     /**
@@ -184,8 +192,8 @@ public:
      * slide, save, load submodels
      */
     void slide_to(double robx, double roby);
-    void sub_load(int width, int sw, int sh, int sx, int sy, int lsx, int lsy);
-    void sub_save(atlaas& sub, int width, int sw, int sh, int sx, int sy);
+    void sub_load(int sx, int sy);
+    void sub_save(atlaas& sub, int sx, int sy);
 
     /**
      * merge existing dtm

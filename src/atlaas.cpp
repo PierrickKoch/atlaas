@@ -21,6 +21,18 @@ namespace atlaas {
 static std::ofstream tmplog("/tmp/libatlaas.log");
 
 /**
+ * Merge point cloud with the sensor to world transformation.
+void atlaas::merge(const points& cloud, pose6d sensor) {
+    // rot = quaternion(sensor)
+    // loc = translation(sensor)
+    // see octomap::Pose6D::transform
+    // see octomap::Quaternion::rotate
+    // for (auto point : points) { transform(point,rot,loc) }
+    // merge(cloud, sensor.x, sesnor.y)
+}
+ */
+
+/**
  * Merge a point cloud in the internal model
  * and slide, save, load submodels.
  *
@@ -33,8 +45,8 @@ void atlaas::merge(const points& cloud, double robx, double roby) {
     merge(cloud);
 }
 
-void atlaas::sub_load(int width, int sw, int sh, int sx, int sy, int lsx, int lsy) {
-    std::string filepath = sub_name(current[0] + lsx, current[1] + lsy);
+void atlaas::sub_load(int sx, int sy) {
+    std::string filepath = sub_name(current[0] + sx, current[1] + sy);
     if ( ! file_exists( filepath ) )
         return; // no file to load
     atlaas subin;
@@ -48,7 +60,7 @@ void atlaas::sub_load(int width, int sw, int sh, int sx, int sy, int lsx, int ls
     map_sync = false;
 }
 
-void atlaas::sub_save(atlaas& sub, int width, int sw, int sh, int sx, int sy) {
+void atlaas::sub_save(atlaas& sub, int sx, int sy) {
     for (auto it  = internal.begin() + sw * (sx + 1) + sh * width * (sy + 1),
               end = it + sh * width, sit = sub.internal.begin();
               it < end; it += width, sit += sw) {
@@ -70,8 +82,6 @@ void atlaas::sub_save(atlaas& sub, int width, int sw, int sh, int sx, int sy) {
  */
 void atlaas::slide_to(double robx, double roby) {
     const point_xy_t& pixr = map.point_custom2pix(robx, roby);
-    size_t width  = map.get_width();  // x
-    size_t height = map.get_height(); // y
     float cx = pixr[0] / width;
     float cy = pixr[1] / height;
     // check, slide, save, load
@@ -79,8 +89,6 @@ void atlaas::slide_to(double robx, double roby) {
          ( cy > 0.25 ) && ( cy < 0.75 ) )
         return; // robot is in "center" square
 
-    int sw = width  / 3; // x
-    int sh = height / 3; // y
     int dx = (cx < 0.33) ? -1 : (cx > 0.66) ? 1 : 0; // W/E
     int dy = (cy < 0.33) ? -1 : (cy > 0.66) ? 1 : 0; // N/S
     point_info_t internal_reset;
@@ -93,42 +101,37 @@ void atlaas::slide_to(double robx, double roby) {
 
     if (dx == -1) {
         // save EAST 1/3 maplets [ 1,-1], [ 1, 0], [ 1, 1]
-        sub_save(subout, width, sw, sh,  1, -1);
-        sub_save(subout, width, sw, sh,  1,  0);
-        sub_save(subout, width, sw, sh,  1,  1);
+        sub_save(subout,  1, -1);
+        sub_save(subout,  1,  0);
+        sub_save(subout,  1,  1);
         if (dy == -1) {
             // save SOUTH
-            sub_save(subout, width, sw, sh, -1,  1);
-            sub_save(subout, width, sw, sh,  0,  1);
+            sub_save(subout, -1,  1);
+            sub_save(subout,  0,  1);
         } else if (dy == 1) {
             // save NORTH
-            sub_save(subout, width, sw, sh, -1, -1);
-            sub_save(subout, width, sw, sh,  0, -1);
+            sub_save(subout, -1, -1);
+            sub_save(subout,  0, -1);
         }
-        // move the map to the WEST
+        // move the map to the WEST [-1 -> 0; 0 -> 1]
         for (auto it = internal.begin(); it < internal.end(); it += width) {
             std::copy_backward(it, it + 2 * sw, it + width);
             // reset(it, it + sw);
             std::fill(it, it + sw, internal_reset);
         }
-        // load WEST maplets
-        // TODO check dy
-        sub_load(width, sw, sh, -1, -1, -2, -1);
-        sub_load(width, sw, sh, -1,  0, -2,  0);
-        sub_load(width, sw, sh, -1,  1, -2,  1);
     } else if (dx == 1) {
         // save WEST 1/3 maplets [-1,-1], [-1, 0], [-1, 1]
-        sub_save(subout, width, sw, sh, -1, -1);
-        sub_save(subout, width, sw, sh, -1,  0);
-        sub_save(subout, width, sw, sh, -1,  1);
+        sub_save(subout, -1, -1);
+        sub_save(subout, -1,  0);
+        sub_save(subout, -1,  1);
         if (dy == -1) {
             // save SOUTH
-            sub_save(subout, width, sw, sh,  0,  1);
-            sub_save(subout, width, sw, sh,  1,  1);
+            sub_save(subout,  0,  1);
+            sub_save(subout,  1,  1);
         } else if (dy == 1) {
             // save NORTH
-            sub_save(subout, width, sw, sh,  0, -1);
-            sub_save(subout, width, sw, sh,  1, -1);
+            sub_save(subout,  0, -1);
+            sub_save(subout,  1, -1);
         }
         // move the map to the EAST
         for (auto it = internal.begin(); it < internal.end(); it += width) {
@@ -136,37 +139,74 @@ void atlaas::slide_to(double robx, double roby) {
             // reset(it + 2 * sw, it + width);
             std::fill(it + 2 * sw, it + width, internal_reset);
         }
-        // load EAST maplets
-        // TODO check dy
-        sub_load(width, sw, sh,  1, -1,  2, -1);
-        sub_load(width, sw, sh,  1,  0,  2,  0);
-        sub_load(width, sw, sh,  1,  1,  2,  1);
+    } else if (dy == -1) {
+        // save SOUTH
+        sub_save(subout, -1,  1);
+        sub_save(subout,  0,  1);
+        sub_save(subout,  1,  1);
+    } else if (dy == 1) {
+        // save NORTH
+        sub_save(subout, -1, -1);
+        sub_save(subout,  0, -1);
+        sub_save(subout,  1, -1);
     }
-
-    current[0] += dx;
 
     if (dy == -1) {
         std::copy_backward(internal.begin(), internal.end() - sh * width,
                            internal.end());
-        // reset(internal.begin(), internal.begin() + sh * width); TODO load saved map
+        // reset(internal.begin(), internal.begin() + sh * width);
         std::fill(internal.begin(), internal.begin() + sh * width - 1, internal_reset);
-        // load NORTH
-        // TODO check dx
-        sub_load(width, sw, sh, -1, -1, -1, -2);
-        sub_load(width, sw, sh,  0, -1,  0, -2);
-        sub_load(width, sw, sh,  1, -1,  1, -2);
     } else if (dy == 1) {
         std::copy(internal.begin() + sh * width, internal.end(), internal.begin());
-        // reset(internal.end() - sh * width, internal.end()); TODO load saved map
+        // reset(internal.end() - sh * width, internal.end());
         std::fill(internal.end() - sh * width, internal.end(), internal_reset);
-        // load SOUTH
-        // TODO check dx
-        sub_load(width, sw, sh, -1,  1, -1,  2);
-        sub_load(width, sw, sh,  0,  1,  0,  2);
-        sub_load(width, sw, sh,  1,  1,  1,  2);
     }
 
+    // after moving, update our current center
+    current[0] += dx;
     current[1] += dy;
+
+    // load here
+    if (dx == -1) {
+        // load WEST maplets
+        sub_load(-1, -1);
+        sub_load(-1,  0);
+        sub_load(-1,  1);
+        if (dy == -1) {
+            // load NORTH
+            sub_load( 0, -1);
+            sub_load( 1, -1);
+        } else if (dy == 1) {
+            // load SOUTH
+            sub_load( 0,  1);
+            sub_load( 1,  1);
+        }
+    } else if (dx == 1) {
+        // load EAST maplets
+        sub_load( 1, -1);
+        sub_load( 1,  0);
+        sub_load( 1,  1);
+        if (dy == -1) {
+            // load NORTH
+            sub_load(-1, -1);
+            sub_load( 0, -1);
+        } else if (dy == 1) {
+            // load SOUTH
+            sub_load(-1,  1);
+            sub_load( 0,  1);
+        }
+    } else if (dy == -1) {
+        // load NORTH
+        sub_load(-1, -1);
+        sub_load( 0, -1);
+        sub_load( 1, -1);
+    } else if (dy == 1) {
+        // load SOUTH
+        sub_load(-1,  1);
+        sub_load( 0,  1);
+        sub_load( 1,  1);
+    }
+
     const auto& utm = map.point_pix2utm(sw * dx, sh * dy);
     // update map transform used for merging the pointcloud
     map.set_transform(utm[0], utm[1], map.get_scale_x(), map.get_scale_y());
@@ -226,8 +266,8 @@ void atlaas::merge(const atlaas& from) {
     double x_origin = utm[0];
     float z_mean, d_mean, n_pts, from_n_pts;
 
-    for (size_t ix = 0; ix < from.map.get_width();  ix++) {
-        for (size_t iy = 0; iy < from.map.get_height(); iy++) {
+    for (size_t ix = 0; ix < from.width;  ix++) {
+        for (size_t iy = 0; iy < from.height; iy++) {
             utm[0] += scale_x;
             idx += 1;
 
@@ -277,8 +317,12 @@ void atlaas::update() {
 
 void atlaas::_fill_internal() {
     assert( map.names == MAP_NAMES );
+    width  = map.get_width();  // x
+    height = map.get_height(); // y
+    sw = width  / 3; // sub-width
+    sh = height / 3; // sub-height
     // set internal size
-    internal.resize( map.get_width() * map.get_height() );
+    internal.resize( width * height );
     // fill internal from map
     // map -> internal
     for (size_t idx = 0; idx < internal.size(); idx++) {
