@@ -102,6 +102,20 @@ public:
         internal.resize( width * height );
         map_sync = true;
         current = {{0,0}};
+        // load maplets if any
+        // works if we init with the same parameters,
+        // even if the robot is at a different pose.
+        int sw = width  / 3; // x
+        int sh = height / 3; // y
+        sub_load(width, sw, sh, -1, -1, -1, -1);
+        sub_load(width, sw, sh, -1,  0, -1,  0);
+        sub_load(width, sw, sh, -1,  1, -1,  1);
+        sub_load(width, sw, sh,  0, -1,  0, -1);
+        sub_load(width, sw, sh,  0,  0,  0,  0);
+        sub_load(width, sw, sh,  0,  1,  0,  1);
+        sub_load(width, sw, sh,  1, -1,  1, -1);
+        sub_load(width, sw, sh,  1,  0,  1,  0);
+        sub_load(width, sw, sh,  1,  1,  1,  1);
     }
 
     /**

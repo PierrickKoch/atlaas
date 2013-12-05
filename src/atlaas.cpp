@@ -45,6 +45,7 @@ void atlaas::sub_load(int width, int sw, int sh, int sx, int sy, int lsx, int ls
         // sub to map
         std::copy(sit, sit + sw, it);
     }
+    map_sync = false;
 }
 
 void atlaas::sub_save(atlaas& sub, int width, int sw, int sh, int sx, int sy) {
