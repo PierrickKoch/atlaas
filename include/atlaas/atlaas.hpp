@@ -62,12 +62,12 @@ class atlaas {
     bool map_sync;
 
     /**
-     * {x,y} size of the map
+     * {x,y} map size
      */
     size_t width;
     size_t height;
-    int sw;
-    int sh;
+    int sw; // sub-width
+    int sh; // sub-height
 
     /**
      * fill internal from map
@@ -113,17 +113,18 @@ public:
         // load maplets if any
         // works if we init with the same parameters,
         // even if the robot is at a different pose.
-        sw = width  / 3; // x
-        sh = height / 3; // y
-        sub_load(-1, -1);
-        sub_load(-1,  0);
-        sub_load(-1,  1);
-        sub_load( 0, -1);
-        sub_load( 0,  0);
-        sub_load( 0,  1);
-        sub_load( 1, -1);
-        sub_load( 1,  0);
-        sub_load( 1,  1);
+        sw = width  / 3; // sub-width
+        sh = height / 3; // sub-height
+        atlaas sub;
+        sub_load(sub, -1, -1);
+        sub_load(sub, -1,  0);
+        sub_load(sub, -1,  1);
+        sub_load(sub,  0, -1);
+        sub_load(sub,  0,  0);
+        sub_load(sub,  0,  1);
+        sub_load(sub,  1, -1);
+        sub_load(sub,  1,  0);
+        sub_load(sub,  1,  1);
     }
 
     /**
@@ -192,7 +193,7 @@ public:
      * slide, save, load submodels
      */
     void slide_to(double robx, double roby);
-    void sub_load(int sx, int sy);
+    void sub_load(atlaas& sub, int sx, int sy);
     void sub_save(atlaas& sub, int sx, int sy);
 
     /**

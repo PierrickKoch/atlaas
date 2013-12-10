@@ -45,14 +45,13 @@ void atlaas::merge(const points& cloud, double robx, double roby) {
     merge(cloud);
 }
 
-void atlaas::sub_load(int sx, int sy) {
+void atlaas::sub_load(atlaas& sub, int sx, int sy) {
     std::string filepath = sub_name(current[0] + sx, current[1] + sy);
     if ( ! file_exists( filepath ) )
         return; // no file to load
-    atlaas subin;
-    subin.init(filepath);
+    sub.init(filepath);
     for (auto it  = internal.begin() + sw * (sx + 1) + sh * width * (sy + 1),
-              end = it + sh * width, sit = subin.internal.begin();
+              end = it + sh * width, sit = sub.internal.begin();
               it < end; it += width, sit += sw) {
         // sub to map
         std::copy(sit, sit + sw, it);
@@ -93,25 +92,25 @@ void atlaas::slide_to(double robx, double roby) {
     int dy = (cy < 0.33) ? -1 : (cy > 0.66) ? 1 : 0; // N/S
     point_info_t internal_reset;
     // 1/3 maplet
-    atlaas subout;
-    subout.map.copy_meta(map, sw, sh);
-    subout.internal.resize(sw * sh);
+    atlaas sub;
+    sub.map.copy_meta(map, sw, sh);
+    sub.internal.resize(sw * sh);
 
     // the following save/move/load need to be optimized
 
     if (dx == -1) {
         // save EAST 1/3 maplets [ 1,-1], [ 1, 0], [ 1, 1]
-        sub_save(subout,  1, -1);
-        sub_save(subout,  1,  0);
-        sub_save(subout,  1,  1);
+        sub_save(sub,  1, -1);
+        sub_save(sub,  1,  0);
+        sub_save(sub,  1,  1);
         if (dy == -1) {
             // save SOUTH
-            sub_save(subout, -1,  1);
-            sub_save(subout,  0,  1);
+            sub_save(sub, -1,  1);
+            sub_save(sub,  0,  1);
         } else if (dy == 1) {
             // save NORTH
-            sub_save(subout, -1, -1);
-            sub_save(subout,  0, -1);
+            sub_save(sub, -1, -1);
+            sub_save(sub,  0, -1);
         }
         // move the map to the WEST [-1 -> 0; 0 -> 1]
         for (auto it = internal.begin(); it < internal.end(); it += width) {
@@ -121,17 +120,17 @@ void atlaas::slide_to(double robx, double roby) {
         }
     } else if (dx == 1) {
         // save WEST 1/3 maplets [-1,-1], [-1, 0], [-1, 1]
-        sub_save(subout, -1, -1);
-        sub_save(subout, -1,  0);
-        sub_save(subout, -1,  1);
+        sub_save(sub, -1, -1);
+        sub_save(sub, -1,  0);
+        sub_save(sub, -1,  1);
         if (dy == -1) {
             // save SOUTH
-            sub_save(subout,  0,  1);
-            sub_save(subout,  1,  1);
+            sub_save(sub,  0,  1);
+            sub_save(sub,  1,  1);
         } else if (dy == 1) {
             // save NORTH
-            sub_save(subout,  0, -1);
-            sub_save(subout,  1, -1);
+            sub_save(sub,  0, -1);
+            sub_save(sub,  1, -1);
         }
         // move the map to the EAST
         for (auto it = internal.begin(); it < internal.end(); it += width) {
@@ -141,14 +140,14 @@ void atlaas::slide_to(double robx, double roby) {
         }
     } else if (dy == -1) {
         // save SOUTH
-        sub_save(subout, -1,  1);
-        sub_save(subout,  0,  1);
-        sub_save(subout,  1,  1);
+        sub_save(sub, -1,  1);
+        sub_save(sub,  0,  1);
+        sub_save(sub,  1,  1);
     } else if (dy == 1) {
         // save NORTH
-        sub_save(subout, -1, -1);
-        sub_save(subout,  0, -1);
-        sub_save(subout,  1, -1);
+        sub_save(sub, -1, -1);
+        sub_save(sub,  0, -1);
+        sub_save(sub,  1, -1);
     }
 
     if (dy == -1) {
@@ -169,42 +168,42 @@ void atlaas::slide_to(double robx, double roby) {
     // load here
     if (dx == -1) {
         // load WEST maplets
-        sub_load(-1, -1);
-        sub_load(-1,  0);
-        sub_load(-1,  1);
+        sub_load(sub, -1, -1);
+        sub_load(sub, -1,  0);
+        sub_load(sub, -1,  1);
         if (dy == -1) {
             // load NORTH
-            sub_load( 0, -1);
-            sub_load( 1, -1);
+            sub_load(sub,  0, -1);
+            sub_load(sub,  1, -1);
         } else if (dy == 1) {
             // load SOUTH
-            sub_load( 0,  1);
-            sub_load( 1,  1);
+            sub_load(sub,  0,  1);
+            sub_load(sub,  1,  1);
         }
     } else if (dx == 1) {
         // load EAST maplets
-        sub_load( 1, -1);
-        sub_load( 1,  0);
-        sub_load( 1,  1);
+        sub_load(sub,  1, -1);
+        sub_load(sub,  1,  0);
+        sub_load(sub,  1,  1);
         if (dy == -1) {
             // load NORTH
-            sub_load(-1, -1);
-            sub_load( 0, -1);
+            sub_load(sub, -1, -1);
+            sub_load(sub,  0, -1);
         } else if (dy == 1) {
             // load SOUTH
-            sub_load(-1,  1);
-            sub_load( 0,  1);
+            sub_load(sub, -1,  1);
+            sub_load(sub,  0,  1);
         }
     } else if (dy == -1) {
         // load NORTH
-        sub_load(-1, -1);
-        sub_load( 0, -1);
-        sub_load( 1, -1);
+        sub_load(sub, -1, -1);
+        sub_load(sub,  0, -1);
+        sub_load(sub,  1, -1);
     } else if (dy == 1) {
         // load SOUTH
-        sub_load(-1,  1);
-        sub_load( 0,  1);
-        sub_load( 1,  1);
+        sub_load(sub, -1,  1);
+        sub_load(sub,  0,  1);
+        sub_load(sub,  1,  1);
     }
 
     const auto& utm = map.point_pix2utm(sw * dx, sh * dy);
