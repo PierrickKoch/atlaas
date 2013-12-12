@@ -18,7 +18,7 @@
 
 namespace atlaas {
 
-static std::ofstream tmplog("/tmp/libatlaas.log");
+static std::ofstream tmplog("atlaas.log");
 
 /**
  * Merge point cloud with the sensor to world transformation.
