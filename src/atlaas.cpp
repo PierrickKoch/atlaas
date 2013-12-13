@@ -21,27 +21,32 @@ namespace atlaas {
 static std::ofstream tmplog("atlaas.log");
 
 /**
- * Merge point cloud with the sensor to world transformation.
-void atlaas::merge(const points& cloud, pose6d sensor) {
-    // rot = quaternion(sensor)
-    // loc = translation(sensor)
-    // see octomap::Pose6D::transform
-    // see octomap::Quaternion::rotate
-    // for (auto point : points) { transform(point,rot,loc) }
-    // merge(cloud, sensor.x, sesnor.y)
-}
+ * Apply the transformation matrix to the point cloud (in place)
  */
+void transform(points& cloud, const matrix& tr) {
+    float x,y,z;
+    for (auto& point : cloud) {
+        x = point[0];
+        y = point[1];
+        z = point[2];
+        point[0] = (x * tr[0]) + (y * tr[1]) + (z * tr[2])  + tr[3];
+        point[1] = (x * tr[4]) + (y * tr[5]) + (z * tr[6])  + tr[7];
+        point[2] = (x * tr[8]) + (y * tr[9]) + (z * tr[10]) + tr[11];
+    }
+}
 
 /**
- * Merge a point cloud in the internal model
+ * Merge point cloud in the internal model
+ * with the sensor to world transformation,
  * and slide, save, load submodels.
  *
- * @param cloud: point cloud in the custom frame
- * @param robx:  robot x pose in the custom frame
- * @param roby:  robot y pose in the custom frame
+ * @param cloud: point cloud in the sensor frame
+ * @param transformation: sensor to world transformation
  */
-void atlaas::merge(const points& cloud, double robx, double roby) {
-    slide_to(robx, roby);
+void atlaas::merge(points& cloud, const matrix& transformation) {
+    transform(cloud, transformation);
+    // according to t3d/src/matrix.c:t3dMatrixOfEuler : [3,7] = x,y
+    slide_to(transformation[3], transformation[7]);
     merge(cloud);
 }
 

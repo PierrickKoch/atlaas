@@ -29,6 +29,7 @@ enum { H_STATE=N_RASTER, N_INTERNAL};
 
 typedef std::array<double, 2> point_xy_t;   // XY (for UTM frame)
 typedef std::array<float,  3> point_xyz_t;  // XYZ (custom frame)
+typedef std::array<double, 16> matrix;      // transformation matrix
 typedef std::vector<point_xyz_t> points;    // PointsXYZ
 typedef std::array<float, N_INTERNAL> point_info_t;
 typedef std::vector<point_info_t> points_info_t;
@@ -185,9 +186,9 @@ public:
     void merge(const points& cloud);
 
     /**
-     * merge and slide, save, load submodels
+     * transform, merge, slide, save, load submodels
      */
-    void merge(const points& cloud, double robx, double roby);
+    void merge(points& cloud, const matrix& transformation);
 
     /**
      * slide, save, load submodels
