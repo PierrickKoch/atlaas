@@ -30,6 +30,7 @@ enum { H_STATE=N_RASTER, N_INTERNAL};
 typedef std::array<double, 2> point_xy_t;   // XY (for UTM frame)
 typedef std::array<float,  3> point_xyz_t;  // XYZ (custom frame)
 typedef std::array<double, 16> matrix;      // transformation matrix
+typedef std::array<double, 6> pose6d;       // yaw,pitch,roll,x,y,z
 typedef std::vector<point_xyz_t> points;    // PointsXYZ
 typedef std::array<float, N_INTERNAL> point_info_t;
 typedef std::vector<point_info_t> points_info_t;
@@ -203,9 +204,82 @@ public:
     void merge(const atlaas& from);
 };
 
+/**
+ * Returns weither the file exists or not on POSIX systems (use <sys/stat.h>)
+ */
 inline bool file_exists(const std::string& name) {
     struct stat buffer;
     return ( stat(name.c_str(), &buffer) == 0 );
+}
+
+/**
+ * Transformation helpers
+ */
+
+/**
+ * Pose6d(yaw,pitch,roll,x,y,z) -> Matrix[16]
+ */
+inline matrix pose6d_to_matrix(double yaw, double pitch, double roll,
+                               double x, double y, double z) {
+    matrix mat;
+    double ca, sa, cb, sb, cg, sg;
+
+    ca = cos(yaw);   sa = sin(yaw);
+    cb = cos(pitch); sb = sin(pitch);
+    cg = cos(roll);  sg = sin(roll);
+
+    mat[0]  = ca*cb;
+    mat[1]  = ca*sb*sg - sa*cg;
+    mat[2]  = ca*sb*cg + sa*sg;
+    mat[3]  = x;
+
+    mat[4]  = sa*cb;
+    mat[5]  = sa*sb*sg + ca*cg;
+    mat[6]  = sa*sb*cg - ca*sg;
+    mat[7]  = y;
+
+    mat[8]  = -sb;
+    mat[9]  = cb*sg;
+    mat[10] = cb*cg;
+    mat[11] = z;
+
+    mat[12] = 0.0;
+    mat[13] = 0.0;
+    mat[14] = 0.0;
+    mat[15] = 1.0;
+
+    return mat;
+}
+
+/**
+ * Pose6d(yaw,pitch,roll,x,y,z) -> Matrix[16]
+ */
+inline matrix pose6d_to_matrix(const pose6d& pose) {
+    return pose6d_to_matrix(pose[0], pose[1], pose[2], pose[3], pose[4], pose[5]);
+}
+
+/**
+ * Matrix[16] -> Pose6d(yaw,pitch,roll,x,y,z)
+ */
+inline pose6d matrix_to_pose6d(const matrix& mat) {
+    double yaw,pitch,roll,x,y,z;
+
+    double d = sqrt(mat[0]*mat[0] + mat[4]*mat[4]);
+
+    if (fabs(d) > 1e-10) {
+        yaw  = atan2(mat[4], mat[0]);
+        roll = atan2(mat[9], mat[10]);
+    } else {
+        yaw  = atan2(-mat[1], mat[5]);
+        roll = 0.0;
+    }
+    pitch = atan2(-mat[8], d);
+
+    x = mat[3];
+    y = mat[7];
+    z = mat[11];
+
+    return {{yaw,pitch,roll,x,y,z}};
 }
 
 } // namespace atlaas
