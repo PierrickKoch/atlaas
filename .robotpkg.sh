@@ -1,6 +1,6 @@
 #!/bin/sh
 
-__NEW_VER=0.1.1
+__NEW_VER=0.1.2
 
 __PKGNAME=atlaas
 __IS_WIP_=wip/

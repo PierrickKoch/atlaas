@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 set(PACKAGE_NAME atlaas)
-set(PACKAGE_VERSION "0.1.1")
+set(PACKAGE_VERSION "0.1.2")
 
 # C++11 for GCC 4.6
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
