@@ -76,12 +76,6 @@ class atlaas {
      */
     void _fill_internal();
 
-    std::string sub_name(int x, int y) {
-        std::ostringstream oss;
-        oss << "atlaas." << x << "x" << y << ".tif";
-        return oss.str();
-    }
-
 public:
     /**
      * init the georeferenced map meta-data
@@ -196,7 +190,21 @@ public:
      */
     void slide_to(double robx, double roby);
     void sub_load(atlaas& sub, int sx, int sy);
-    void sub_save(atlaas& sub, int sx, int sy);
+    void sub_save(atlaas& sub, int sx, int sy) const;
+    void save_currents() const {
+        atlaas sub;
+        sub.map.copy_meta(map, sw, sh);
+        sub.internal.resize(sw * sh);
+        sub_save(sub, -1, -1);
+        sub_save(sub, -1,  0);
+        sub_save(sub, -1,  1);
+        sub_save(sub,  0, -1);
+        sub_save(sub,  0,  0);
+        sub_save(sub,  0,  1);
+        sub_save(sub,  1, -1);
+        sub_save(sub,  1,  0);
+        sub_save(sub,  1,  1);
+    }
 
     /**
      * merge existing dtm
@@ -210,6 +218,12 @@ public:
 inline bool file_exists(const std::string& name) {
     struct stat buffer;
     return ( stat(name.c_str(), &buffer) == 0 );
+}
+
+inline std::string sub_name(int x, int y) {
+    std::ostringstream oss;
+    oss << "atlaas." << x << "x" << y << ".tif";
+    return oss.str();
 }
 
 /**

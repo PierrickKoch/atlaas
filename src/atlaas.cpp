@@ -64,10 +64,10 @@ void atlaas::sub_load(atlaas& sub, int sx, int sy) {
     map_sync = false;
 }
 
-void atlaas::sub_save(atlaas& sub, int sx, int sy) {
-    for (auto it  = internal.begin() + sw * (sx + 1) + sh * width * (sy + 1),
-              end = it + sh * width, sit = sub.internal.begin();
-              it < end; it += width, sit += sw) {
+void atlaas::sub_save(atlaas& sub, int sx, int sy) const {
+    auto it  = internal.begin() + sw * (sx + 1) + sh * width * (sy + 1),
+         end = it + sh * width;
+    for (auto sit = sub.internal.begin(); it < end; it += width, sit += sw) {
         // map to sub
         std::copy(it, it + sw, sit);
     }
