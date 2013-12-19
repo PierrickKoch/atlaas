@@ -239,7 +239,7 @@ void atlaas::merge(const points& cloud) {
         // increment N_POINTS
         info[N_POINTS]++;
 
-        if (n_pts == 0) {
+        if (n_pts < 1) {
             info[Z_MAX] = new_z;
             info[Z_MIN] = new_z;
         } else {
