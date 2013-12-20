@@ -11,6 +11,7 @@
 #define ATLAAS_HPP
 
 #include <array> // C++11
+#include <memory> // unique_ptr C++11
 #include <map>
 #include <vector>
 #include <string>
@@ -55,7 +56,6 @@ class atlaas {
     /**
      * history of saved submodels, to load them back
      */
-    map_str_t submodels;
     point_id_t current;
 
     /**
@@ -70,6 +70,7 @@ class atlaas {
     size_t height;
     int sw; // sub-width
     int sh; // sub-height
+    std::unique_ptr<atlaas> sub;
 
     /**
      * fill internal from map
@@ -111,16 +112,18 @@ public:
         // even if the robot is at a different pose.
         sw = width  / 3; // sub-width
         sh = height / 3; // sub-height
-        atlaas sub;
-        sub_load(sub, -1, -1);
-        sub_load(sub, -1,  0);
-        sub_load(sub, -1,  1);
-        sub_load(sub,  0, -1);
-        sub_load(sub,  0,  0);
-        sub_load(sub,  0,  1);
-        sub_load(sub,  1, -1);
-        sub_load(sub,  1,  0);
-        sub_load(sub,  1,  1);
+        sub = std::move(std::unique_ptr<atlaas>(new atlaas));
+        sub->map.copy_meta(map, sw, sh);
+        sub->internal.resize(sw * sh);
+        sub_load(-1, -1);
+        sub_load(-1,  0);
+        sub_load(-1,  1);
+        sub_load( 0, -1);
+        sub_load( 0,  0);
+        sub_load( 0,  1);
+        sub_load( 1, -1);
+        sub_load( 1,  0);
+        sub_load( 1,  1);
     }
 
     /**
@@ -189,21 +192,18 @@ public:
      * slide, save, load submodels
      */
     void slide_to(double robx, double roby);
-    void sub_load(atlaas& sub, int sx, int sy);
-    void sub_save(atlaas& sub, int sx, int sy) const;
+    void sub_load(int sx, int sy);
+    void sub_save(int sx, int sy) const;
     void save_currents() const {
-        atlaas sub;
-        sub.map.copy_meta(map, sw, sh);
-        sub.internal.resize(sw * sh);
-        sub_save(sub, -1, -1);
-        sub_save(sub, -1,  0);
-        sub_save(sub, -1,  1);
-        sub_save(sub,  0, -1);
-        sub_save(sub,  0,  0);
-        sub_save(sub,  0,  1);
-        sub_save(sub,  1, -1);
-        sub_save(sub,  1,  0);
-        sub_save(sub,  1,  1);
+        sub_save(-1, -1);
+        sub_save(-1,  0);
+        sub_save(-1,  1);
+        sub_save( 0, -1);
+        sub_save( 0,  0);
+        sub_save( 0,  1);
+        sub_save( 1, -1);
+        sub_save( 1,  0);
+        sub_save( 1,  1);
     }
 
     /**
