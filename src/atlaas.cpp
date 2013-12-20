@@ -95,7 +95,7 @@ void atlaas::slide_to(double robx, double roby) {
 
     int dx = (cx < 0.33) ? -1 : (cx > 0.66) ? 1 : 0; // W/E
     int dy = (cy < 0.33) ? -1 : (cy > 0.66) ? 1 : 0; // N/S
-    point_info_t internal_reset;
+    point_info_t zeros{}; // value-initialization w/empty initializer
 
     if (dx == -1) {
         // save EAST 1/3 maplets [ 1,-1], [ 1, 0], [ 1, 1]
@@ -115,7 +115,7 @@ void atlaas::slide_to(double robx, double roby) {
         for (auto it = internal.begin(); it < internal.end(); it += width) {
             std::copy_backward(it, it + 2 * sw, it + width);
             // reset(it, it + sw);
-            std::fill(it, it + sw, internal_reset);
+            std::fill(it, it + sw, zeros);
         }
     } else if (dx == 1) {
         // save WEST 1/3 maplets [-1,-1], [-1, 0], [-1, 1]
@@ -135,7 +135,7 @@ void atlaas::slide_to(double robx, double roby) {
         for (auto it = internal.begin(); it < internal.end(); it += width) {
             std::copy(it + sw, it + width, it);
             // reset(it + 2 * sw, it + width);
-            std::fill(it + 2 * sw, it + width, internal_reset);
+            std::fill(it + 2 * sw, it + width, zeros);
         }
     } else if (dy == -1) {
         // save SOUTH
@@ -153,11 +153,11 @@ void atlaas::slide_to(double robx, double roby) {
         std::copy_backward(internal.begin(), internal.end() - sh * width,
                            internal.end());
         // reset(internal.begin(), internal.begin() + sh * width);
-        std::fill(internal.begin(), internal.begin() + sh * width - 1, internal_reset);
+        std::fill(internal.begin(), internal.begin() + sh * width - 1, zeros);
     } else if (dy == 1) {
         std::copy(internal.begin() + sh * width, internal.end(), internal.begin());
         // reset(internal.end() - sh * width, internal.end());
-        std::fill(internal.end() - sh * width, internal.end(), internal_reset);
+        std::fill(internal.end() - sh * width, internal.end(), zeros);
     }
 
     // after moving, update our current center
@@ -249,7 +249,6 @@ void atlaas::merge(const points& cloud) {
            by the number of samples plus 1. */
         info[Z_MEAN]   = (z_mean * n_pts + new_z) / info[N_POINTS];
         info[SIGMA_Z] += (new_z - z_mean) * (new_z - info[Z_MEAN]);
-
     }
     map_sync = false;
 }
