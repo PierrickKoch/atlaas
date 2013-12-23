@@ -45,9 +45,24 @@ void transform(points& cloud, const matrix& tr) {
  */
 void atlaas::merge(points& cloud, const matrix& transformation) {
     transform(cloud, transformation);
-    // according to t3d/src/matrix.c:t3dMatrixOfEuler : [3,7] = x,y
+    // transformation[{3,7}] = {x,y}
     slide_to(transformation[3], transformation[7]);
-    merge(cloud);
+    // use dynamic merge
+    dynamic(cloud);
+}
+
+void atlaas::reset() {
+    point_info_t zeros{}; // value-initialization w/empty initializer
+    std::fill(internal.begin(), internal.end(), zeros);
+    map_sync = false;
+}
+
+void atlaas::dynamic(const points& cloud) {
+    dyn->reset();
+    dyn->map.copy_meta(map);
+    dyn->merge(cloud);
+    // dyn->export8u("atlaas-dyn.jpg");
+    merge(*dyn);
 }
 
 void atlaas::sub_load(int sx, int sy) {
@@ -253,48 +268,38 @@ void atlaas::merge(const points& cloud) {
     map_sync = false;
 }
 
+/**
+ * Merge dynamic dtm
+ *
+ * @param from: dynamic atlaas
+ */
 void atlaas::merge(const atlaas& from) {
-    assert( map.names == MAP_NAMES );
-    // merge existing dtm
-    size_t index, idx = 0;
-    double scale_x = from.map.get_scale_x();
-    double scale_y = from.map.get_scale_y();
-    point_xy_t utm = from.map.point_pix2utm(0, 0);
-    double x_origin = utm[0];
     float z_mean, d_mean, n_pts, from_n_pts;
-
-    for (size_t ix = 0; ix < from.width;  ix++) {
-        for (size_t iy = 0; iy < from.height; iy++) {
-            utm[0] += scale_x;
-            idx += 1;
-
-            // XXX index_utm() must take care of orientation (near future)
-            index = map.index_utm(utm[0], utm[1]);
-            if (index == std::numeric_limits<size_t>::max() ) {
-                // TODO point is outside the map
-                continue;
-            }
-            auto& info = internal[ index ];
-            const auto& info_from = from.internal[idx];
-            n_pts = info[N_POINTS];
-            z_mean = info[Z_MEAN];
-            from_n_pts = info_from[N_POINTS];
-            info[N_POINTS] += from_n_pts;
-            if (info[Z_MAX] < info_from[Z_MAX])
-                info[Z_MAX] = info_from[Z_MAX];
-            if (info[Z_MIN] > info_from[Z_MIN])
-                info[Z_MIN] = info_from[Z_MIN];
-            info[Z_MEAN] = ( (z_mean * n_pts) + (info_from[Z_MEAN] *
-                from_n_pts) ) / info[N_POINTS];
-            /* The actual variance will later be divided by the number of
-               samples plus 1. */
-            d_mean = info_from[Z_MEAN] - z_mean;
-            info[SIGMA_Z] = info[SIGMA_Z] * info[SIGMA_Z] * n_pts +
-                info_from[SIGMA_Z] * info_from[SIGMA_Z] * from_n_pts +
-                d_mean * d_mean * n_pts * from_n_pts / info[N_POINTS];
+    auto it = internal.begin(), end = internal.end();
+    for (auto it_from = from.internal.begin(); it < end; ++it, ++it_from) {
+        auto& info_from = *it_from;
+        from_n_pts = info_from[N_POINTS];
+        if ( from_n_pts < 1 )
+            continue;
+        auto& info = *it;
+        if ( info[N_POINTS] < 1 ) {
+            info = info_from;
+            continue;
         }
-        utm[0] = x_origin;
-        utm[1] += scale_y;
+        n_pts = info[N_POINTS];
+        z_mean = info[Z_MEAN];
+        info[N_POINTS] += from_n_pts;
+        if (info[Z_MAX] < info_from[Z_MAX])
+            info[Z_MAX] = info_from[Z_MAX];
+        if (info[Z_MIN] > info_from[Z_MIN])
+            info[Z_MIN] = info_from[Z_MIN];
+        info[Z_MEAN] = ( (z_mean * n_pts) + (info_from[Z_MEAN] *
+            from_n_pts) ) / info[N_POINTS];
+        // compute the real variance (according to Knuth's bible)
+        d_mean = info_from[Z_MEAN] - z_mean;
+        info[SIGMA_Z] = info[SIGMA_Z] * info[SIGMA_Z] * n_pts +
+            info_from[SIGMA_Z] * info_from[SIGMA_Z] * from_n_pts +
+            d_mean * d_mean * n_pts * from_n_pts / info[N_POINTS];
     }
     map_sync = false;
 }

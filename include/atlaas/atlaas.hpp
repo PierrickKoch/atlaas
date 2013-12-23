@@ -71,6 +71,7 @@ class atlaas {
     int sw; // sub-width
     int sh; // sub-height
     std::unique_ptr<atlaas> sub;
+    std::unique_ptr<atlaas> dyn;
 
     /**
      * fill internal from map
@@ -124,6 +125,9 @@ public:
         sub_load( 1, -1);
         sub_load( 1,  0);
         sub_load( 1,  1);
+        // atlaas used for dynamic merge
+        dyn = std::move(std::unique_ptr<atlaas>(new atlaas));
+        dyn->internal.resize( width * height );
     }
 
     /**
@@ -207,7 +211,17 @@ public:
     }
 
     /**
-     * merge existing dtm
+     * reset all cells for dynamic merge
+     */
+    void reset();
+
+    /**
+     * dynamic merge of cloud in custom frame
+     */
+    void dynamic(const points& cloud);
+
+    /**
+     * merge existing dtm for dynamic merge
      */
     void merge(const atlaas& from);
 };
