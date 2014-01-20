@@ -1,34 +1,34 @@
 #!/bin/sh
 
-__NEW_VER=0.1.2
+NEW_VER=0.1.2
 
-__PKGNAME=atlaas
-__IS_WIP_=wip/
-__RPKROOT=$HOME/robotpkg
+PKGNAME=atlaas
+PKGTYPE=wip
+RPKROOT=$HOME/robotpkg
 
 # need to run inside the project folder
 # with the previous PACKAGE_VERSION in CMakeLists.txt
 
 # do not edit following (supposed to be smart)
 
-__OLD_VER=$(grep "PACKAGE_VERSION" CMakeLists.txt | cut -d\" -f2)
-__DIRNAME=$__PKGNAME-$__NEW_VER
-__ARCHIVE=$__DIRNAME.tar.gz
+OLD_VER=$(awk -F\" '/PACKAGE_VERSION/ { print $2 }' CMakeLists.txt)
+DIRNAME=$PKGNAME-$NEW_VER
+ARCHIVE=$DIRNAME.tar.gz
 
-__SHORTLG=$(mktemp)
-echo "Changes since v$__OLD_VER:" > $__SHORTLG
-echo "" >> $__SHORTLG
-git shortlog v$__OLD_VER..HEAD >> $__SHORTLG
+SHORTLG=$(mktemp)
+echo "Changes since v$OLD_VER:" > $SHORTLG
+echo "" >> $SHORTLG
+git shortlog v$OLD_VER..HEAD >> $SHORTLG
 
-sed -i.bak -e "s/set(PACKAGE_VERSION \"$__OLD_VER\")/set(PACKAGE_VERSION \"$__NEW_VER\")/" CMakeLists.txt
+sed -i.bak -e "s/set(PACKAGE_VERSION \"$OLD_VER\")/set(PACKAGE_VERSION \"$NEW_VER\")/" CMakeLists.txt
 
-git commit . -m"Bump to v$__NEW_VER"
-git tag v$__NEW_VER -F $__SHORTLG
+git commit . -m"Bump to v$NEW_VER"
+git tag v$NEW_VER -F $SHORTLG
 
-git archive --format=tar --prefix=$__DIRNAME/ v$__NEW_VER | gzip > $__RPKROOT/distfiles/$__ARCHIVE
-cd $__RPKROOT/$__IS_WIP_$__PKGNAME
+git archive --format=tar --prefix=$DIRNAME/ v$NEW_VER | gzip > $RPKROOT/distfiles/$ARCHIVE
+cd $RPKROOT/$PKGTYPE/$PKGNAME
 
-sed -i.bak -e "s/VERSION=\([\t]*\)$__OLD_VER/VERSION=\1$__NEW_VER/" Makefile
+sed -i.bak -e "s/VERSION=\([\t]*\)$OLD_VER/VERSION=\1$NEW_VER/" Makefile
 
 make distinfo
 make clean
@@ -38,11 +38,11 @@ make MAKE_JOBS=$n update
 make print-PLIST
 # update PLIST only if changes
 test `diff -u0 PLIST PLIST.guess | wc -l` -gt 5 && mv PLIST.guess PLIST
-git commit . -m"[$__IS_WIP_$__PKGNAME] Update to $__DIRNAME"
+git commit . -m"[$PKGTYPE/$PKGNAME] Update to $DIRNAME"
 
-scp $__RPKROOT/distfiles/$__ARCHIVE anna.laas.fr:/usr/local/openrobots/distfiles/$__PKGNAME/
+scp $RPKROOT/distfiles/$ARCHIVE anna.laas.fr:/usr/local/openrobots/distfiles/$PKGNAME/
 
-echo "You need to push in '$__RPKROOT/$__IS_WIP_$__PKGNAME' and '$OLDPWD'"
+echo "You need to push in '$RPKROOT/$PKGTYPE/$PKGNAME' and '$OLDPWD'"
 echo "... After checking everything is fine :-)"
 
-rm $__SHORTLG
+rm $SHORTLG
