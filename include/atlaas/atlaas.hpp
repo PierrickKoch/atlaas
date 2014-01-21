@@ -20,13 +20,15 @@
 
 #include <gdalwrap/gdal.hpp>
 
+#define DYNAMIC_MERGE
+
 namespace atlaas {
 
 std::vector<std::string> MAP_NAMES =
      {"N_POINTS", "Z_MIN", "Z_MAX", "Z_MEAN", "SIGMA_Z"};
 enum { N_POINTS,   Z_MIN,   Z_MAX,   Z_MEAN,   SIGMA_Z,   N_RASTER};
 // internal use only
-enum { H_STATE=N_RASTER, N_INTERNAL};
+enum { N_INTERNAL=N_RASTER}; // enum { LAST_UPDATE=N_RASTER, N_INTERNAL};
 
 typedef std::array<double, 2> point_xy_t;   // XY (for UTM frame)
 typedef std::array<float,  3> point_xyz_t;  // XYZ (custom frame)
@@ -35,6 +37,7 @@ typedef std::array<double, 6> pose6d;       // yaw,pitch,roll,x,y,z
 typedef std::vector<point_xyz_t> points;    // PointsXYZ
 typedef std::array<float, N_INTERNAL> point_info_t;
 typedef std::vector<point_info_t> points_info_t;
+typedef std::vector<bool> vbool_t; // altitude state (vertical or not)
 typedef std::map<std::string, std::string> map_str_t;
 typedef std::array<int, 2> point_id_t; // submodels location
 typedef std::vector<point_id_t> points_id_t;
@@ -51,7 +54,11 @@ class atlaas {
     /**
      * internal data model
      */
-    points_info_t internal;
+    points_info_t internal; // to merge dyninter
+    points_info_t gndinter; // ground info for vertical/flat unknown state
+    points_info_t dyninter; // to merge point cloud
+    vbool_t       vertical; // altitude state (vertical or not)
+    double        hstate_threshold;
 
     /**
      * history of saved submodels, to load them back
@@ -71,7 +78,6 @@ class atlaas {
     int sw; // sub-width
     int sh; // sub-height
     std::unique_ptr<atlaas> sub;
-    std::unique_ptr<atlaas> dyn;
 
     /**
      * fill internal from map
@@ -125,9 +131,13 @@ public:
         sub_load( 1, -1);
         sub_load( 1,  0);
         sub_load( 1,  1);
+#ifdef DYNAMIC_MERGE
         // atlaas used for dynamic merge
-        dyn = std::move(std::unique_ptr<atlaas>(new atlaas));
-        dyn->internal.resize( width * height );
+        dyninter.resize( width * height );
+        vertical.resize( width * height );
+        gndinter.resize( width * height );
+        hstate_threshold = 3.0;
+#endif
     }
 
     /**
@@ -144,6 +154,10 @@ public:
 
     void set_rotation(double rotation) {
         // TODO map.set_rotation(rotation);
+    }
+
+    void set_hstate_threshold(double threshold) {
+        hstate_threshold = threshold;
     }
 
     /**
@@ -185,7 +199,7 @@ public:
     /**
      * merge point-cloud in internal structure
      */
-    void merge(const points& cloud);
+    void merge(const points& cloud, points_info_t& infos);
 
     /**
      * transform, merge, slide, save, load submodels
@@ -211,19 +225,16 @@ public:
     }
 
     /**
-     * reset all cells for dynamic merge
-     */
-    void reset();
-
-    /**
      * dynamic merge of cloud in custom frame
      */
     void dynamic(const points& cloud);
+    float sigma_mean(const points_info_t& inter);
 
     /**
      * merge existing dtm for dynamic merge
      */
-    void merge(const atlaas& from);
+    void merge();
+    void merge(point_info_t& dst, const point_info_t& src);
 };
 
 /**

@@ -44,25 +44,29 @@ void transform(points& cloud, const matrix& tr) {
  * @param transformation: sensor to world transformation
  */
 void atlaas::merge(points& cloud, const matrix& transformation) {
+    // transform the cloud from sensor to custom frame
     transform(cloud, transformation);
-    // transformation[{3,7}] = {x,y}
+    // slide map if needed. transformation[{3,7}] = {x,y}
     slide_to(transformation[3], transformation[7]);
+#ifdef DYNAMIC_MERGE
     // use dynamic merge
     dynamic(cloud);
-}
-
-void atlaas::reset() {
-    point_info_t zeros{}; // value-initialization w/empty initializer
-    std::fill(internal.begin(), internal.end(), zeros);
+#else
+    // merge the cloud in the internal data
+    merge(cloud, internal);
     map_sync = false;
+#endif
 }
 
 void atlaas::dynamic(const points& cloud) {
-    dyn->reset();
-    dyn->map.copy_meta(map);
-    dyn->merge(cloud);
+    // clear the dynamic map (zeros)
+    point_info_t zeros{}; // value-initialization w/empty initializer
+    std::fill(dyninter.begin(), dyninter.end(), zeros);
+    // merge the point-cloud
+    merge(cloud, dyninter);
     // dyn->export8u("atlaas-dyn.jpg");
-    merge(*dyn);
+    // merge the dynamic atlaas with internal data
+    merge();
 }
 
 void atlaas::sub_load(int sx, int sy) {
@@ -111,6 +115,9 @@ void atlaas::slide_to(double robx, double roby) {
     int dx = (cx < 0.33) ? -1 : (cx > 0.66) ? 1 : 0; // W/E
     int dy = (cy < 0.33) ? -1 : (cy > 0.66) ? 1 : 0; // N/S
     point_info_t zeros{}; // value-initialization w/empty initializer
+    // reset state and ground infos used for dynamic merge
+    std::fill(gndinter.begin(), gndinter.end(), zeros);
+    std::fill(vertical.begin(), vertical.end(), false);
 
     if (dx == -1) {
         // save EAST 1/3 maplets [ 1,-1], [ 1, 0], [ 1, 1]
@@ -232,7 +239,7 @@ void atlaas::slide_to(double robx, double roby) {
  *
  * @param cloud: point cloud in the custom frame
  */
-void atlaas::merge(const points& cloud) {
+void atlaas::merge(const points& cloud, points_info_t& inter) {
     size_t index;
     float z_mean, n_pts, new_z;
     // merge point-cloud in internal structure
@@ -241,67 +248,119 @@ void atlaas::merge(const points& cloud) {
         if (index == std::numeric_limits<size_t>::max() )
             continue; // point is outside the map
 
-        auto& info = internal[ index ];
+        auto& info = inter[ index ];
         new_z = point[2];
         n_pts = info[N_POINTS];
-        z_mean = info[Z_MEAN];
-        // increment N_POINTS
-        info[N_POINTS]++;
 
         if (n_pts < 1) {
-            info[Z_MAX] = new_z;
-            info[Z_MIN] = new_z;
+            info[N_POINTS] = 1;
+            info[Z_MAX]  = new_z;
+            info[Z_MIN]  = new_z;
+            info[Z_MEAN] = new_z;
+            info[SIGMA_Z] = 0;
         } else {
+            z_mean = info[Z_MEAN];
+            // increment N_POINTS
+            info[N_POINTS]++;
             // update Z_MAX
             if (new_z > info[Z_MAX])
                 info[Z_MAX] = new_z;
             // update Z_MIN
             if (new_z < info[Z_MIN])
                 info[Z_MIN] = new_z;
+
+            /* Incremental mean and variance updates (according to Knuth's bible,
+               Vol. 2, section 4.2.2). The actual variance will later be divided
+               by the number of samples plus 1. */
+            info[Z_MEAN]   = (z_mean * n_pts + new_z) / info[N_POINTS];
+            info[SIGMA_Z] += (new_z - z_mean) * (new_z - info[Z_MEAN]);
         }
-        /* Incremental mean and variance updates (according to Knuth's bible,
-           Vol. 2, section 4.2.2). The actual variance will later be divided
-           by the number of samples plus 1. */
-        info[Z_MEAN]   = (z_mean * n_pts + new_z) / info[N_POINTS];
-        info[SIGMA_Z] += (new_z - z_mean) * (new_z - info[Z_MEAN]);
     }
     map_sync = false;
 }
 
 /**
- * Merge dynamic dtm
- *
- * @param from: dynamic atlaas
+ * Compute Sigma mean
  */
-void atlaas::merge(const atlaas& from) {
-    float z_mean, d_mean, n_pts, from_n_pts;
-    auto it = internal.begin(), end = internal.end();
-    for (auto it_from = from.internal.begin(); it < end; ++it, ++it_from) {
-        auto& info_from = *it_from;
-        from_n_pts = info_from[N_POINTS];
-        if ( from_n_pts < 1 )
-            continue;
-        auto& info = *it;
-        if ( info[N_POINTS] < 1 ) {
-            info = info_from;
-            continue;
+float atlaas::sigma_mean(const points_info_t& inter) {
+    size_t sigma_count = 0;
+    double sigma_total = 0;
+
+    for (auto& info : inter) {
+        if (info[N_POINTS] > 0) {
+            sigma_count++;
+            sigma_total += info[SIGMA_Z];
         }
-        n_pts = info[N_POINTS];
-        z_mean = info[Z_MEAN];
-        info[N_POINTS] += from_n_pts;
-        if (info[Z_MAX] < info_from[Z_MAX])
-            info[Z_MAX] = info_from[Z_MAX];
-        if (info[Z_MIN] > info_from[Z_MIN])
-            info[Z_MIN] = info_from[Z_MIN];
-        info[Z_MEAN] = ( (z_mean * n_pts) + (info_from[Z_MEAN] *
-            from_n_pts) ) / info[N_POINTS];
-        // compute the real variance (according to Knuth's bible)
-        d_mean = info_from[Z_MEAN] - z_mean;
-        info[SIGMA_Z] = info[SIGMA_Z] * info[SIGMA_Z] * n_pts +
-            info_from[SIGMA_Z] * info_from[SIGMA_Z] * from_n_pts +
-            d_mean * d_mean * n_pts * from_n_pts / info[N_POINTS];
+    }
+
+    if (sigma_count == 0)
+        return 0;
+
+    return sigma_total / sigma_count;
+}
+
+/**
+ * Merge dynamic dtm
+ */
+void atlaas::merge() {
+    bool is_vertical;
+    size_t index = 0;
+    float threshold = hstate_threshold * sigma_mean(dyninter);
+    auto it = internal.begin();
+    auto st = vertical.begin();
+
+    for (auto& dyninfo : dyninter) {
+        if ( dyninfo[N_POINTS] > 0 ) {
+
+            /* compute the real variance (according to Knuth's bible) */
+            dyninfo[SIGMA_Z] /= dyninfo[N_POINTS];
+            is_vertical = dyninfo[SIGMA_Z] > threshold;
+
+            if ( (*it)[N_POINTS] < 1 ) {
+                *st = is_vertical;
+                *it = dyninfo;
+            } else if ( *st == is_vertical ) {
+                merge(*it, dyninfo);
+            } else if ( !*st ) { // was flat
+                gndinter[index] = *it;
+                *it = dyninfo;
+                *st = true;
+            } else { // was vertical
+                *st = false;
+                *it = gndinter[index];
+                merge(*it, dyninfo);
+            }
+        }
+
+        st++;
+        it++;
+        index++;
     }
     map_sync = false;
+}
+
+void atlaas::merge(point_info_t& dst, const point_info_t& src) {
+    if ( dst[N_POINTS] < 1 ) {
+        dst = src;
+        return;
+    }
+    float z_mean, dst_n_pts, src_n_pts;
+
+    src_n_pts = src[N_POINTS];
+    dst_n_pts = dst[N_POINTS];
+    dst[N_POINTS] += src_n_pts;
+    z_mean = dst[Z_MEAN];
+
+    if (dst[Z_MAX] < src[Z_MAX])
+        dst[Z_MAX] = src[Z_MAX];
+    if (dst[Z_MIN] > src[Z_MIN])
+        dst[Z_MIN] = src[Z_MIN];
+
+    dst[Z_MEAN] = ( (z_mean * dst_n_pts) + (src[Z_MEAN] * src_n_pts) )
+                    / dst[N_POINTS];
+    // XXX compute the variance
+    dst[SIGMA_Z] = ( dst[SIGMA_Z] * dst_n_pts + src[SIGMA_Z] * src_n_pts)
+                    / dst[N_POINTS];
 }
 
 void atlaas::update() {
