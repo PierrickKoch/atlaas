@@ -35,12 +35,10 @@ typedef std::array<float,  3> point_xyz_t;  // XYZ (custom frame)
 typedef std::array<double, 16> matrix;      // transformation matrix
 typedef std::array<double, 6> pose6d;       // yaw,pitch,roll,x,y,z
 typedef std::vector<point_xyz_t> points;    // PointsXYZ
-typedef std::array<float, N_INTERNAL> point_info_t;
-typedef std::vector<point_info_t> points_info_t;
+typedef std::array<float, N_INTERNAL> cell_info_t;
+typedef std::vector<cell_info_t> cells_info_t;
 typedef std::vector<bool> vbool_t; // altitude state (vertical or not)
-typedef std::map<std::string, std::string> map_str_t;
-typedef std::array<int, 2> point_id_t; // submodels location
-typedef std::vector<point_id_t> points_id_t;
+typedef std::array<int, 2> map_id_t; // submodels location
 
 /**
  * atlaas
@@ -54,16 +52,16 @@ class atlaas {
     /**
      * internal data model
      */
-    points_info_t internal; // to merge dyninter
-    points_info_t gndinter; // ground info for vertical/flat unknown state
-    points_info_t dyninter; // to merge point cloud
+    cells_info_t internal; // to merge dyninter
+    cells_info_t gndinter; // ground info for vertical/flat unknown state
+    cells_info_t dyninter; // to merge point cloud
     vbool_t       vertical; // altitude state (vertical or not)
     double        hstate_threshold;
 
     /**
-     * history of saved submodels, to load them back
+     * current location in the submodels frame
      */
-    point_id_t current;
+    map_id_t current;
 
     /**
      * need update I/O ?
@@ -75,6 +73,10 @@ class atlaas {
      */
     size_t width;
     size_t height;
+
+    /**
+     * submodels data
+     */
     int sw; // sub-width
     int sh; // sub-height
     std::unique_ptr<atlaas> sub;
@@ -180,7 +182,7 @@ public:
      * get a const ref on the internal data (aligned points)
      * used for our local planner message conversion
      */
-    const points_info_t& get_internal() const {
+    const cells_info_t& get_internal() const {
         return internal;
     }
 
@@ -199,7 +201,7 @@ public:
     /**
      * merge point-cloud in internal structure
      */
-    void merge(const points& cloud, points_info_t& infos);
+    void merge(const points& cloud, cells_info_t& infos);
 
     /**
      * transform, merge, slide, save, load submodels
@@ -228,13 +230,13 @@ public:
      * dynamic merge of cloud in custom frame
      */
     void dynamic(const points& cloud);
-    float sigma_mean(const points_info_t& inter);
+    float sigma_mean(const cells_info_t& inter);
 
     /**
      * merge existing dtm for dynamic merge
      */
     void merge();
-    void merge(point_info_t& dst, const point_info_t& src);
+    void merge(cell_info_t& dst, const cell_info_t& src);
 };
 
 /**

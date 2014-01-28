@@ -60,7 +60,7 @@ void atlaas::merge(points& cloud, const matrix& transformation) {
 
 void atlaas::dynamic(const points& cloud) {
     // clear the dynamic map (zeros)
-    point_info_t zeros{}; // value-initialization w/empty initializer
+    cell_info_t zeros{}; // value-initialization w/empty initializer
     std::fill(dyninter.begin(), dyninter.end(), zeros);
     // merge the point-cloud
     merge(cloud, dyninter);
@@ -114,7 +114,7 @@ void atlaas::slide_to(double robx, double roby) {
 
     int dx = (cx < 0.33) ? -1 : (cx > 0.66) ? 1 : 0; // W/E
     int dy = (cy < 0.33) ? -1 : (cy > 0.66) ? 1 : 0; // N/S
-    point_info_t zeros{}; // value-initialization w/empty initializer
+    cell_info_t zeros{}; // value-initialization w/empty initializer
     // reset state and ground infos used for dynamic merge
     std::fill(gndinter.begin(), gndinter.end(), zeros);
     std::fill(vertical.begin(), vertical.end(), false);
@@ -239,7 +239,7 @@ void atlaas::slide_to(double robx, double roby) {
  *
  * @param cloud: point cloud in the custom frame
  */
-void atlaas::merge(const points& cloud, points_info_t& inter) {
+void atlaas::merge(const points& cloud, cells_info_t& inter) {
     size_t index;
     float z_mean, n_pts, new_z;
     // merge point-cloud in internal structure
@@ -282,7 +282,7 @@ void atlaas::merge(const points& cloud, points_info_t& inter) {
 /**
  * Compute Sigma mean
  */
-float atlaas::sigma_mean(const points_info_t& inter) {
+float atlaas::sigma_mean(const cells_info_t& inter) {
     size_t sigma_count = 0;
     double sigma_total = 0;
 
@@ -339,7 +339,7 @@ void atlaas::merge() {
     map_sync = false;
 }
 
-void atlaas::merge(point_info_t& dst, const point_info_t& src) {
+void atlaas::merge(cell_info_t& dst, const cell_info_t& src) {
     if ( dst[N_POINTS] < 1 ) {
         dst = src;
         return;
