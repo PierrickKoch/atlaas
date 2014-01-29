@@ -25,8 +25,8 @@
 namespace atlaas {
 
 std::vector<std::string> MAP_NAMES =
-     {"N_POINTS", "Z_MIN", "Z_MAX", "Z_MEAN", "SIGMA_Z"};
-enum { N_POINTS,   Z_MIN,   Z_MAX,   Z_MEAN,   SIGMA_Z,   N_RASTER};
+     {"N_POINTS", "Z_MIN", "Z_MAX", "Z_MEAN", "VARIANCE"};
+enum { N_POINTS,   Z_MIN,   Z_MAX,   Z_MEAN,   VARIANCE,   N_RASTER};
 // internal use only
 enum { N_INTERNAL=N_RASTER}; // enum { LAST_UPDATE=N_RASTER, N_INTERNAL};
 
@@ -56,7 +56,7 @@ class atlaas {
     cells_info_t gndinter; // ground info for vertical/flat unknown state
     cells_info_t dyninter; // to merge point cloud
     vbool_t       vertical; // altitude state (vertical or not)
-    double        hstate_threshold;
+    float         variance_factor;
 
     /**
      * current location in the submodels frame
@@ -138,7 +138,7 @@ public:
         dyninter.resize( width * height );
         vertical.resize( width * height );
         gndinter.resize( width * height );
-        hstate_threshold = 3.0;
+        variance_factor = 3.0;
 #endif
     }
 
@@ -158,8 +158,8 @@ public:
         // TODO map.set_rotation(rotation);
     }
 
-    void set_hstate_threshold(double threshold) {
-        hstate_threshold = threshold;
+    void set_variance_factor(float factor) {
+        variance_factor = factor;
     }
 
     /**
@@ -230,7 +230,11 @@ public:
      * dynamic merge of cloud in custom frame
      */
     void dynamic(const points& cloud);
-    float sigma_mean(const cells_info_t& inter);
+
+    /**
+     * compute real variance and return the mean
+     */
+    float variance_mean(cells_info_t& inter);
 
     /**
      * merge existing dtm for dynamic merge

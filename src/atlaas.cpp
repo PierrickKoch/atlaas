@@ -257,7 +257,7 @@ void atlaas::merge(const points& cloud, cells_info_t& inter) {
             info[Z_MAX]  = new_z;
             info[Z_MIN]  = new_z;
             info[Z_MEAN] = new_z;
-            info[SIGMA_Z] = 0;
+            info[VARIANCE] = 0;
         } else {
             z_mean = info[Z_MEAN];
             // increment N_POINTS
@@ -272,31 +272,33 @@ void atlaas::merge(const points& cloud, cells_info_t& inter) {
             /* Incremental mean and variance updates (according to Knuth's bible,
                Vol. 2, section 4.2.2). The actual variance will later be divided
                by the number of samples plus 1. */
-            info[Z_MEAN]   = (z_mean * n_pts + new_z) / info[N_POINTS];
-            info[SIGMA_Z] += (new_z - z_mean) * (new_z - info[Z_MEAN]);
+            info[Z_MEAN]    = (z_mean * n_pts + new_z) / info[N_POINTS];
+            info[VARIANCE] += (new_z - z_mean) * (new_z - info[Z_MEAN]);
         }
     }
     map_sync = false;
 }
 
 /**
- * Compute Sigma mean
+ * Compute real variance and return the mean
  */
-float atlaas::sigma_mean(const cells_info_t& inter) {
-    size_t sigma_count = 0;
-    double sigma_total = 0;
+float atlaas::variance_mean(cells_info_t& inter) {
+    size_t variance_count = 0;
+    float  variance_total = 0;
 
     for (auto& info : inter) {
-        if (info[N_POINTS] > 0) {
-            sigma_count++;
-            sigma_total += info[SIGMA_Z];
+        if (info[N_POINTS] > 2) {
+            /* compute the real variance (according to Knuth's bible) */
+            info[VARIANCE] /= info[N_POINTS] - 1;
+            variance_total += info[VARIANCE];
+            variance_count++;
         }
     }
 
-    if (sigma_count == 0)
+    if (variance_count == 0)
         return 0;
 
-    return sigma_total / sigma_count;
+    return variance_total / variance_count;
 }
 
 /**
@@ -305,16 +307,14 @@ float atlaas::sigma_mean(const cells_info_t& inter) {
 void atlaas::merge() {
     bool is_vertical;
     size_t index = 0;
-    float threshold = hstate_threshold * sigma_mean(dyninter);
+    float threshold = variance_factor * variance_mean(dyninter);
     auto it = internal.begin();
     auto st = vertical.begin();
 
     for (auto& dyninfo : dyninter) {
         if ( dyninfo[N_POINTS] > 0 ) {
 
-            /* compute the real variance (according to Knuth's bible) */
-            dyninfo[SIGMA_Z] /= dyninfo[N_POINTS];
-            is_vertical = dyninfo[SIGMA_Z] > threshold;
+            is_vertical = dyninfo[VARIANCE] > threshold;
 
             if ( (*it)[N_POINTS] < 1 ) {
                 *st = is_vertical;
@@ -344,11 +344,9 @@ void atlaas::merge(cell_info_t& dst, const cell_info_t& src) {
         dst = src;
         return;
     }
-    float z_mean, dst_n_pts, src_n_pts;
+    float z_mean, d_mean, new_n_pts;
 
-    src_n_pts = src[N_POINTS];
-    dst_n_pts = dst[N_POINTS];
-    dst[N_POINTS] += src_n_pts;
+    new_n_pts = src[N_POINTS] + dst[N_POINTS];
     z_mean = dst[Z_MEAN];
 
     if (dst[Z_MAX] < src[Z_MAX])
@@ -356,11 +354,17 @@ void atlaas::merge(cell_info_t& dst, const cell_info_t& src) {
     if (dst[Z_MIN] > src[Z_MIN])
         dst[Z_MIN] = src[Z_MIN];
 
-    dst[Z_MEAN] = ( (z_mean * dst_n_pts) + (src[Z_MEAN] * src_n_pts) )
-                    / dst[N_POINTS];
+    dst[Z_MEAN] = ( (z_mean * dst[N_POINTS]) + (src[Z_MEAN] * src[N_POINTS]) )
+                   / new_n_pts;
     // XXX compute the variance
-    dst[SIGMA_Z] = ( dst[SIGMA_Z] * dst_n_pts + src[SIGMA_Z] * src_n_pts)
-                    / dst[N_POINTS];
+    //d_mean = dst[Z_MEAN] - z_mean;
+    dst[VARIANCE] = ( src[VARIANCE] * src[VARIANCE] * src[N_POINTS]
+                    + dst[VARIANCE] * dst[VARIANCE] * dst[N_POINTS]
+    //                + d_mean * d_mean * src[N_POINTS] * dst[N_POINTS] / new_n_pts
+                    ) / new_n_pts;
+    //dst[VARIANCE] = ( dst[VARIANCE] * dst[N_POINTS] + src[VARIANCE] * src[N_POINTS])
+    //               / new_n_pts;
+    dst[N_POINTS] = new_n_pts;
 }
 
 void atlaas::update() {
@@ -371,7 +375,7 @@ void atlaas::update() {
         map.bands[Z_MAX][idx]       = internal[idx][Z_MAX];
         map.bands[Z_MIN][idx]       = internal[idx][Z_MIN];
         map.bands[Z_MEAN][idx]      = internal[idx][Z_MEAN];
-        map.bands[SIGMA_Z][idx]     = internal[idx][SIGMA_Z];
+        map.bands[VARIANCE][idx]    = internal[idx][VARIANCE];
     }
     map_sync = true;
 }
@@ -391,7 +395,7 @@ void atlaas::_fill_internal() {
         internal[idx][Z_MAX]        = map.bands[Z_MAX][idx];
         internal[idx][Z_MIN]        = map.bands[Z_MIN][idx];
         internal[idx][Z_MEAN]       = map.bands[Z_MEAN][idx];
-        internal[idx][SIGMA_Z]      = map.bands[SIGMA_Z][idx];
+        internal[idx][VARIANCE]     = map.bands[VARIANCE][idx];
     }
     map_sync = true;
 }
