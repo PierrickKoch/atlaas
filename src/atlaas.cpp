@@ -330,6 +330,7 @@ void atlaas::merge() {
                 *it = gndinter[index];
                 merge(*it, dyninfo);
             }
+            (*it)[LAST_UPDATE] = get_reference_time();
         }
 
         st++;
@@ -376,6 +377,7 @@ void atlaas::update() {
         map.bands[Z_MIN][idx]       = internal[idx][Z_MIN];
         map.bands[Z_MEAN][idx]      = internal[idx][Z_MEAN];
         map.bands[VARIANCE][idx]    = internal[idx][VARIANCE];
+        map.bands[LAST_UPDATE][idx] = internal[idx][LAST_UPDATE];
     }
     map_sync = true;
 }
@@ -396,6 +398,7 @@ void atlaas::_fill_internal() {
         internal[idx][Z_MIN]        = map.bands[Z_MIN][idx];
         internal[idx][Z_MEAN]       = map.bands[Z_MEAN][idx];
         internal[idx][VARIANCE]     = map.bands[VARIANCE][idx];
+        internal[idx][LAST_UPDATE]  = map.bands[LAST_UPDATE][idx];
     }
     map_sync = true;
 }

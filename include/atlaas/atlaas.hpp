@@ -13,6 +13,7 @@
 #include <array> // C++11
 #include <memory> // unique_ptr C++11
 #include <map>
+#include <ctime> // std::time
 #include <vector>
 #include <string>
 #include <sstream> // ostringstream
@@ -20,15 +21,17 @@
 
 #include <gdalwrap/gdal.hpp>
 
+/* date --date='2014-01-01 00:00 UTC' +%s */
+#define TIME_BASE 1388534400
 #define DYNAMIC_MERGE
 
 namespace atlaas {
 
 std::vector<std::string> MAP_NAMES =
-     {"N_POINTS", "Z_MIN", "Z_MAX", "Z_MEAN", "VARIANCE"};
-enum { N_POINTS,   Z_MIN,   Z_MAX,   Z_MEAN,   VARIANCE,   N_RASTER};
+     {"N_POINTS", "Z_MIN", "Z_MAX", "Z_MEAN", "VARIANCE", "LAST_UPDATE"};
+enum { N_POINTS,   Z_MIN,   Z_MAX,   Z_MEAN,   VARIANCE,   LAST_UPDATE,   N_RASTER};
 // internal use only
-enum { N_INTERNAL=N_RASTER}; // enum { LAST_UPDATE=N_RASTER, N_INTERNAL};
+enum { N_INTERNAL=N_RASTER}; // enum { OTHER_FIELD=N_RASTER, N_INTERNAL};
 
 typedef std::array<double, 2> point_xy_t;   // XY (for UTM frame)
 typedef std::array<float,  3> point_xyz_t;  // XYZ (custom frame)
@@ -85,6 +88,16 @@ class atlaas {
      * fill internal from map
      */
     void _fill_internal();
+
+    /**
+     * Seconds since the base time (2014-01-01).
+     *
+     * Since we'll store datas as float32, time since epoch would give
+     * something like `1.39109e+09`, we substract time(2014-01-01).
+     */
+    float get_reference_time() {
+        return std::time(NULL) - TIME_BASE;
+    }
 
 public:
     /**
