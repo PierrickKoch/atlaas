@@ -21,15 +21,13 @@
 
 #include <gdalwrap/gdal.hpp>
 
-/* date --date='2014-01-01 00:00 UTC' +%s */
-#define TIME_BASE 1388534400
 #define DYNAMIC_MERGE
 
 namespace atlaas {
 
 std::vector<std::string> MAP_NAMES =
-     {"N_POINTS", "Z_MIN", "Z_MAX", "Z_MEAN", "VARIANCE", "LAST_UPDATE"};
-enum { N_POINTS,   Z_MIN,   Z_MAX,   Z_MEAN,   VARIANCE,   LAST_UPDATE,   N_RASTER};
+     {"N_POINTS", "Z_MIN", "Z_MAX", "Z_MEAN", "VARIANCE", "TIME"};
+enum { N_POINTS,   Z_MIN,   Z_MAX,   Z_MEAN,   VARIANCE,   TIME,   N_RASTER};
 // internal use only
 enum { N_INTERNAL=N_RASTER}; // enum { OTHER_FIELD=N_RASTER, N_INTERNAL};
 
@@ -85,18 +83,24 @@ class atlaas {
     std::unique_ptr<atlaas> sub;
 
     /**
+     * time base
+     */
+    std::time_t time_base;
+
+    /**
      * fill internal from map
      */
     void _fill_internal();
 
     /**
-     * Seconds since the base time (2014-01-01).
+     * Seconds since the base time.
      *
      * Since we'll store datas as float32, time since epoch would give
-     * something like `1.39109e+09`, we substract time(2014-01-01).
+     * something like `1.39109e+09`, we substract a time_base
+     * (to be set using `atlaas::set_time_base(time_t)`).
      */
     float get_reference_time() {
-        return std::time(NULL) - TIME_BASE;
+        return std::time(NULL) - time_base;
     }
 
 public:
@@ -153,6 +157,7 @@ public:
         gndinter.resize( width * height );
         variance_factor = 3.0;
 #endif
+        set_time_base( std::time(NULL) );
     }
 
     /**
@@ -169,6 +174,11 @@ public:
 
     void set_rotation(double rotation) {
         // TODO map.set_rotation(rotation);
+    }
+
+    void set_time_base(std::time_t base) {
+        time_base = base;
+        map.metadata["TIME"] = std::to_string(time_base);
     }
 
     void set_variance_factor(float factor) {
