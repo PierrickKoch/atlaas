@@ -129,6 +129,7 @@ public:
         map.set_utm(utm_zone, utm_zone);
         map.set_custom_origin(custom_x, custom_y);
         map.names = MAP_NAMES;
+        set_time_base( std::time(NULL) );
         // set internal points info structure size to map (gdal) size
         internal.resize( width * height );
         map_sync = true;
@@ -157,7 +158,6 @@ public:
         gndinter.resize( width * height );
         variance_factor = 3.0;
 #endif
-        set_time_base( std::time(NULL) );
     }
 
     /**

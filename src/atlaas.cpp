@@ -406,7 +406,8 @@ void atlaas::_fill_internal() {
         internal[idx][VARIANCE]     = map.bands[VARIANCE][idx];
         internal[idx][TIME]         = map.bands[TIME][idx];
     }
-    time_base = std::stol(map.metadata["TIME"]);
+    // WARN std::stol might throw std::invalid_argument
+    time_base = std::stol(map.get_meta("TIME", "0"));
     map_sync = true;
 }
 
