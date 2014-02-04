@@ -56,8 +56,8 @@ class atlaas {
     cells_info_t internal; // to merge dyninter
     cells_info_t gndinter; // ground info for vertical/flat unknown state
     cells_info_t dyninter; // to merge point cloud
-    vbool_t       vertical; // altitude state (vertical or not)
-    float         variance_factor;
+    vbool_t      vertical; // altitude state (vertical or not)
+    float        variance_factor;
 
     /**
      * current location in the submodels frame

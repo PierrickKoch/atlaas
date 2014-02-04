@@ -74,6 +74,12 @@ void atlaas::sub_load(int sx, int sy) {
     if ( ! file_exists( filepath ) )
         return; // no file to load
     sub->init(filepath);
+    // update each cell time if bases differ
+    if (time_base != sub->time_base) {
+        long diff = time_base - sub->time_base;
+        for (auto& cell : sub->internal)
+            cell[TIME] -= diff;
+    }
     auto it  = internal.begin() + sw * (sx + 1) + sh * width * (sy + 1),
          end = it + sh * width;
     for (auto sit = sub->internal.begin(); it < end; it += width, sit += sw) {
@@ -400,6 +406,7 @@ void atlaas::_fill_internal() {
         internal[idx][VARIANCE]     = map.bands[VARIANCE][idx];
         internal[idx][TIME]         = map.bands[TIME][idx];
     }
+    time_base = std::stol(map.metadata["TIME"]);
     map_sync = true;
 }
 
