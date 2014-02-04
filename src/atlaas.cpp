@@ -77,6 +77,7 @@ void atlaas::sub_load(int sx, int sy) {
     // update each cell time if bases differ
     if (time_base != sub->time_base) {
         long diff = time_base - sub->time_base;
+        tmplog << __func__ << " time_base diff " << diff << std::endl;
         for (auto& cell : sub->internal)
             cell[TIME] -= diff;
     }
@@ -314,6 +315,7 @@ void atlaas::merge() {
     bool is_vertical;
     size_t index = 0;
     float threshold = variance_factor * variance_mean(dyninter);
+    float time_ref = get_reference_time();
     auto it = internal.begin();
     auto st = vertical.begin();
 
@@ -336,7 +338,7 @@ void atlaas::merge() {
                 *it = gndinter[index];
                 merge(*it, dyninfo);
             }
-            (*it)[TIME] = get_reference_time();
+            (*it)[TIME] = time_ref;
         }
 
         st++;
@@ -351,7 +353,7 @@ void atlaas::merge(cell_info_t& dst, const cell_info_t& src) {
         dst = src;
         return;
     }
-    float z_mean, d_mean, new_n_pts;
+    float z_mean, new_n_pts;
 
     new_n_pts = src[N_POINTS] + dst[N_POINTS];
     z_mean = dst[Z_MEAN];
@@ -363,14 +365,10 @@ void atlaas::merge(cell_info_t& dst, const cell_info_t& src) {
 
     dst[Z_MEAN] = ( (z_mean * dst[N_POINTS]) + (src[Z_MEAN] * src[N_POINTS]) )
                    / new_n_pts;
-    // XXX compute the variance
-    //d_mean = dst[Z_MEAN] - z_mean;
-    dst[VARIANCE] = ( src[VARIANCE] * src[VARIANCE] * src[N_POINTS]
-                    + dst[VARIANCE] * dst[VARIANCE] * dst[N_POINTS]
-    //                + d_mean * d_mean * src[N_POINTS] * dst[N_POINTS] / new_n_pts
-                    ) / new_n_pts;
-    //dst[VARIANCE] = ( dst[VARIANCE] * dst[N_POINTS] + src[VARIANCE] * src[N_POINTS])
-    //               / new_n_pts;
+    // compute the global variance
+    dst[VARIANCE] = ( src[VARIANCE] * (src[N_POINTS] - 1)
+                    + dst[VARIANCE] * (dst[N_POINTS] - 1)
+                    ) / (new_n_pts - 1);
     dst[N_POINTS] = new_n_pts;
 }
 
