@@ -25,7 +25,7 @@
 
 namespace atlaas {
 
-std::vector<std::string> MAP_NAMES =
+static std::vector<std::string> MAP_NAMES =
      {"N_POINTS", "Z_MIN", "Z_MAX", "Z_MEAN", "VARIANCE", "TIME"};
 enum { N_POINTS,   Z_MIN,   Z_MAX,   Z_MEAN,   VARIANCE,   TIME,   N_RASTER};
 // internal use only
