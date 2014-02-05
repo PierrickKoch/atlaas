@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "GLADYS"
+echo "atlaas"
 echo "======"
 uname -a # show kernel info
 n=`awk '/cpu cores/ {print $NF; exit}' /proc/cpuinfo`
