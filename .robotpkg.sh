@@ -38,7 +38,12 @@ make MAKE_JOBS=$n update
 make print-PLIST
 # update PLIST only if changes
 test `diff -u0 PLIST PLIST.guess | wc -l` -gt 5 && mv PLIST.guess PLIST
-git commit . -m"[$PKGTYPE/$PKGNAME] Update to $DIRNAME"
+
+COMMITM=$(mktemp)
+echo "[$PKGTYPE/$PKGNAME] Update to $DIRNAME" > $COMMITM
+echo "" >> $COMMITM
+cat $SHORTLG >> $COMMITM
+git commit . -F $COMMITM
 
 scp $RPKROOT/distfiles/$ARCHIVE anna.laas.fr:/usr/local/openrobots/distfiles/$PKGNAME/
 
@@ -46,3 +51,4 @@ echo "You need to push in '$RPKROOT/$PKGTYPE/$PKGNAME' and '$OLDPWD'"
 echo "... After checking everything is fine :-)"
 
 rm $SHORTLG
+rm $COMMITM
