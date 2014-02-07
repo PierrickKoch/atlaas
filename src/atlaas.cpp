@@ -325,15 +325,19 @@ void atlaas::merge() {
             is_vertical = dyninfo[VARIANCE] > threshold;
 
             if ( (*it)[N_POINTS] < 1 ) {
+                // init
                 *st = is_vertical;
                 *it = dyninfo;
             } else if ( *st == is_vertical ) {
+                // same state
                 merge(*it, dyninfo);
-            } else if ( !*st ) { // was flat
+            } else if ( is_vertical ) {
+                // was flat, backup the cell in ground swap
                 gndinter[index] = *it;
                 *it = dyninfo;
                 *st = true;
-            } else { // was vertical
+            } else {
+                // was vertical, revert ground and merge
                 *st = false;
                 *it = gndinter[index];
                 merge(*it, dyninfo);
