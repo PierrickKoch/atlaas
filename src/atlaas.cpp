@@ -11,7 +11,7 @@
 #include <stdexcept>        // for out_of_range
 
 #include <fstream>          // ofstream, tmplog
-#include <algorithm>        // copy{,_backward}
+#include <algorithm>        // copy{,_backward},for_each
 #include <cmath>            // floor
 
 #include "atlaas/atlaas.hpp"
@@ -25,14 +25,14 @@ static std::ofstream tmplog("atlaas.log");
  */
 void transform(points& cloud, const matrix& tr) {
     float x,y,z;
-    for (auto& point : cloud) {
+    std::for_each(cloud.begin(), cloud.end(), [&](point_xyz_t& point) {
         x = point[0];
         y = point[1];
         z = point[2];
         point[0] = (x * tr[0]) + (y * tr[1]) + (z * tr[2])  + tr[3];
         point[1] = (x * tr[4]) + (y * tr[5]) + (z * tr[6])  + tr[7];
         point[2] = (x * tr[8]) + (y * tr[9]) + (z * tr[10]) + tr[11];
-    }
+    });
 }
 
 /**
