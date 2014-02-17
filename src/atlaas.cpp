@@ -252,7 +252,7 @@ void atlaas::merge(const points& cloud, cells_info_t& inter) {
     // merge point-cloud in internal structure
     for (const auto& point : cloud) {
         index = map.index_custom(point[0], point[1]);
-        if (index == std::numeric_limits<size_t>::max() )
+        if (index >= inter.size() )
             continue; // point is outside the map
 
         auto& info = inter[ index ];
