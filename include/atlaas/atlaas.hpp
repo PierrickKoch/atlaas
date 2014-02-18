@@ -107,27 +107,26 @@ public:
     /**
      * init the georeferenced map meta-data
      * we recommend width and height being 3 times the range of the sensor
-     * for a Velodyne, we recommend 90x90m @ 0.1m/pixel resolution.
+     * for a Velodyne, we recommend 120x120m @ 0.1m/pixel resolution.
      *
      * @param size_x    width  in meters
      * @param size_y    height in meters
      * @param scale     size of a pixel in meters
      * @param custom_x  custom X origin in UTM in meters
      * @param custom_y  custom Y origin in UTM in meters
-     * @param utm_x     UTM (X) origin in meters
-     * @param utm_y     UTM (Y) origin in meters
+     * @param custom_z  custom Z origin in UTM in meters
      * @param utm_zone  UTM zone
      * @param utm_north is UTM north?
      */
     void init(double size_x, double size_y, double scale,
-              double custom_x, double custom_y, double utm_x, double utm_y,
+              double custom_x, double custom_y, double custom_z,
               int utm_zone, bool utm_north = true) {
         width  = std::ceil(size_x / scale);
         height = std::ceil(size_y / scale);
         map.set_size(N_RASTER, width, height);
-        map.set_transform(utm_x, utm_y, scale, -scale);
+        map.set_transform(custom_x, custom_y, scale, -scale);
         map.set_utm(utm_zone, utm_zone);
-        map.set_custom_origin(custom_x, custom_y);
+        map.set_custom_origin(custom_x, custom_y, custom_z);
         map.names = MAP_NAMES;
         set_time_base( std::time(NULL) );
         // set internal points info structure size to map (gdal) size
