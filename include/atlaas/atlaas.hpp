@@ -14,6 +14,7 @@
 #include <memory> // unique_ptr C++11
 #include <map>
 #include <ctime> // std::time
+#include <cstdlib> // std::getenv
 #include <vector>
 #include <string>
 #include <sstream> // ostringstream
@@ -39,7 +40,15 @@ typedef std::vector<point_xyz_t> points;    // PointsXYZ
 typedef std::array<float, N_INTERNAL> cell_info_t;
 typedef std::vector<cell_info_t> cells_info_t;
 typedef std::vector<bool> vbool_t; // altitude state (vertical or not)
-typedef std::array<int, 2> map_id_t; // submodels location
+typedef std::array<int, 2> map_id_t; // tiles location
+
+/**
+ * getenv with default value if the variable is not set
+ */
+inline std::string getenv(const std::string& name, const std::string& def) {
+    const char* value = std::getenv( name.c_str() );
+    return value ? value : def;
+}
 
 /**
  * atlaas
@@ -60,7 +69,7 @@ class atlaas {
     float        variance_factor;
 
     /**
-     * current location in the submodels frame
+     * current location in the tiles frame
      */
     map_id_t current;
 
@@ -76,16 +85,22 @@ class atlaas {
     size_t height;
 
     /**
-     * submodels data
+     * tiles data
      */
-    int sw; // sub-width
-    int sh; // sub-height
-    std::unique_ptr<atlaas> sub;
+    int sw; // tile-width
+    int sh; // tile-height
+    std::unique_ptr<atlaas> tile;
 
     /**
      * time base
      */
     std::time_t time_base;
+
+    /**
+     * path for tiles I/O
+     * from the environment variable ATLAAS_PATH
+     */
+    std::string path;
 
     /**
      * fill internal from map
@@ -129,6 +144,8 @@ public:
         map.set_custom_origin(custom_x, custom_y, custom_z);
         map.names = MAP_NAMES;
         set_time_base( std::time(NULL) );
+        // init atlaas-path from the environment variable ATLAAS_PATH
+        path = getenv("ATLAAS_PATH", ".");
         // set internal points info structure size to map (gdal) size
         internal.resize( width * height );
         map_sync = true;
@@ -136,20 +153,20 @@ public:
         // load maplets if any
         // works if we init with the same parameters,
         // even if the robot is at a different pose.
-        sw = width  / 3; // sub-width
-        sh = height / 3; // sub-height
-        sub = std::move(std::unique_ptr<atlaas>(new atlaas));
-        sub->map.copy_meta(map, sw, sh);
-        sub->internal.resize(sw * sh);
-        sub_load(-1, -1);
-        sub_load(-1,  0);
-        sub_load(-1,  1);
-        sub_load( 0, -1);
-        sub_load( 0,  0);
-        sub_load( 0,  1);
-        sub_load( 1, -1);
-        sub_load( 1,  0);
-        sub_load( 1,  1);
+        sw = width  / 3; // tile-width
+        sh = height / 3; // tile-height
+        tile = std::move(std::unique_ptr<atlaas>(new atlaas));
+        tile->map.copy_meta(map, sw, sh);
+        tile->internal.resize(sw * sh);
+        tile_load(-1, -1);
+        tile_load(-1,  0);
+        tile_load(-1,  1);
+        tile_load( 0, -1);
+        tile_load( 0,  0);
+        tile_load( 0,  1);
+        tile_load( 1, -1);
+        tile_load( 1,  0);
+        tile_load( 1,  1);
 #ifdef DYNAMIC_MERGE
         // atlaas used for dynamic merge
         dyninter.resize( width * height );
@@ -169,6 +186,12 @@ public:
     void init(const gdalwrap::gdal& gmap) {
         map = gmap; // copy (!)
         _fill_internal();
+    }
+
+    std::string tilepath(int x, int y) const {
+        std::ostringstream oss;
+        oss << path << "/atlaas." << x << "x" << y << ".tif";
+        return oss.str();
     }
 
     void set_rotation(double rotation) {
@@ -226,26 +249,26 @@ public:
     void merge(const points& cloud, cells_info_t& infos);
 
     /**
-     * transform, merge, slide, save, load submodels
+     * transform, merge, slide, save, load tiles
      */
     void merge(points& cloud, const matrix& transformation);
 
     /**
-     * slide, save, load submodels
+     * slide, save, load tiles
      */
     void slide_to(double robx, double roby);
-    void sub_load(int sx, int sy);
-    void sub_save(int sx, int sy) const;
+    void tile_load(int sx, int sy);
+    void tile_save(int sx, int sy) const;
     void save_currents() const {
-        sub_save(-1, -1);
-        sub_save(-1,  0);
-        sub_save(-1,  1);
-        sub_save( 0, -1);
-        sub_save( 0,  0);
-        sub_save( 0,  1);
-        sub_save( 1, -1);
-        sub_save( 1,  0);
-        sub_save( 1,  1);
+        tile_save(-1, -1);
+        tile_save(-1,  0);
+        tile_save(-1,  1);
+        tile_save( 0, -1);
+        tile_save( 0,  0);
+        tile_save( 0,  1);
+        tile_save( 1, -1);
+        tile_save( 1,  0);
+        tile_save( 1,  1);
     }
 
     /**
@@ -271,12 +294,6 @@ public:
 inline bool file_exists(const std::string& name) {
     struct stat buffer;
     return ( stat(name.c_str(), &buffer) == 0 );
-}
-
-inline std::string sub_name(int x, int y) {
-    std::ostringstream oss;
-    oss << "atlaas." << x << "x" << y << ".tif";
-    return oss.str();
 }
 
 /**

@@ -10,15 +10,12 @@
 #include <cassert>
 #include <stdexcept>        // for out_of_range
 
-#include <fstream>          // ofstream, tmplog
 #include <algorithm>        // copy{,_backward}
 #include <cmath>            // floor
 
 #include "atlaas/atlaas.hpp"
 
 namespace atlaas {
-
-static std::ofstream tmplog("atlaas.log");
 
 /**
  * Apply the transformation matrix to the point cloud (in place)
@@ -38,7 +35,7 @@ void transform(points& cloud, const matrix& tr) {
 /**
  * Merge point cloud in the internal model
  * with the sensor to world transformation,
- * and slide, save, load submodels.
+ * and slide, save, load tiles.
  *
  * @param cloud: point cloud in the sensor frame
  * @param transformation: sensor to world transformation
@@ -69,43 +66,43 @@ void atlaas::dynamic(const points& cloud) {
     merge();
 }
 
-void atlaas::sub_load(int sx, int sy) {
-    std::string filepath = sub_name(current[0] + sx, current[1] + sy);
+void atlaas::tile_load(int sx, int sy) {
+    std::string filepath = tilepath(current[0] + sx, current[1] + sy);
     if ( ! file_exists( filepath ) )
         return; // no file to load
-    sub->init(filepath);
+    tile->init(filepath);
     // update each cell time if bases differ
-    if (time_base != sub->time_base) {
-        long diff = time_base - sub->time_base;
-        tmplog << __func__ << " time_base diff " << diff << std::endl;
-        for (auto& cell : sub->internal)
+    if (time_base != tile->time_base) {
+        long diff = time_base - tile->time_base;
+        std::cout << __func__ << " time_base diff " << diff << std::endl;
+        for (auto& cell : tile->internal)
             cell[TIME] -= diff;
     }
     auto it  = internal.begin() + sw * (sx + 1) + sh * width * (sy + 1),
          end = it + sh * width;
-    for (auto sit = sub->internal.begin(); it < end; it += width, sit += sw) {
-        // sub to map
+    for (auto sit = tile->internal.begin(); it < end; it += width, sit += sw) {
+        // tile to map
         std::copy(sit, sit + sw, it);
     }
     map_sync = false;
 }
 
-void atlaas::sub_save(int sx, int sy) const {
+void atlaas::tile_save(int sx, int sy) const {
     auto it  = internal.begin() + sw * (sx + 1) + sh * width * (sy + 1),
          end = it + sh * width;
-    for (auto sit = sub->internal.begin(); it < end; it += width, sit += sw) {
-        // map to sub
+    for (auto sit = tile->internal.begin(); it < end; it += width, sit += sw) {
+        // map to tile
         std::copy(it, it + sw, sit);
     }
-    sub->update();
+    tile->update();
     const auto& utm = map.point_pix2utm( sx * sw, sy * sh);
     // update map transform used for merging the pointcloud
-    sub->map.set_transform(utm[0], utm[1], map.get_scale_x(), map.get_scale_y());
-    sub->map.save( sub_name(current[0] + sx, current[1] + sy) );
+    tile->map.set_transform(utm[0], utm[1], map.get_scale_x(), map.get_scale_y());
+    tile->map.save( tilepath(current[0] + sx, current[1] + sy) );
 }
 
 /**
- * Slide, save, load submodels
+ * Slide, save, load tiles
  *
  * @param robx:  robot x pose in the custom frame
  * @param roby:  robot y pose in the custom frame
@@ -128,17 +125,17 @@ void atlaas::slide_to(double robx, double roby) {
 
     if (dx == -1) {
         // save EAST 1/3 maplets [ 1,-1], [ 1, 0], [ 1, 1]
-        sub_save( 1, -1);
-        sub_save( 1,  0);
-        sub_save( 1,  1);
+        tile_save( 1, -1);
+        tile_save( 1,  0);
+        tile_save( 1,  1);
         if (dy == -1) {
             // save SOUTH
-            sub_save(-1,  1);
-            sub_save( 0,  1);
+            tile_save(-1,  1);
+            tile_save( 0,  1);
         } else if (dy == 1) {
             // save NORTH
-            sub_save(-1, -1);
-            sub_save( 0, -1);
+            tile_save(-1, -1);
+            tile_save( 0, -1);
         }
         // move the map to the WEST [-1 -> 0; 0 -> 1]
         for (auto it = internal.begin(); it < internal.end(); it += width) {
@@ -148,17 +145,17 @@ void atlaas::slide_to(double robx, double roby) {
         }
     } else if (dx == 1) {
         // save WEST 1/3 maplets [-1,-1], [-1, 0], [-1, 1]
-        sub_save(-1, -1);
-        sub_save(-1,  0);
-        sub_save(-1,  1);
+        tile_save(-1, -1);
+        tile_save(-1,  0);
+        tile_save(-1,  1);
         if (dy == -1) {
             // save SOUTH
-            sub_save( 0,  1);
-            sub_save( 1,  1);
+            tile_save( 0,  1);
+            tile_save( 1,  1);
         } else if (dy == 1) {
             // save NORTH
-            sub_save( 0, -1);
-            sub_save( 1, -1);
+            tile_save( 0, -1);
+            tile_save( 1, -1);
         }
         // move the map to the EAST
         for (auto it = internal.begin(); it < internal.end(); it += width) {
@@ -168,14 +165,14 @@ void atlaas::slide_to(double robx, double roby) {
         }
     } else if (dy == -1) {
         // save SOUTH
-        sub_save(-1,  1);
-        sub_save( 0,  1);
-        sub_save( 1,  1);
+        tile_save(-1,  1);
+        tile_save( 0,  1);
+        tile_save( 1,  1);
     } else if (dy == 1) {
         // save NORTH
-        sub_save(-1, -1);
-        sub_save( 0, -1);
-        sub_save( 1, -1);
+        tile_save(-1, -1);
+        tile_save( 0, -1);
+        tile_save( 1, -1);
     }
 
     if (dy == -1) {
@@ -196,49 +193,49 @@ void atlaas::slide_to(double robx, double roby) {
     // load here
     if (dx == -1) {
         // load WEST maplets
-        sub_load(-1, -1);
-        sub_load(-1,  0);
-        sub_load(-1,  1);
+        tile_load(-1, -1);
+        tile_load(-1,  0);
+        tile_load(-1,  1);
         if (dy == -1) {
             // load NORTH
-            sub_load( 0, -1);
-            sub_load( 1, -1);
+            tile_load( 0, -1);
+            tile_load( 1, -1);
         } else if (dy == 1) {
             // load SOUTH
-            sub_load( 0,  1);
-            sub_load( 1,  1);
+            tile_load( 0,  1);
+            tile_load( 1,  1);
         }
     } else if (dx == 1) {
         // load EAST maplets
-        sub_load( 1, -1);
-        sub_load( 1,  0);
-        sub_load( 1,  1);
+        tile_load( 1, -1);
+        tile_load( 1,  0);
+        tile_load( 1,  1);
         if (dy == -1) {
             // load NORTH
-            sub_load(-1, -1);
-            sub_load( 0, -1);
+            tile_load(-1, -1);
+            tile_load( 0, -1);
         } else if (dy == 1) {
             // load SOUTH
-            sub_load(-1,  1);
-            sub_load( 0,  1);
+            tile_load(-1,  1);
+            tile_load( 0,  1);
         }
     } else if (dy == -1) {
         // load NORTH
-        sub_load(-1, -1);
-        sub_load( 0, -1);
-        sub_load( 1, -1);
+        tile_load(-1, -1);
+        tile_load( 0, -1);
+        tile_load( 1, -1);
     } else if (dy == 1) {
         // load SOUTH
-        sub_load(-1,  1);
-        sub_load( 0,  1);
-        sub_load( 1,  1);
+        tile_load(-1,  1);
+        tile_load( 0,  1);
+        tile_load( 1,  1);
     }
 
     const auto& utm = map.point_pix2utm(sw * dx, sh * dy);
     // update map transform used for merging the pointcloud
     map.set_transform(utm[0], utm[1], map.get_scale_x(), map.get_scale_y());
     map_sync = false;
-    tmplog << __func__ << " utm " << utm[0] << ", " << utm[1] << std::endl;
+    std::cout << __func__ << " utm " << utm[0] << ", " << utm[1] << std::endl;
 }
 
 /**
@@ -394,8 +391,8 @@ void atlaas::_fill_internal() {
     assert( map.names == MAP_NAMES );
     width  = map.get_width();  // x
     height = map.get_height(); // y
-    sw = width  / 3; // sub-width
-    sh = height / 3; // sub-height
+    sw = width  / 3; // tile-width
+    sh = height / 3; // tile-height
     // set internal size
     internal.resize( width * height );
     // fill internal from map
