@@ -18,7 +18,7 @@
 #include <vector>
 #include <string>
 #include <sstream> // ostringstream
-#include <sys/stat.h> // stat
+#include <sys/stat.h> // stat, file_exists
 
 #include <gdalwrap/gdal.hpp>
 
@@ -140,7 +140,7 @@ public:
         height = std::ceil(size_y / scale);
         map.set_size(N_RASTER, width, height);
         map.set_transform(custom_x, custom_y, scale, -scale);
-        map.set_utm(utm_zone, utm_zone);
+        map.set_utm(utm_zone, utm_north);
         map.set_custom_origin(custom_x, custom_y, custom_z);
         map.names = MAP_NAMES;
         set_time_base( std::time(NULL) );
@@ -192,10 +192,6 @@ public:
         std::ostringstream oss;
         oss << path << "/atlaas." << x << "x" << y << ".tif";
         return oss.str();
-    }
-
-    void set_rotation(double rotation) {
-        // TODO map.set_rotation(rotation);
     }
 
     void set_time_base(std::time_t base) {
