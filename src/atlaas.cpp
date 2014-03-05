@@ -95,7 +95,7 @@ void atlaas::tile_save(int sx, int sy) const {
         std::copy(it, it + sw, sit);
     }
     tile->update();
-    const auto& utm = map.point_pix2utm( sx * sw, sy * sh);
+    const auto& utm = map.point_pix2utm( (sx + 1) * sw, (sy + 1) * sh);
     // update map transform used for merging the pointcloud
     tile->map.set_transform(utm[0], utm[1], map.get_scale_x(), map.get_scale_y());
     tile->map.save( tilepath(current[0] + sx, current[1] + sy) );
