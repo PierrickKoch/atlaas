@@ -16,8 +16,12 @@ DIRNAME=$PKGNAME-$NEW_VER
 ARCHIVE=$DIRNAME.tar.gz
 
 SHORTLG=$(mktemp)
-echo "Changes since v$OLD_VER:" > $SHORTLG
-echo "" >> $SHORTLG
+cat << EOF > $SHORTLG
+$DIRNAME
+
+Changes since v$OLD_VER:
+
+EOF
 git shortlog v$OLD_VER..HEAD >> $SHORTLG
 
 sed -i.bak -e "s/set(PACKAGE_VERSION \"$OLD_VER\")/set(PACKAGE_VERSION \"$NEW_VER\")/" CMakeLists.txt
@@ -45,7 +49,7 @@ echo "" >> $COMMITM
 cat $SHORTLG >> $COMMITM
 git commit . -F $COMMITM
 
-scp $RPKROOT/distfiles/$ARCHIVE anna.laas.fr:/usr/local/openrobots/distfiles/$PKGNAME/
+scp $RPKROOT/distfiles/$ARCHIVE www.openrobots.org:/var/ftp/pub/openrobots/distfiles/$PKGNAME/
 
 echo "You need to push in '$RPKROOT/$PKGTYPE/$PKGNAME' and '$OLDPWD'"
 echo "... After checking everything is fine :-)"
