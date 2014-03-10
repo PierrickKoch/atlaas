@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 2.8)
 set(PACKAGE_NAME atlaas)
 set(PACKAGE_VERSION "0.1.3")
 
+option(BUILD_TOOLS "Build tools" OFF)
+
 # C++11 for GCC 4.6
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules")
@@ -32,6 +34,10 @@ endif("${isSystemDir}" STREQUAL "-1")
 
 # Library and binary
 add_subdirectory(src)
+
+if (BUILD_TOOLS)
+    add_subdirectory(tools)
+endif(BUILD_TOOLS)
 
 # Install headers
 file(GLOB atlaas_HDRS "include/atlaas/*.hpp")
