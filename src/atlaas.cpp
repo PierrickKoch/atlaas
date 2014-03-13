@@ -76,7 +76,8 @@ void atlaas::tile_load(int sx, int sy) {
         long diff = time_base - tile->time_base;
         std::cout << __func__ << " time_base diff " << diff << std::endl;
         for (auto& cell : tile->internal)
-            cell[TIME] -= diff;
+            if (cell[N_POINTS] > 0)
+                cell[TIME] -= diff;
     }
     auto it  = internal.begin() + sw * (sx + 1) + sh * width * (sy + 1),
          end = it + sh * width;
@@ -338,6 +339,7 @@ void atlaas::merge() {
                 *st = false;
                 *it = gndinter[index];
                 merge(*it, dyninfo);
+                // TODO gndinter[index] = zeros; ???
             }
             (*it)[TIME] = time_ref;
         }

@@ -285,7 +285,7 @@ public:
 };
 
 /**
- * Returns weither the file exists or not on POSIX systems (use <sys/stat.h>)
+ * Returns whether the file exists or not on POSIX systems (use <sys/stat.h>)
  */
 inline bool file_exists(const std::string& name) {
     struct stat buffer;
