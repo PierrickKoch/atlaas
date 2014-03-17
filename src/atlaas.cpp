@@ -328,17 +328,26 @@ void atlaas::merge() {
                 *it = dyninfo;
             } else if ( *st == is_vertical ) {
                 // same state
-                merge(*it, dyninfo);
+                // if the cells are flat and differ more than 10cm, swap
+                if (!is_vertical && (( (*it)[Z_MEAN] - dyninfo[Z_MEAN] ) > 0.1 )) {
+                    gndinter[index] = *it;
+                    *it = dyninfo;
+                    // TODO (*it)[DYNAMIC] += 1.0;
+                } else {
+                    merge(*it, dyninfo);
+                }
             } else if ( is_vertical ) {
                 // was flat, backup the cell in ground swap
                 gndinter[index] = *it;
                 *it = dyninfo;
                 *st = true;
+                // TODO (*it)[DYNAMIC] += 1.0;
             } else {
                 // was vertical, revert ground and merge
                 *st = false;
                 *it = gndinter[index];
                 merge(*it, dyninfo);
+                // TODO (*it)[DYNAMIC] += 1.0;
                 // TODO gndinter[index] = zeros; ???
             }
             (*it)[TIME] = time_ref;
