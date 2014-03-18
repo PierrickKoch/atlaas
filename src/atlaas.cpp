@@ -18,21 +18,6 @@
 namespace atlaas {
 
 /**
- * Apply the transformation matrix to the point cloud (in place)
- */
-void transform(points& cloud, const matrix& tr) {
-    float x,y,z;
-    for (auto& point : cloud) {
-        x = point[0];
-        y = point[1];
-        z = point[2];
-        point[0] = (x * tr[0]) + (y * tr[1]) + (z * tr[2])  + tr[3];
-        point[1] = (x * tr[4]) + (y * tr[5]) + (z * tr[6])  + tr[7];
-        point[2] = (x * tr[8]) + (y * tr[9]) + (z * tr[10]) + tr[11];
-    }
-}
-
-/**
  * Merge point cloud in the internal model
  * with the sensor to world transformation,
  * and slide, save, load tiles.
@@ -76,7 +61,7 @@ void atlaas::tile_load(int sx, int sy) {
         long diff = time_base - tile->time_base;
         std::cout << __func__ << " time_base diff " << diff << std::endl;
         for (auto& cell : tile->internal)
-            if (cell[N_POINTS] > 0)
+            if (cell[N_POINTS] > 0.9)
                 cell[TIME] -= diff;
     }
     auto it  = internal.begin() + sw * (sx + 1) + sh * width * (sy + 1),
