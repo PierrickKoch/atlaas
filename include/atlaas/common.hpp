@@ -21,15 +21,13 @@ namespace atlaas {
 static const std::vector<std::string> MAP_NAMES =
      {"N_POINTS", "Z_MIN", "Z_MAX", "Z_MEAN", "VARIANCE", "TIME"};
 enum { N_POINTS,   Z_MIN,   Z_MAX,   Z_MEAN,   VARIANCE,   TIME,   N_RASTER};
-// internal use only
-enum { N_INTERNAL=N_RASTER}; // enum { OTHER_FIELD=N_RASTER, N_INTERNAL};
 
 typedef std::array<double, 2> point_xy_t;   // XY (for UTM frame)
 typedef std::array<float,  3> point_xyz_t;  // XYZ (custom frame)
 typedef std::array<double, 16> matrix;      // transformation matrix
 typedef std::array<double, 6> pose6d;       // yaw,pitch,roll,x,y,z
 typedef std::vector<point_xyz_t> points;    // PointsXYZ
-typedef std::array<float, N_INTERNAL> cell_info_t;
+typedef std::array<float, N_RASTER> cell_info_t;
 typedef std::vector<cell_info_t> cells_info_t;
 typedef std::vector<bool> vbool_t; // altitude state (vertical or not)
 typedef std::array<int, 2> map_id_t; // tiles location
