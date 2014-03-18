@@ -64,7 +64,7 @@ void atlaas::tile_load(int sx, int sy) {
             if (cell[N_POINTS] > 0.9)
                 cell[TIME] -= diff;
     }
-    auto it  = internal.begin() + sw * (sx + 1) + sh * width * (sy + 1),
+    auto it  = internal.begin() + sw * sx + sh * width * sy,
          end = it + sh * width;
     for (auto sit = tile->internal.begin(); it < end; it += width, sit += sw) {
         // tile to map
@@ -74,14 +74,14 @@ void atlaas::tile_load(int sx, int sy) {
 }
 
 void atlaas::tile_save(int sx, int sy) const {
-    auto it  = internal.begin() + sw * (sx + 1) + sh * width * (sy + 1),
+    auto it  = internal.begin() + sw * sx + sh * width * sy,
          end = it + sh * width;
     for (auto sit = tile->internal.begin(); it < end; it += width, sit += sw) {
         // map to tile
         std::copy(it, it + sw, sit);
     }
     tile->update();
-    const auto& utm = map.point_pix2utm( (sx + 1) * sw, (sy + 1) * sh);
+    const auto& utm = map.point_pix2utm( sx * sw, sy * sh);
     // update map transform used for merging the pointcloud
     tile->map.set_transform(utm[0], utm[1], map.get_scale_x(), map.get_scale_y());
     tile->map.save( tilepath(current[0] + sx, current[1] + sy) );
@@ -111,17 +111,17 @@ void atlaas::slide_to(double robx, double roby) {
 
     if (dx == -1) {
         // save EAST 1/3 maplets [ 1,-1], [ 1, 0], [ 1, 1]
-        tile_save( 1, -1);
-        tile_save( 1,  0);
-        tile_save( 1,  1);
+        tile_save(2, 0);
+        tile_save(2, 1);
+        tile_save(2, 2);
         if (dy == -1) {
             // save SOUTH
-            tile_save(-1,  1);
-            tile_save( 0,  1);
+            tile_save(0, 2);
+            tile_save(1, 2);
         } else if (dy == 1) {
             // save NORTH
-            tile_save(-1, -1);
-            tile_save( 0, -1);
+            tile_save(0, 0);
+            tile_save(1, 0);
         }
         // move the map to the WEST [-1 -> 0; 0 -> 1]
         for (auto it = internal.begin(); it < internal.end(); it += width) {
@@ -131,17 +131,17 @@ void atlaas::slide_to(double robx, double roby) {
         }
     } else if (dx == 1) {
         // save WEST 1/3 maplets [-1,-1], [-1, 0], [-1, 1]
-        tile_save(-1, -1);
-        tile_save(-1,  0);
-        tile_save(-1,  1);
+        tile_save(0, 0);
+        tile_save(0, 1);
+        tile_save(0, 2);
         if (dy == -1) {
             // save SOUTH
-            tile_save( 0,  1);
-            tile_save( 1,  1);
+            tile_save(1, 2);
+            tile_save(2, 2);
         } else if (dy == 1) {
             // save NORTH
-            tile_save( 0, -1);
-            tile_save( 1, -1);
+            tile_save(1, 0);
+            tile_save(2, 0);
         }
         // move the map to the EAST
         for (auto it = internal.begin(); it < internal.end(); it += width) {
@@ -151,14 +151,14 @@ void atlaas::slide_to(double robx, double roby) {
         }
     } else if (dy == -1) {
         // save SOUTH
-        tile_save(-1,  1);
-        tile_save( 0,  1);
-        tile_save( 1,  1);
+        tile_save(0, 2);
+        tile_save(1, 2);
+        tile_save(2, 2);
     } else if (dy == 1) {
         // save NORTH
-        tile_save(-1, -1);
-        tile_save( 0, -1);
-        tile_save( 1, -1);
+        tile_save(0, 0);
+        tile_save(1, 0);
+        tile_save(2, 0);
     }
 
     if (dy == -1) {
@@ -179,42 +179,42 @@ void atlaas::slide_to(double robx, double roby) {
     // load here
     if (dx == -1) {
         // load WEST maplets
-        tile_load(-1, -1);
-        tile_load(-1,  0);
-        tile_load(-1,  1);
+        tile_load(0, 0);
+        tile_load(0, 1);
+        tile_load(0, 2);
         if (dy == -1) {
             // load NORTH
-            tile_load( 0, -1);
-            tile_load( 1, -1);
+            tile_load(1, 0);
+            tile_load(2, 0);
         } else if (dy == 1) {
             // load SOUTH
-            tile_load( 0,  1);
-            tile_load( 1,  1);
+            tile_load(1, 2);
+            tile_load(2, 2);
         }
     } else if (dx == 1) {
         // load EAST maplets
-        tile_load( 1, -1);
-        tile_load( 1,  0);
-        tile_load( 1,  1);
+        tile_load(2, 0);
+        tile_load(2, 1);
+        tile_load(2, 2);
         if (dy == -1) {
             // load NORTH
-            tile_load(-1, -1);
-            tile_load( 0, -1);
+            tile_load(0, 0);
+            tile_load(1, 0);
         } else if (dy == 1) {
             // load SOUTH
-            tile_load(-1,  1);
-            tile_load( 0,  1);
+            tile_load(0, 2);
+            tile_load(1, 2);
         }
     } else if (dy == -1) {
         // load NORTH
-        tile_load(-1, -1);
-        tile_load( 0, -1);
-        tile_load( 1, -1);
+        tile_load(0, 0);
+        tile_load(1, 0);
+        tile_load(2, 0);
     } else if (dy == 1) {
         // load SOUTH
-        tile_load(-1,  1);
-        tile_load( 0,  1);
-        tile_load( 1,  1);
+        tile_load(0, 2);
+        tile_load(1, 2);
+        tile_load(2, 2);
     }
 
     const auto& utm = map.point_pix2utm(sw * dx, sh * dy);

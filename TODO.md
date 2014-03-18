@@ -13,7 +13,6 @@ TODO
 - atlaas.cpp:43  (atlaas::merge) : add I/O for playback (rosbag like)
 - drop atlaas::map use array<gdal>
 - unbounded index_pix modulo to find the tile
-- break tile frame (-1,-1) -> (0,0)
 - use tile(0,0) as georeference utm(x0,y0)
 - don't merge if Sigma1 < Ts && Sigma2 < Ts && Z1 - Z2 > Tz
   aka. 2 flat cells with large alt. diff.

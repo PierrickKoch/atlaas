@@ -126,15 +126,15 @@ public:
         tile = std::move(std::unique_ptr<atlaas>(new atlaas));
         tile->map.copy_meta(map, sw, sh);
         tile->internal.resize(sw * sh);
-        tile_load(-1, -1);
-        tile_load(-1,  0);
-        tile_load(-1,  1);
-        tile_load( 0, -1);
-        tile_load( 0,  0);
-        tile_load( 0,  1);
-        tile_load( 1, -1);
-        tile_load( 1,  0);
-        tile_load( 1,  1);
+        tile_load(0, 0);
+        tile_load(0, 1);
+        tile_load(0, 2);
+        tile_load(1, 0);
+        tile_load(1, 1);
+        tile_load(1, 2);
+        tile_load(2, 0);
+        tile_load(2, 1);
+        tile_load(2, 2);
 #ifdef DYNAMIC_MERGE
         // atlaas used for dynamic merge
         dyninter.resize( width * height );
@@ -224,15 +224,15 @@ public:
     void tile_load(int sx, int sy);
     void tile_save(int sx, int sy) const;
     void save_currents() const {
-        tile_save(-1, -1);
-        tile_save(-1,  0);
-        tile_save(-1,  1);
-        tile_save( 0, -1);
-        tile_save( 0,  0);
-        tile_save( 0,  1);
-        tile_save( 1, -1);
-        tile_save( 1,  0);
-        tile_save( 1,  1);
+        tile_save(0, 0);
+        tile_save(0, 1);
+        tile_save(0, 2);
+        tile_save(1, 0);
+        tile_save(1, 1);
+        tile_save(1, 2);
+        tile_save(2, 0);
+        tile_save(2, 1);
+        tile_save(2, 2);
     }
 
     /**
