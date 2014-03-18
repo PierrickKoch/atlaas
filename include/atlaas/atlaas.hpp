@@ -23,6 +23,9 @@
 
 namespace atlaas {
 
+// init tile-path from the environment variable ATLAAS_PATH
+static const std::string ATLAAS_PATH = getenv("ATLAAS_PATH", ".");
+
 /**
  * atlaas
  */
@@ -70,12 +73,6 @@ class atlaas {
     std::time_t time_base;
 
     /**
-     * path for tiles I/O
-     * from the environment variable ATLAAS_PATH
-     */
-    std::string path;
-
-    /**
      * fill internal from map
      */
     void _fill_internal();
@@ -117,8 +114,6 @@ public:
         map.set_custom_origin(custom_x, custom_y, custom_z);
         map.names = MAP_NAMES;
         set_time_base( std::time(NULL) );
-        // init atlaas-path from the environment variable ATLAAS_PATH
-        path = getenv("ATLAAS_PATH", ".");
         // set internal points info structure size to map (gdal) size
         internal.resize( width * height );
         map_sync = true;
@@ -163,7 +158,7 @@ public:
 
     std::string tilepath(int x, int y) const {
         std::ostringstream oss;
-        oss << path << "/atlaas." << x << "x" << y << ".tif";
+        oss << ATLAAS_PATH << "/atlaas." << x << "x" << y << ".tif";
         return oss.str();
     }
 

@@ -17,8 +17,9 @@ TODO
 - use tile(0,0) as georeference utm(x0,y0)
 - don't merge if Sigma1 < Ts && Sigma2 < Ts && Z1 - Z2 > Tz
   aka. 2 flat cells with large alt. diff.
+- fuse methods tile_save w/ _fill_internal and tile_load w/ update
 
-07-02-2014
+2014-02-07
 ----------
 
 * after benchmark with `valgrind --tool=callgrind atlaas`*
