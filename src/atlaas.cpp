@@ -36,7 +36,6 @@ void atlaas::merge(points& cloud, const matrix& transformation) {
 #else
     // merge the cloud in the internal data
     merge(cloud, internal);
-    map_sync = false;
 #endif
 }
 
@@ -55,36 +54,52 @@ void atlaas::tile_load(int sx, int sy) {
     std::string filepath = tilepath(current[0] + sx, current[1] + sy);
     if ( ! file_exists( filepath ) )
         return; // no file to load
-    tile->init(filepath);
+    tile.load(filepath);
+    assert( tile.bands.size() == MAP_NAMES.size() );
+    assert( tile.bands[0].size() == sw * sh );
     // update each cell time if bases differ
-    if (time_base != tile->time_base) {
-        long diff = time_base - tile->time_base;
-        std::cout << __func__ << " time_base diff " << diff << std::endl;
-        for (auto& cell : tile->internal)
-            if (cell[N_POINTS] > 0.9)
-                cell[TIME] -= diff;
-    }
-    auto it  = internal.begin() + sw * sx + sh * width * sy,
-         end = it + sh * width;
-    for (auto sit = tile->internal.begin(); it < end; it += width, sit += sw) {
+    long diff = time_base - std::stol(tile.get_meta("TIME", "0"));
+    size_t idx = 0, eoi = 0;
+    for (auto it  = internal.begin() + sw * sx + sh * width * sy,
+         end = it + sh * width; it < end; it += width - sw)
+    for (eoi += sw; idx < eoi; idx++) {
         // tile to map
-        std::copy(sit, sit + sw, it);
+        (*it)[N_POINTS] = tile.bands[N_POINTS][idx];
+        (*it)[Z_MAX]    = tile.bands[Z_MAX][idx];
+        (*it)[Z_MIN]    = tile.bands[Z_MIN][idx];
+        (*it)[Z_MEAN]   = tile.bands[Z_MEAN][idx];
+        (*it)[VARIANCE] = tile.bands[VARIANCE][idx];
+        if ( (*it)[N_POINTS] > 0.9 )
+            (*it)[TIME] = tile.bands[TIME][idx] - diff;
+        else
+            (*it)[TIME] = 0;
+        it++;
     }
-    map_sync = false;
 }
 
 void atlaas::tile_save(int sx, int sy) const {
-    auto it  = internal.begin() + sw * sx + sh * width * sy,
-         end = it + sh * width;
-    for (auto sit = tile->internal.begin(); it < end; it += width, sit += sw) {
+    // re-init the IO cache in case a load corrupted its meta-data
+    // reset meta-data (important for TIME)
+    tile.copy_meta_only(meta);
+    tile.names = MAP_NAMES;
+    tile.set_size(N_RASTER, sw, sh);
+    size_t idx = 0, eoi = 0;
+    for (auto it  = internal.begin() + sw * sx + sh * width * sy,
+         end = it + sh * width; it < end; it += width - sw)
+    for (eoi += sw; idx < eoi; idx++) {
         // map to tile
-        std::copy(it, it + sw, sit);
+        tile.bands[N_POINTS][idx] = (*it)[N_POINTS];
+        tile.bands[Z_MAX][idx]    = (*it)[Z_MAX];
+        tile.bands[Z_MIN][idx]    = (*it)[Z_MIN];
+        tile.bands[Z_MEAN][idx]   = (*it)[Z_MEAN];
+        tile.bands[VARIANCE][idx] = (*it)[VARIANCE];
+        tile.bands[TIME][idx]     = (*it)[TIME];
+        it++;
     }
-    tile->update();
-    const auto& utm = map.point_pix2utm( sx * sw, sy * sh);
+    const auto& utm = meta.point_pix2utm( sx * sw, sy * sh);
     // update map transform used for merging the pointcloud
-    tile->map.set_transform(utm[0], utm[1], map.get_scale_x(), map.get_scale_y());
-    tile->map.save( tilepath(current[0] + sx, current[1] + sy) );
+    tile.set_transform(utm[0], utm[1], meta.get_scale_x(), meta.get_scale_y());
+    tile.save( tilepath(current[0] + sx, current[1] + sy) );
 }
 
 /**
@@ -94,7 +109,7 @@ void atlaas::tile_save(int sx, int sy) const {
  * @param roby:  robot y pose in the custom frame
  */
 void atlaas::slide_to(double robx, double roby) {
-    const point_xy_t& pixr = map.point_custom2pix(robx, roby);
+    const point_xy_t& pixr = meta.point_custom2pix(robx, roby);
     float cx = pixr[0] / width;
     float cy = pixr[1] / height;
     // check, slide, save, load
@@ -217,10 +232,9 @@ void atlaas::slide_to(double robx, double roby) {
         tile_load(2, 2);
     }
 
-    const auto& utm = map.point_pix2utm(sw * dx, sh * dy);
+    const auto& utm = meta.point_pix2utm(sw * dx, sh * dy);
     // update map transform used for merging the pointcloud
-    map.set_transform(utm[0], utm[1], map.get_scale_x(), map.get_scale_y());
-    map_sync = false;
+    meta.set_transform(utm[0], utm[1], meta.get_scale_x(), meta.get_scale_y());
     std::cout << __func__ << " utm " << utm[0] << ", " << utm[1] << std::endl;
 }
 
@@ -234,7 +248,7 @@ void atlaas::merge(const points& cloud, cells_info_t& inter) {
     float z_mean, n_pts, new_z;
     // merge point-cloud in internal structure
     for (const auto& point : cloud) {
-        index = map.index_custom(point[0], point[1]);
+        index = meta.index_custom(point[0], point[1]);
         if (index >= inter.size() )
             continue; // point is outside the map
 
@@ -266,7 +280,6 @@ void atlaas::merge(const points& cloud, cells_info_t& inter) {
             info[VARIANCE] += (new_z - z_mean) * (new_z - info[Z_MEAN]);
         }
     }
-    map_sync = false;
 }
 
 /**
@@ -342,7 +355,6 @@ void atlaas::merge() {
         it++;
         index++;
     }
-    map_sync = false;
 }
 
 void atlaas::merge(cell_info_t& dst, const cell_info_t& src) {
@@ -367,43 +379,6 @@ void atlaas::merge(cell_info_t& dst, const cell_info_t& src) {
                     + dst[VARIANCE] * (dst[N_POINTS] - 1)
                     ) / (new_n_pts - 1);
     dst[N_POINTS] = new_n_pts;
-}
-
-void atlaas::update() {
-    // update map from internal
-    // internal -> map
-    for (size_t idx = 0; idx < internal.size(); idx++) {
-        map.bands[N_POINTS][idx]    = internal[idx][N_POINTS];
-        map.bands[Z_MAX][idx]       = internal[idx][Z_MAX];
-        map.bands[Z_MIN][idx]       = internal[idx][Z_MIN];
-        map.bands[Z_MEAN][idx]      = internal[idx][Z_MEAN];
-        map.bands[VARIANCE][idx]    = internal[idx][VARIANCE];
-        map.bands[TIME][idx]        = internal[idx][TIME];
-    }
-    map_sync = true;
-}
-
-void atlaas::_fill_internal() {
-    assert( map.names == MAP_NAMES );
-    width  = map.get_width();  // x
-    height = map.get_height(); // y
-    sw = width  / 3; // tile-width
-    sh = height / 3; // tile-height
-    // set internal size
-    internal.resize( width * height );
-    // fill internal from map
-    // map -> internal
-    for (size_t idx = 0; idx < internal.size(); idx++) {
-        internal[idx][N_POINTS]     = map.bands[N_POINTS][idx];
-        internal[idx][Z_MAX]        = map.bands[Z_MAX][idx];
-        internal[idx][Z_MIN]        = map.bands[Z_MIN][idx];
-        internal[idx][Z_MEAN]       = map.bands[Z_MEAN][idx];
-        internal[idx][VARIANCE]     = map.bands[VARIANCE][idx];
-        internal[idx][TIME]         = map.bands[TIME][idx];
-    }
-    // WARN std::stol might throw std::invalid_argument
-    time_base = std::stol(map.get_meta("TIME", "0"));
-    map_sync = true;
 }
 
 } // namespace atlaas

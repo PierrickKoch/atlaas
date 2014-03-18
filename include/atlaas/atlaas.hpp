@@ -26,6 +26,12 @@ namespace atlaas {
 // init tile-path from the environment variable ATLAAS_PATH
 static const std::string ATLAAS_PATH = getenv("ATLAAS_PATH", ".");
 
+inline std::string tilepath(int x, int y) {
+    std::ostringstream oss;
+    oss << ATLAAS_PATH << "/atlaas." << x << "x" << y << ".tif";
+    return oss.str();
+}
+
 /**
  * atlaas
  */
@@ -33,7 +39,8 @@ class atlaas {
     /**
      * I/O data model
      */
-    gdalwrap::gdal map;
+    gdalwrap::gdal meta;
+    mutable gdalwrap::gdal tile;
 
     /**
      * internal data model
@@ -51,11 +58,6 @@ class atlaas {
     map_id_t current;
 
     /**
-     * need update I/O ?
-     */
-    bool map_sync;
-
-    /**
      * {x,y} map size
      */
     size_t width;
@@ -66,17 +68,11 @@ class atlaas {
      */
     int sw; // tile-width
     int sh; // tile-height
-    std::unique_ptr<atlaas> tile;
 
     /**
      * time base
      */
     std::time_t time_base;
-
-    /**
-     * fill internal from map
-     */
-    void _fill_internal();
 
     /**
      * Seconds since the base time.
@@ -109,24 +105,24 @@ public:
               int utm_zone, bool utm_north = true) {
         width  = std::ceil(size_x / scale);
         height = std::ceil(size_y / scale);
-        map.set_size(N_RASTER, width, height);
-        map.set_transform(custom_x, custom_y, scale, -scale);
-        map.set_utm(utm_zone, utm_north);
-        map.set_custom_origin(custom_x, custom_y, custom_z);
-        map.names = MAP_NAMES;
+        meta.set_size(width, height); // does not change the container
+        meta.set_transform(custom_x, custom_y, scale, -scale);
+        meta.set_utm(utm_zone, utm_north);
+        meta.set_custom_origin(custom_x, custom_y, custom_z);
         set_time_base( std::time(NULL) );
         // set internal points info structure size to map (gdal) size
         internal.resize( width * height );
-        map_sync = true;
         current = {{0,0}};
-        // load maplets if any
+        // load tiles if any
         // works if we init with the same parameters,
         // even if the robot is at a different pose.
         sw = width  / 3; // tile-width
         sh = height / 3; // tile-height
-        tile = std::move(std::unique_ptr<atlaas>(new atlaas));
-        tile->map.copy_meta(map, sw, sh);
-        tile->internal.resize(sw * sh);
+
+        tile.copy_meta_only(meta);
+        tile.names = MAP_NAMES;
+        tile.set_size(N_RASTER, sw, sh);
+
         tile_load(0, 0);
         tile_load(0, 1);
         tile_load(0, 2);
@@ -145,27 +141,9 @@ public:
 #endif
     }
 
-    /**
-     * init from an exisiting map
-     */
-    void init(std::string filepath) {
-        map.load(filepath);
-        _fill_internal();
-    }
-    void init(const gdalwrap::gdal& gmap) {
-        map = gmap; // copy (!)
-        _fill_internal();
-    }
-
-    std::string tilepath(int x, int y) const {
-        std::ostringstream oss;
-        oss << ATLAAS_PATH << "/atlaas." << x << "x" << y << ".tif";
-        return oss.str();
-    }
-
     void set_time_base(std::time_t base) {
         time_base = base;
-        map.metadata["TIME"] = std::to_string(time_base);
+        meta.metadata["TIME"] = std::to_string(time_base);
     }
 
     void set_variance_factor(float factor) {
@@ -173,19 +151,10 @@ public:
     }
 
     /**
-     * get a const ref on the map after updating its values
-     */
-    const gdalwrap::gdal& get() {
-        if (not map_sync)
-            update(); // on-demand update
-        return map;
-    }
-
-    /**
      * get a const ref on the map without updating its values
      */
-    const gdalwrap::gdal& get_unsynced_map() const {
-        return map;
+    const gdalwrap::gdal& get_meta() const {
+        return meta;
     }
 
     /**
@@ -195,18 +164,6 @@ public:
     const cells_info_t& get_internal() const {
         return internal;
     }
-
-    /**
-     * Save Z_MEAN as a grayscale image (for display)
-     */
-    void export8u(const std::string& filepath) {
-        get().export8u(filepath, Z_MEAN);
-    }
-
-    /**
-     * update internal -> map
-     */
-    void update();
 
     /**
      * merge point-cloud in internal structure
