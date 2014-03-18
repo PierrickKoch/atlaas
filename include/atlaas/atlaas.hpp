@@ -45,7 +45,8 @@ class atlaas {
     float        variance_factor;
 
     /**
-     * current location in the tiles frame
+     * position of the current most North-West tile (0, 0)
+     * in the global tile frame
      */
     map_id_t current;
 
