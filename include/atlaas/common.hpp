@@ -134,6 +134,10 @@ inline point_xyz_t matrix_to_point(const matrix& mat) {
 
 /**
  * Apply the transformation matrix to the point cloud (in place)
+ *
+ * with a 6 digits floating-point precision, at a decimeter resolution,
+ * it is safe to use this method up to 99 km from the origin.
+ * ( cf. std::numeric_limits<float>::digits10 )
  */
 inline void transform(points& cloud, const matrix& tr) {
     float x,y,z;
@@ -147,7 +151,8 @@ inline void transform(points& cloud, const matrix& tr) {
     }
 }
 
-/** Euclidian distance (squared)
+/**
+ * Euclidian distance (squared)
  *
  * usefull to compare a set of points (faster)
  */
@@ -157,7 +162,10 @@ inline float distance_sq(const point_xyz_t& pA, const point_xyz_t& pB) {
     float z = pA[2] - pB[2];
     return x*x + y*y + z*z;
 }
-/** Euclidian distance */
+
+/**
+ * Euclidian distance
+ */
 template <class Point>
 inline float distance(const Point& pA, const Point& pB) {
     return std::sqrt(distance_sq(pA, pB));
