@@ -24,8 +24,9 @@ namespace atlaas {
 void atlaas::merge(points& cloud, const matrix& transformation) {
     // transform the cloud from sensor to custom frame
     transform(cloud, transformation);
-    // slide map while needed. transformation[{3,7}] = {x,y}
-    while ( slide(transformation[3], transformation[7]) );
+    sensor_xyz = matrix_to_point(transformation);
+    // slide map while needed
+    while ( slide() );
     // use dynamic merge
     dynamic(cloud);
 }
@@ -60,6 +61,7 @@ void atlaas::tile_load(int sx, int sy) {
         (*it)[Z_MEAN]   = tile.bands[Z_MEAN][idx];
         (*it)[VARIANCE] = tile.bands[VARIANCE][idx];
         (*it)[TIME]     = tile.bands[TIME][idx];
+        (*it)[DIST_SQ]  = tile.bands[DIST_SQ][idx];
         if ( diff and (*it)[N_POINTS] > 0.9 )
             (*it)[TIME] -= diff;
         it++;
@@ -83,6 +85,7 @@ void atlaas::tile_save(int sx, int sy) const {
         tile.bands[Z_MEAN][idx]   = (*it)[Z_MEAN];
         tile.bands[VARIANCE][idx] = (*it)[VARIANCE];
         tile.bands[TIME][idx]     = (*it)[TIME];
+        tile.bands[DIST_SQ][idx]  = (*it)[DIST_SQ];
         it++;
     }
     const auto& utm = meta.point_pix2utm( sx * sw, sy * sh);
@@ -115,6 +118,7 @@ void atlaas::merge(const points& cloud, cells_info_t& inter) {
             info[Z_MIN]  = new_z;
             info[Z_MEAN] = new_z;
             info[VARIANCE] = 0;
+            info[DIST_SQ] = distance_sq(sensor_xyz, point);
         } else {
             z_mean = info[Z_MEAN];
             // increment N_POINTS

@@ -12,6 +12,7 @@
 
 #include <array> // C++11
 #include <cstdlib> // std::getenv
+#include <cmath> // std::sqrt
 #include <vector>
 #include <string>
 #include <sys/stat.h> // stat, file_exists
@@ -19,8 +20,8 @@
 namespace atlaas {
 
 static const std::vector<std::string> MAP_NAMES =
-     {"N_POINTS", "Z_MIN", "Z_MAX", "Z_MEAN", "VARIANCE", "TIME"};
-enum { N_POINTS,   Z_MIN,   Z_MAX,   Z_MEAN,   VARIANCE,   TIME,   N_RASTER};
+     {"N_POINTS", "Z_MIN", "Z_MAX", "Z_MEAN", "VARIANCE", "TIME", "DIST_SQ"};
+enum { N_POINTS,   Z_MIN,   Z_MAX,   Z_MEAN,   VARIANCE,   TIME,   DIST_SQ,   N_RASTER};
 
 typedef std::array<double, 2> point_xy_t;   // XY (for UTM frame)
 typedef std::array<float,  3> point_xyz_t;  // XYZ (custom frame)
@@ -123,6 +124,15 @@ inline pose6d matrix_to_pose6d(const matrix& mat) {
 }
 
 /**
+ * Matrix[16] -> Pose3d(x,y,z)
+ */
+inline point_xyz_t matrix_to_point(const matrix& mat) {
+    return {{ static_cast<float>(mat[3]),
+              static_cast<float>(mat[7]),
+              static_cast<float>(mat[11]) }};
+}
+
+/**
  * Apply the transformation matrix to the point cloud (in place)
  */
 inline void transform(points& cloud, const matrix& tr) {
@@ -135,6 +145,22 @@ inline void transform(points& cloud, const matrix& tr) {
         point[1] = (x * tr[4]) + (y * tr[5]) + (z * tr[6])  + tr[7];
         point[2] = (x * tr[8]) + (y * tr[9]) + (z * tr[10]) + tr[11];
     }
+}
+
+/** Euclidian distance (squared)
+ *
+ * usefull to compare a set of points (faster)
+ */
+inline float distance_sq(const point_xyz_t& pA, const point_xyz_t& pB) {
+    float x = pA[0] - pB[0];
+    float y = pA[1] - pB[1];
+    float z = pA[2] - pB[2];
+    return x*x + y*y + z*z;
+}
+/** Euclidian distance */
+template <class Point>
+inline float distance(const Point& pA, const Point& pB) {
+    return std::sqrt(distance_sq(pA, pB));
 }
 
 } // namespace atlaas

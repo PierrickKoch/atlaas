@@ -48,6 +48,7 @@ class atlaas {
     cells_info_t dyninter; // to merge point cloud
     vbool_t      vertical; // altitude state (vertical or not)
     float        variance_factor;
+    point_xyz_t  sensor_xyz;
 
     /**
      * position of the current most North-West tile (0, 0)
@@ -175,7 +176,8 @@ public:
     /**
      * slide, save, load tiles
      */
-    bool slide(double robx, double roby);
+    bool slide();
+
     void tile_load(int sx, int sy);
     void tile_save(int sx, int sy) const;
     void save_currents() const {

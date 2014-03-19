@@ -17,13 +17,11 @@ namespace atlaas {
 /**
  * Slide, save, load tiles
  *
- * @param robx:  robot x pose in the custom frame
- * @param roby:  robot y pose in the custom frame
  * @returns whether we did slide or not,
  *          useful to check if we need multiple slide at init
  */
-bool atlaas::slide(double robx, double roby) {
-    const point_xy_t& pixr = meta.point_custom2pix(robx, roby);
+bool atlaas::slide() {
+    const point_xy_t& pixr = meta.point_custom2pix(sensor_xyz[0], sensor_xyz[1]);
     float cx = pixr[0] / width;
     float cy = pixr[1] / height;
     // check, slide, save, load
