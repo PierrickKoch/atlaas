@@ -59,10 +59,9 @@ void atlaas::tile_load(int sx, int sy) {
         (*it)[Z_MIN]    = tile.bands[Z_MIN][idx];
         (*it)[Z_MEAN]   = tile.bands[Z_MEAN][idx];
         (*it)[VARIANCE] = tile.bands[VARIANCE][idx];
-        if ( (*it)[N_POINTS] > 0.9 )
-            (*it)[TIME] = tile.bands[TIME][idx] - diff;
-        else
-            (*it)[TIME] = 0;
+        (*it)[TIME]     = tile.bands[TIME][idx];
+        if ( diff and (*it)[N_POINTS] > 0.9 )
+            (*it)[TIME] -= diff;
         it++;
     }
 }
