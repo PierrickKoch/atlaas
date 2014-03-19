@@ -19,8 +19,6 @@
 #include <atlaas/common.hpp>
 
 
-#define DYNAMIC_MERGE
-
 namespace atlaas {
 
 // init tile-path from the environment variable ATLAAS_PATH
@@ -132,13 +130,12 @@ public:
         tile_load(2, 0);
         tile_load(2, 1);
         tile_load(2, 2);
-#ifdef DYNAMIC_MERGE
+
         // atlaas used for dynamic merge
         dyninter.resize( width * height );
         vertical.resize( width * height );
         gndinter.resize( width * height );
         variance_factor = 3.0;
-#endif
     }
 
     void set_time_base(std::time_t base) {
@@ -207,7 +204,7 @@ public:
      * merge existing dtm for dynamic merge
      */
     void merge();
-    void merge(cell_info_t& dst, const cell_info_t& src);
+    void merge(cell_info_t& dst, const cell_info_t& src) const;
 };
 
 } // namespace atlaas
