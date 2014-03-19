@@ -21,15 +21,6 @@
 
 namespace atlaas {
 
-// init tile-path from the environment variable ATLAAS_PATH
-static const std::string ATLAAS_PATH = getenv("ATLAAS_PATH", ".");
-
-inline std::string tilepath(int x, int y) {
-    std::ostringstream oss;
-    oss << ATLAAS_PATH << "/atlaas." << x << "x" << y << ".tif";
-    return oss.str();
-}
-
 /**
  * atlaas
  */
@@ -214,6 +205,12 @@ public:
             [](const cell_info_t& cell) -> float { return cell[Z_MEAN]; });
         heightmap.export8u(filepath, 0);
     }
+
+    /*
+     * Load a cloud and a transformation from file for replay.
+     * could be done at the middleware level...
+     */
+    void merge(const std::string& filepath);
 };
 
 } // namespace atlaas

@@ -44,6 +44,15 @@ inline std::string getenv(const std::string& name, const std::string& def) {
     return value ? value : def;
 }
 
+// init tile-path from the environment variable ATLAAS_PATH
+static const std::string ATLAAS_PATH = getenv("ATLAAS_PATH", ".");
+
+inline std::string tilepath(int x, int y) {
+    std::ostringstream oss;
+    oss << ATLAAS_PATH << "/atlaas." << x << "x" << y << ".tif";
+    return oss.str();
+}
+
 /**
  * Returns whether the file exists or not on POSIX systems (use <sys/stat.h>)
  */

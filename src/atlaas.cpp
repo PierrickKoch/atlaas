@@ -10,6 +10,7 @@
 #include <cassert>
 
 #include <atlaas/atlaas.hpp>
+#include <atlaas/io.hpp>
 
 namespace atlaas {
 
@@ -29,6 +30,13 @@ void atlaas::merge(points& cloud, const matrix& transformation) {
     while ( slide() );
     // use dynamic merge
     dynamic(cloud);
+}
+
+void atlaas::merge(const std::string& filepath) {
+    points cloud;
+    matrix transformation;
+    load(filepath, cloud, transformation);
+    merge(cloud, transformation);
 }
 
 void atlaas::dynamic(const points& cloud) {
