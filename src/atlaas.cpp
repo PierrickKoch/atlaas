@@ -98,6 +98,7 @@ void atlaas::tile_save(int sx, int sy) const {
  * Merge a point cloud in the internal model
  *
  * @param cloud: point cloud in the custom frame
+ * @param inter: an internal container of cells
  */
 void atlaas::merge(const points& cloud, cells_info_t& inter) {
     size_t index;
