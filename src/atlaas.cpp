@@ -29,7 +29,7 @@ void atlaas::merge(points& cloud, const matrix& transformation) {
     // transform the cloud from sensor to custom frame
     transform(cloud, transformation);
     // slide map if needed. transformation[{3,7}] = {x,y}
-    slide_to(transformation[3], transformation[7]);
+    while ( slide(transformation[3], transformation[7]) );
 #ifdef DYNAMIC_MERGE
     // use dynamic merge
     dynamic(cloud);
@@ -107,15 +107,17 @@ void atlaas::tile_save(int sx, int sy) const {
  *
  * @param robx:  robot x pose in the custom frame
  * @param roby:  robot y pose in the custom frame
+ * @returns whether we did slide or not,
+ *          useful to check if we need multiple slide at init
  */
-void atlaas::slide_to(double robx, double roby) {
+bool atlaas::slide(double robx, double roby) {
     const point_xy_t& pixr = meta.point_custom2pix(robx, roby);
     float cx = pixr[0] / width;
     float cy = pixr[1] / height;
     // check, slide, save, load
     if ( ( cx > 0.25 ) && ( cx < 0.75 ) &&
          ( cy > 0.25 ) && ( cy < 0.75 ) )
-        return; // robot is in "center" square
+        return false; // robot is in "center" square
 
     int dx = (cx < 0.33) ? -1 : (cx > 0.66) ? 1 : 0; // W/E
     int dy = (cy < 0.33) ? -1 : (cy > 0.66) ? 1 : 0; // N/S
@@ -236,6 +238,8 @@ void atlaas::slide_to(double robx, double roby) {
     // update map transform used for merging the pointcloud
     meta.set_transform(utm[0], utm[1], meta.get_scale_x(), meta.get_scale_y());
     std::cout << __func__ << " utm " << utm[0] << ", " << utm[1] << std::endl;
+
+    return true;
 }
 
 /**

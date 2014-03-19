@@ -178,7 +178,7 @@ public:
     /**
      * slide, save, load tiles
      */
-    void slide_to(double robx, double roby);
+    bool slide(double robx, double roby);
     void tile_load(int sx, int sy);
     void tile_save(int sx, int sy) const;
     void save_currents() const {
