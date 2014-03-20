@@ -166,7 +166,7 @@ public:
     /**
      * merge point-cloud in internal structure
      */
-    void merge(const points& cloud, cells_info_t& infos);
+    void rasterize(const points& cloud, cells_info_t& infos) const;
 
     /**
      * transform, merge, slide, save, load tiles

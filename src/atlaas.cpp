@@ -36,7 +36,7 @@ void atlaas::dynamic(const points& cloud) {
     cell_info_t zeros{}; // value-initialization w/empty initializer
     std::fill(dyninter.begin(), dyninter.end(), zeros);
     // merge the point-cloud
-    merge(cloud, dyninter);
+    rasterize(cloud, dyninter);
     // merge the dynamic atlaas with internal data
     merge();
 }
@@ -100,7 +100,7 @@ void atlaas::tile_save(int sx, int sy) const {
  * @param cloud: point cloud in the custom frame
  * @param inter: an internal container of cells
  */
-void atlaas::merge(const points& cloud, cells_info_t& inter) {
+void atlaas::rasterize(const points& cloud, cells_info_t& inter) const {
     size_t index;
     float z_mean, n_pts, new_z;
     // merge point-cloud in internal structure
