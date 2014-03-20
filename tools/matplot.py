@@ -3,67 +3,70 @@
 
 # <codecell>
 
-
 filename = 'out.tif'
 
 import gdal
 # run `ipython notebook --pylab inline`
 import matplotlib.pyplot as plt
-names = {v:k for k,v in enumerate(["N_POINTS", "Z_MIN", "Z_MAX", "Z_MEAN", "VARIANCE", "TIME"])}
+names = {v:k for k,v in enumerate(["N_POINTS", "Z_MIN", "Z_MAX", "Z_MEAN", "VARIANCE", "TIME", "DIST_SQ"])}
 geotiff = gdal.Open( filename )
 bands   = geotiff.ReadAsArray()
 
-# <codecell>
+def show_hist(name, fsize=(10, 10)):
+    band = bands[names[name]]
+    plt.subplots(figsize = fsize)
+    plt.semilogy()
+    plt.hist( band.flatten(), 256 )
+    plt.show()
 
-band = bands[names['N_POINTS']]
-plt.subplots(figsize=(10, 10))
-plt.semilogy()
-plt.hist( band.flatten(), 256 )
-plt.show()
-
-# <codecell>
-
-band = bands[names['N_POINTS']]
-plt.subplots(figsize=(14, 14))
-imgplot = plt.imshow( band )
-imgplot.set_clim(0, 500)
-plt.colorbar()
-plt.show()
-
-# <codecell>
-
-band = bands[names['VARIANCE']]
-plt.subplots(figsize=(10, 10))
-plt.semilogy()
-plt.hist( band.flatten(), 256 )
-plt.show()
+def show_band(name, cmin=0, cmax=1, cmap='spectral', fsize=(14, 14)):
+    band = bands[names[name]]
+    plt.subplots(figsize = fsize)
+    imgplot = plt.imshow( band )
+    imgplot.set_clim(cmin, cmax)
+    imgplot.set_cmap(cmap)
+    plt.colorbar()
+    plt.show()
 
 # <codecell>
 
-band = bands[names['VARIANCE']]
-plt.subplots(figsize=(14, 14))
-imgplot = plt.imshow( band )
-imgplot.set_clim(0, 0.2)
-imgplot.set_cmap('spectral')
-plt.colorbar()
-plt.show()
+show_hist('N_POINTS')
 
 # <codecell>
 
-band = bands[names['Z_MEAN']]
-plt.subplots(figsize=(10, 10))
-plt.semilogy()
-plt.hist( band.flatten(), 256 )
-plt.show()
+show_band('N_POINTS', 0, 100)
 
 # <codecell>
 
-band = bands[names['Z_MEAN']]
-plt.subplots(figsize=(14, 14))
-imgplot = plt.imshow( band )
-imgplot.set_clim(-0.5, 4.0)
-plt.colorbar()
-plt.show()
+show_hist('VARIANCE')
+
+# <codecell>
+
+show_band('VARIANCE', 0, 0.2)
+
+# <codecell>
+
+show_hist('Z_MEAN')
+
+# <codecell>
+
+show_band('Z_MEAN', 0, 10.0)
+
+# <codecell>
+
+show_hist('TIME')
+
+# <codecell>
+
+show_band('TIME', 0, 200)
+
+# <codecell>
+
+show_hist('DIST_SQ')
+
+# <codecell>
+
+show_band('DIST_SQ', 0, 550)
 
 # <markdowncell>
 
