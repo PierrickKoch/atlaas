@@ -48,7 +48,7 @@ class atlaas {
     cells_info_t dyninter; // to merge point cloud
     vbool_t      vertical; // altitude state (vertical or not)
     float        variance_factor;
-    point_xyz_t  sensor_xyz;
+    point_xy_t   sensor_xy;
 
     /**
      * position of the current most North-West tile (0, 0)

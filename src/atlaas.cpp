@@ -24,7 +24,7 @@ namespace atlaas {
 void atlaas::merge(points& cloud, const matrix& transformation) {
     // transform the cloud from sensor to custom frame
     transform(cloud, transformation);
-    sensor_xyz = matrix_to_point(transformation);
+    sensor_xy = matrix_to_point(transformation);
     // slide map while needed
     while ( slide() );
     // use dynamic merge
@@ -119,7 +119,7 @@ void atlaas::rasterize(const points& cloud, cells_info_t& inter) const {
             info[Z_MIN]  = new_z;
             info[Z_MEAN] = new_z;
             info[VARIANCE] = 0;
-            info[DIST_SQ] = distance_sq(sensor_xyz, point);
+            info[DIST_SQ] = distance_sq(sensor_xy, {{point[0], point[1]}});
         } else {
             z_mean = info[Z_MEAN];
             // increment N_POINTS

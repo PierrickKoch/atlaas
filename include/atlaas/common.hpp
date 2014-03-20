@@ -24,10 +24,10 @@ static const std::vector<std::string> MAP_NAMES =
 enum { N_POINTS,   Z_MIN,   Z_MAX,   Z_MEAN,   VARIANCE,   TIME,   DIST_SQ,   N_RASTER};
 
 typedef std::array<double, 2> point_xy_t;   // XY (for UTM frame)
-typedef std::array<float,  3> point_xyz_t;  // XYZ (custom frame)
+typedef std::array<float,  4> point_xyzi_t; // XYZI (custom frame)
 typedef std::array<double, 16> matrix;      // transformation matrix
 typedef std::array<double, 6> pose6d;       // yaw,pitch,roll,x,y,z
-typedef std::vector<point_xyz_t> points;    // PointsXYZ
+typedef std::vector<point_xyzi_t> points;   // PointsXYZI
 typedef std::array<float, N_RASTER> cell_info_t;
 typedef std::vector<cell_info_t> cells_info_t;
 typedef std::vector<bool> vbool_t; // altitude state (vertical or not)
@@ -124,12 +124,10 @@ inline pose6d matrix_to_pose6d(const matrix& mat) {
 }
 
 /**
- * Matrix[16] -> Pose3d(x,y,z)
+ * Matrix[16] -> Pose2d(x,y)
  */
-inline point_xyz_t matrix_to_point(const matrix& mat) {
-    return {{ static_cast<float>(mat[3]),
-              static_cast<float>(mat[7]),
-              static_cast<float>(mat[11]) }};
+inline point_xy_t matrix_to_point(const matrix& mat) {
+    return {{ mat[3], mat[7] }};
 }
 
 /**
@@ -156,11 +154,10 @@ inline void transform(points& cloud, const matrix& tr) {
  *
  * usefull to compare a set of points (faster)
  */
-inline float distance_sq(const point_xyz_t& pA, const point_xyz_t& pB) {
-    float x = pA[0] - pB[0];
-    float y = pA[1] - pB[1];
-    float z = pA[2] - pB[2];
-    return x*x + y*y + z*z;
+inline double distance_sq(const point_xy_t& pA, const point_xy_t& pB) {
+    double x = pA[0] - pB[0];
+    double y = pA[1] - pB[1];
+    return x*x + y*y;
 }
 
 /**
