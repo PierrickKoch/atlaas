@@ -207,6 +207,20 @@ public:
      */
     void merge();
     void merge(cell_info_t& dst, const cell_info_t& src) const;
+
+    /**
+     * Save Z_MEAN as a normalized grayscale image in filepath
+     */
+    void export8u(const std::string& filepath) const {
+        gdalwrap::gdal heightmap;
+        heightmap.copy_meta_only(meta);
+        heightmap.names = {"Z_MEAN"};
+        heightmap.set_size(1, width, height);
+        std::transform(internal.begin(), internal.end(),
+            heightmap.bands[0].begin(),
+            [](const cell_info_t& cell) -> float { return cell[Z_MEAN]; });
+        heightmap.export8u(filepath, 0);
+    }
 };
 
 } // namespace atlaas

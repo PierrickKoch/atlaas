@@ -11,6 +11,7 @@ TODO
 - atlaas.cpp:311 (atlaas::merge) : add field number of swap to classify
   if a cell is stable or not and it first seen / first swap time
 - atlaas.cpp:43  (atlaas::merge) : add I/O for playback (rosbag like)
+- add thread + deque for slide:tile_save, std::copy in main, gdal::save in T
 
 2014-02-07
 ----------
