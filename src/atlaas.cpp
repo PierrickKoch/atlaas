@@ -141,44 +141,25 @@ void atlaas::rasterize(const points& cloud, cells_info_t& inter) const {
 }
 
 /**
- * Compute real variance and return the mean
- */
-float atlaas::variance_mean(cells_info_t& inter) {
-    size_t variance_count = 0;
-    float  variance_total = 0;
-
-    for (auto& info : inter) {
-        if (info[N_POINTS] > 2) {
-            /* compute the real variance (according to Knuth's bible) */
-            info[VARIANCE] /= info[N_POINTS] - 1;
-            variance_total += info[VARIANCE];
-            variance_count++;
-        }
-    }
-
-    if (variance_count == 0)
-        return 0;
-
-    return variance_total / variance_count;
-}
-
-/**
  * Merge dynamic dtm
  */
 void atlaas::merge() {
     bool is_vertical;
     size_t index = 0;
-    float threshold = variance_factor * variance_mean(dyninter);
     float time_ref = get_reference_time();
     auto it = internal.begin();
     auto st = vertical.begin();
 
     for (auto& dyninfo : dyninter) {
         if ( dyninfo[N_POINTS] > 0 ) {
+            /* compute the real variance (according to Knuth's bible) */
+            if (dyninfo[N_POINTS] > 2)
+                dyninfo[VARIANCE] /= dyninfo[N_POINTS] - 1;
 
-            is_vertical = dyninfo[VARIANCE] > threshold;
+            is_vertical = dyninfo[VARIANCE] > variance_threshold;
 
-            if ( (*it)[N_POINTS] < 1 ) {
+            if ( (*it)[N_POINTS] < 1 || dyninfo[N_POINTS] > 2 &&
+                    (*it)[DIST_SQ] - dyninfo[DIST_SQ] > 25 ) {
                 // init
                 *st = is_vertical;
                 *it = dyninfo;

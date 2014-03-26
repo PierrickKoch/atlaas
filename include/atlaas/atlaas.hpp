@@ -47,7 +47,7 @@ class atlaas {
     cells_info_t gndinter; // ground info for vertical/flat unknown state
     cells_info_t dyninter; // to merge point cloud
     vbool_t      vertical; // altitude state (vertical or not)
-    float        variance_factor;
+    float        variance_threshold;
     point_xy_t   sensor_xy;
 
     /**
@@ -136,7 +136,7 @@ public:
         dyninter.resize( width * height );
         vertical.resize( width * height );
         gndinter.resize( width * height );
-        variance_factor = 3.0;
+        variance_threshold = 0.05;
     }
 
     void set_time_base(std::time_t base) {
@@ -144,8 +144,8 @@ public:
         meta.metadata["TIME"] = std::to_string(time_base);
     }
 
-    void set_variance_factor(float factor) {
-        variance_factor = factor;
+    void set_variance_threshold(float threshold) {
+        variance_threshold = threshold;
     }
 
     /**
@@ -196,11 +196,6 @@ public:
      * dynamic merge of cloud in custom frame
      */
     void dynamic(const points& cloud);
-
-    /**
-     * compute real variance and return the mean
-     */
-    float variance_mean(cells_info_t& inter);
 
     /**
      * merge existing dtm for dynamic merge
