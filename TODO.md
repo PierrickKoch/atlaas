@@ -1,8 +1,8 @@
 TODO
 ====
 
-2014-03-13
-----------
+- use <tr1/array> instead of <array> for boost fallback on no C++11 systems.
+- benchmark benefit of libtiff over gdal for real-time application.
 
 - https://github.com/ethz-asl/libpointmatcher
 - http://pointclouds.org/documentation/tutorials/#registration-tutorial
@@ -12,9 +12,6 @@ TODO
   if a cell is stable or not and it first seen / first swap time
 - atlaas.cpp:43  (atlaas::merge) : add I/O for playback (rosbag like)
 - add thread + deque for slide:tile_save, std::copy in main, gdal::save in T
-
-2014-02-07
-----------
 
 - let another node ``gdal_merge.py atlaas.*x*.tif`` for display (no critic)
 - use standard convention for maplets names ``$PWD/$zoom/$x/$y.tif``
