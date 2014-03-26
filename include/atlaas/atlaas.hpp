@@ -46,7 +46,6 @@ class atlaas {
     cells_info_t internal; // to merge dyninter
     cells_info_t gndinter; // ground info for vertical/flat unknown state
     cells_info_t dyninter; // to merge point cloud
-    vbool_t      vertical; // altitude state (vertical or not)
     float        variance_threshold;
     point_xy_t   sensor_xy;
 
@@ -134,7 +133,6 @@ public:
 
         // atlaas used for dynamic merge
         dyninter.resize( width * height );
-        vertical.resize( width * height );
         gndinter.resize( width * height );
         variance_threshold = 0.05;
     }

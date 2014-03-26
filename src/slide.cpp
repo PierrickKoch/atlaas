@@ -34,7 +34,6 @@ bool atlaas::slide() {
     cell_info_t zeros{}; // value-initialization w/empty initializer
     // reset state and ground infos used for dynamic merge
     std::fill(gndinter.begin(), gndinter.end(), zeros);
-    std::fill(vertical.begin(), vertical.end(), false);
 
     if (dx == -1) {
         // save EAST 1/3 maplets [ 1,-1], [ 1, 0], [ 1, 1]

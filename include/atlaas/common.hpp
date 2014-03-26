@@ -30,7 +30,6 @@ typedef std::array<double, 6> pose6d;       // yaw,pitch,roll,x,y,z
 typedef std::vector<point_xyzi_t> points;   // PointsXYZI
 typedef std::array<float, N_RASTER> cell_info_t;
 typedef std::vector<cell_info_t> cells_info_t;
-typedef std::vector<bool> vbool_t; // altitude state (vertical or not)
 typedef std::array<int, 2> map_id_t; // tiles location
 
 /**
