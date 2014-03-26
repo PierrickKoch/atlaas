@@ -3,6 +3,7 @@ TODO
 
 - use <tr1/array> instead of <array> for boost fallback on no C++11 systems.
 - benchmark benefit of libtiff over gdal for real-time application.
+- rename atlaas in libatlaas to avoid conflict with genom's atlaas.pc
 
 - https://github.com/ethz-asl/libpointmatcher
 - http://pointclouds.org/documentation/tutorials/#registration-tutorial
