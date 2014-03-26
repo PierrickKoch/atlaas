@@ -6,7 +6,6 @@ ATLAAS
 [![Build Status](https://travis-ci.org/pierriko/atlaas.png?branch=master)]
 (https://travis-ci.org/pierriko/atlaas)
 
-* http://gdal.org
 * http://www.openrobots.org/wiki
 * http://trac.laas.fr/git/atlaas
 
@@ -16,10 +15,14 @@ ATLAAS
 INSTALL
 -------
 
+First, install [`gdalwrap`](https://github.com/pierriko/gdalwrap#install), then
+
     git clone http://trac.laas.fr/git/atlaas && cd atlaas
     mkdir build && cd build
     cmake -DCMAKE_INSTALL_PREFIX=$HOME/devel ..
     make -j8 && make install
+
+*cf.* [.travis.yml](.travis.yml)
 
 
 CONTRIBUTE
