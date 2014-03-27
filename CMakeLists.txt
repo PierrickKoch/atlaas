@@ -43,9 +43,9 @@ endif(BUILD_TOOLS)
 if (BUILD_DOC)
   find_package(Doxygen)
   if(DOXYGEN_FOUND)
-    configure_file( Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
+    configure_file( doxyfile.dox.in ${CMAKE_CURRENT_BINARY_DIR}/doxyfile.dox @ONLY)
     add_custom_target( doc ALL
-      ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+      ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/doxyfile.dox
       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
       COMMENT "Generating documentation (Doxygen)" VERBATIM )
   endif(DOXYGEN_FOUND)
