@@ -17,6 +17,7 @@
 
 #include <gdalwrap/gdal.hpp>
 #include <atlaas/common.hpp>
+#include <atlaas/matcher.hpp>
 
 
 namespace atlaas {
@@ -82,6 +83,11 @@ class atlaas {
     float get_reference_time() {
         return std::time(NULL) - time_base;
     }
+
+    /**
+     * ICP
+     */
+    matcher pointmatcher;
 
 public:
     /**

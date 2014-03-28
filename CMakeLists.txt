@@ -13,9 +13,12 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules")
 
 # C++11 GDAL wrapper
 find_package(GdalWrap REQUIRED)
+# libpointmatcher (ICP)
+find_package(PointMatcher REQUIRED)
 
 include_directories(include)
 include_directories(${GDALWRAP_INCLUDE_DIRS})
+include_directories(${POINTMATCHER_INCLUDE_DIRS})
 
 # Filesystem Hierarchy Standard
 include(GNUInstallDirs)

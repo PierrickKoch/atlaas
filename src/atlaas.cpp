@@ -10,6 +10,7 @@
 #include <cassert>
 
 #include <atlaas/atlaas.hpp>
+#include <atlaas/matcher.hpp>
 
 namespace atlaas {
 
@@ -28,7 +29,7 @@ void atlaas::merge(points& cloud, const matrix& transformation) {
     // slide map while needed
     while ( slide() );
     // use dynamic merge
-    dynamic(cloud);
+    dynamic( pointmatcher.transform(cloud) );
 }
 
 void atlaas::dynamic(const points& cloud) {
