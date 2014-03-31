@@ -3,8 +3,9 @@ cmake_minimum_required(VERSION 2.8)
 set(PACKAGE_NAME atlaas)
 set(PACKAGE_VERSION "0.1.3")
 
+option(BUILD_TESTS  "Build tests" ON)
 option(BUILD_TOOLS  "Build tools" OFF)
-option(BUILD_DOC    "Build documation" OFF)
+option(BUILD_DOC    "Build documentation" OFF)
 
 # C++11 for GCC 4.6
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
@@ -37,8 +38,13 @@ endif("${isSystemDir}" STREQUAL "-1")
 add_subdirectory(src)
 
 if (BUILD_TOOLS)
-    add_subdirectory(tools)
+  add_subdirectory(tools)
 endif(BUILD_TOOLS)
+
+if (BUILD_TESTS)
+  include( CTest )
+  add_subdirectory(test)
+endif(BUILD_TESTS)
 
 if (BUILD_DOC)
   find_package(Doxygen)
