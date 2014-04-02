@@ -26,6 +26,7 @@ set -e # exit on error
 mkdir build && cd build
 cmake -DCMAKE_INSTALL_PREFIX=$DEVEL_ROOT ..
 make -j$n
+make test
 make install
 
 echo "==================================="
