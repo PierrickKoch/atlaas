@@ -1,6 +1,6 @@
 #include <iostream>
-#include "atlaas/atlaas.hpp"
-#include "gdalwrap/gdal.hpp"
+#include <atlaas/atlaas.hpp>
+#include <gdalwrap/gdal.hpp>
 
 int main(int argc, char * argv[]) {
     if (argc < 3) {

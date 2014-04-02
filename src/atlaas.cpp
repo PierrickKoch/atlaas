@@ -9,7 +9,7 @@
  */
 #include <cassert>
 
-#include "atlaas/atlaas.hpp"
+#include <atlaas/atlaas.hpp>
 
 namespace atlaas {
 

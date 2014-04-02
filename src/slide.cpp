@@ -10,7 +10,7 @@
 #include <iostream>         // std::{cout,endl}
 #include <algorithm>        // std::copy{,_backward}
 
-#include "atlaas/atlaas.hpp"
+#include <atlaas/atlaas.hpp>
 
 namespace atlaas {
 
