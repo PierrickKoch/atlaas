@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 set(PACKAGE_NAME atlaas)
-set(PACKAGE_VERSION "0.1.3")
+set(PACKAGE_VERSION "0.1.4")
 
 option(BUILD_TESTS  "Build tests" ON)
 option(BUILD_TOOLS  "Build tools" OFF)

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-NEW_VER=0.1.3
+NEW_VER=0.1.4
 
 PKGNAME=atlaas
 PKGTYPE=wip
