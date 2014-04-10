@@ -17,6 +17,7 @@
 
 #include <gdalwrap/gdal.hpp>
 #include <atlaas/common.hpp>
+#include <atlaas/io.hpp>
 
 
 namespace atlaas {
@@ -211,6 +212,8 @@ public:
      * could be done at the middleware level...
      */
     void merge(const std::string& filepath);
+
+
 };
 
 } // namespace atlaas

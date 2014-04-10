@@ -7,6 +7,7 @@ filename = 'out.tif'
 
 import gdal
 # run `ipython notebook --pylab inline`
+# ipython notebook --pylab inline
 import matplotlib.pyplot as plt
 names = {v:k for k,v in enumerate(["N_POINTS", "Z_MIN", "Z_MAX", "Z_MEAN", "VARIANCE", "TIME", "DIST_SQ"])}
 geotiff = gdal.Open( filename )
