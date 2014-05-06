@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# <nbformat>2</nbformat>
+# <nbformat>3.0</nbformat>
 
 # <codecell>
 
@@ -12,11 +12,10 @@ names = {v:k for k,v in enumerate(["N_POINTS", "Z_MIN", "Z_MAX", "Z_MEAN", "VARI
 geotiff = gdal.Open( filename )
 bands   = geotiff.ReadAsArray()
 
-def show_hist(name, fsize=(10, 10)):
+def show_hist(name, fsize=(12, 5)):
     band = bands[names[name]]
     plt.subplots(figsize = fsize)
-    plt.semilogy()
-    plt.hist( band.flatten(), 256 )
+    plt.hist( band.flatten(), 100, log=1 )
     plt.show()
 
 def show_band(name, cmin=0, cmax=1, cmap='spectral', fsize=(14, 14)):
