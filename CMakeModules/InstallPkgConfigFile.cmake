@@ -93,7 +93,7 @@ function(install_pkg_config_file)
     # write the .pc file out
     file(WRITE ${pc_fname}
         "prefix=${CMAKE_INSTALL_PREFIX}\n"
-        "libdir=\${prefix}/${CMAKE_INSTALL_LIBDIR}\n"
+        "libdir=\${prefix}/lib\n"
         "includedir=\${prefix}/include\n"
         "\n"
         "Name: ${pc_name}\n"

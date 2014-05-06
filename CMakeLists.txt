@@ -17,20 +17,17 @@ find_package(GdalWrap REQUIRED)
 include_directories(include)
 include_directories(${GDALWRAP_INCLUDE_DIRS})
 
-# Filesystem Hierarchy Standard
-include(GNUInstallDirs)
-
 # Load the 'install_pkg_config_file' macro
 include(InstallPkgConfigFile)
 
 # RPath management http://www.cmake.org/Wiki/CMake_RPATH_handling
 set(CMAKE_SKIP_BUILD_RPATH  FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE) 
-set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}" isSystemDir)
+list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
 if("${isSystemDir}" STREQUAL "-1")
-  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
+  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 endif("${isSystemDir}" STREQUAL "-1")
 
 
@@ -59,7 +56,7 @@ endif(BUILD_DOC)
 
 # Install headers
 file(GLOB atlaas_HDRS "include/atlaas/*.hpp")
-install(FILES ${atlaas_HDRS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/atlaas)
+install(FILES ${atlaas_HDRS} DESTINATION include/atlaas)
 
 #########################################################################
 ### Uninstall ###
