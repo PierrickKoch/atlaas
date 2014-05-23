@@ -14,13 +14,13 @@ bands   = geotiff.ReadAsArray()
 
 def show_hist(name, fsize=(12, 5)):
     band = bands[names[name]]
-    plt.subplots(figsize = fsize)
+    plt.figure(figsize = fsize)
     plt.hist( band.flatten(), 100, log=1 )
     plt.show()
 
 def show_band(name, cmin=0, cmax=1, cmap='spectral', fsize=(14, 14)):
     band = bands[names[name]]
-    plt.subplots(figsize = fsize)
+    plt.figure(figsize = fsize)
     imgplot = plt.imshow( band )
     imgplot.set_clim(cmin, cmax)
     imgplot.set_cmap(cmap)
