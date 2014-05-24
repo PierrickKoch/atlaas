@@ -150,15 +150,16 @@ void atlaas::merge() {
     auto it = internal.begin();
 
     for (auto& dyninfo : dyninter) {
-        if ( dyninfo[N_POINTS] > 0 ) {
+        if ( dyninfo[N_POINTS] > 0 && (
+            (*it)[N_POINTS] < 1 || (*it)[DIST_SQ] - dyninfo[DIST_SQ] > -4 ) ) {
             /* compute the real variance (according to Knuth's bible) */
             if (dyninfo[N_POINTS] > 2)
                 dyninfo[VARIANCE] /= dyninfo[N_POINTS] - 1;
 
             is_vertical = dyninfo[VARIANCE] > variance_threshold;
 
-            if ( (*it)[N_POINTS] < 1 || dyninfo[N_POINTS] > 2 &&
-                    (*it)[DIST_SQ] - dyninfo[DIST_SQ] > 25 ) {
+            if ( (*it)[N_POINTS] < 1 || ( dyninfo[N_POINTS] > 2 &&
+                    (*it)[DIST_SQ] - dyninfo[DIST_SQ] > 4 ) ) {
                 // init
                 *it = dyninfo;
             } else if ( is_vertical == (*it)[VARIANCE] > variance_threshold) {
