@@ -209,9 +209,32 @@ public:
         heightmap.copy_meta_only(meta);
         heightmap.names = {"Z_MEAN"};
         heightmap.set_size(1, width, height);
+        // get min/max from data
+        float min = std::numeric_limits<float>::max();
+        float max = std::numeric_limits<float>::min();
+        for (const auto& cell : internal) {
+            if (cell[N_POINTS] > 0.9) {
+                if (cell[Z_MEAN] > max)
+                    max = cell[Z_MEAN];
+                if (cell[Z_MEAN] < min)
+                    min = cell[Z_MEAN];
+            }
+        }
+        float diff = max - min;
+        if (diff == 0) // max == min (useless band)
+            return;
+
+        float coef = 255.0 / diff;
         std::transform(internal.begin(), internal.end(),
             heightmap.bands[0].begin(),
-            [](const cell_info_t& cell) -> float { return cell[Z_MEAN]; });
+            [&](const cell_info_t& cell) -> float {
+                if (cell[N_POINTS] > 0.9)
+                    return coef * (cell[Z_MEAN] - min);
+                else
+                    return -1;
+            });
+        heightmap.metadata["ATLAAS_MIN"] = std::to_string(min);
+        heightmap.metadata["ATLAAS_MAX"] = std::to_string(max);
         heightmap.export8u(filepath, 0);
     }
 };
