@@ -237,6 +237,19 @@ public:
         heightmap.metadata["ATLAAS_MAX"] = std::to_string(max);
         heightmap.export8u(filepath, 0);
     }
+    void export_zmean(const std::string& filepath) const {
+        gdalwrap::gdal heightmap;
+        heightmap.copy_meta_only(meta);
+        heightmap.names = {"Z_MEAN"};
+        heightmap.set_size(1, width, height);
+        // TODO heightmap . set NoData = -10000
+        std::transform(internal.begin(), internal.end(),
+            heightmap.bands[0].begin(),
+            [&](const cell_info_t& cell) -> float {
+                return (cell[N_POINTS] > 0.9) ? cell[Z_MEAN] : -10000;
+            });
+        heightmap.save(filepath);
+    }
 };
 
 } // namespace atlaas
