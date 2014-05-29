@@ -9,7 +9,7 @@ imgplot.set_cmap(cmap)
 
 in place, keeping image's resolution.
 
-usage: %s nimg cmin cmax
+usage: %s input.tif cmin cmax
 """
 import sys
 import gdal
@@ -21,25 +21,21 @@ def convert(fin, fout, cmin, cmax, cmap=cm.spectral):
     geo  = gdal.Open(fin)
     img  = geo.ReadAsArray()
     # filter out NoData ( -10000 ) using np magic
-    img[img==-10000] = np.nan
-    img -= cmin
-    img *= (1./(cmax - cmin))
+    img[img == -10000] = np.nan
+    img = (img - cmin) * (1./(cmax - cmin))
     img[np.isnan(img)] = 0
-    Image.fromarray(np.uint8(cmap(img)*255)).save(fout)
+    # in case of JPEG or WebP, set quality to 90%, else this option is ignored
+    Image.fromarray(np.uint8(cmap(img)*255)).save(fout, quality=90)
 
 def main(argv):
     if len(argv) < 3:
         sys.stderr.write(__doc__%argv[0])
         return 1
 
-    nimg = int(argv[1])
-    cmin = int(argv[2])
-    cmax = int(argv[3])
-
-    for i in range(nimg):
-        fin  = 'atlaas.%i.tif'%i
-        fout = '%s.jpg'%fin
-        convert(fin, fout, cmin, cmax)
+    cmin = float(argv[2])
+    cmax = float(argv[3])
+    fout = '%s.jpg'%argv[1]
+    convert(argv[1], fout, cmin, cmax)
 
     return 0
 
