@@ -18,12 +18,11 @@ import numpy as np
 from matplotlib import cm
 
 def convert(fin, fout, cmin, cmax, cmap=cm.spectral):
-    geo  = gdal.Open(fin)
-    img  = geo.ReadAsArray()
-    # filter out NoData ( -10000 ) using np magic
-    img[img == -10000] = np.nan
+    geo = gdal.Open(fin)
+    img = geo.ReadAsArray() # get band as a numpy.array
     img = (img - cmin) * (1./(cmax - cmin))
-    img[np.isnan(img)] = 0
+    img[img > 1] = 1
+    img[img < 0] = 0
     # in case of JPEG or WebP, set quality to 90%, else this option is ignored
     Image.fromarray(np.uint8(cmap(img)*255)).save(fout, quality=90)
 
