@@ -34,6 +34,7 @@ inline std::string tilepath(int x, int y) {
  * atlaas
  */
 class atlaas {
+    int seq;
     /**
      * I/O data model
      */
@@ -101,6 +102,7 @@ public:
     void init(double size_x, double size_y, double scale,
               double custom_x, double custom_y, double custom_z,
               int utm_zone, bool utm_north = true) {
+        seq = 0;
         width  = std::ceil(size_x / scale);
         height = std::ceil(size_y / scale);
         meta.set_size(width, height); // does not change the container

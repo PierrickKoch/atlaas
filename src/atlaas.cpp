@@ -11,6 +11,9 @@
 
 #include <atlaas/atlaas.hpp>
 
+#include <octomap/octomap.h>
+#include <octomap/math/Utils.h>
+
 namespace atlaas {
 
 /**
@@ -22,6 +25,24 @@ namespace atlaas {
  * @param transformation: sensor to world transformation
  */
 void atlaas::merge(points& cloud, const matrix& transformation) {
+    {
+        //   TMP OCTOTEST
+        octomap::OcTree tree (0.1);
+        octomap::point3d origin (0.0f, 0.0f, 0.0f);
+        octomap::Pointcloud otcloud;
+        for (const auto& point : cloud) {
+            octomap::point3d otpoint (point[0], point[1], point[2]);
+            otcloud.push_back(otpoint);
+        }
+        tree.insertPointCloud(otcloud, origin, 20, true, true);
+        //tree.updateInnerOccupancy();
+        //std::ostringstream oss;
+        //oss<<"octomap5cm."<<seq++<<".bt";
+        //std::cout<<"write "<<oss.str()<<std::endl;
+        //tree.writeBinary(oss.str());
+        //  /TMP OCTOTEST
+    }
+
     // transform the cloud from sensor to custom frame
     transform(cloud, transformation);
     sensor_xy = matrix_to_point(transformation);

@@ -20,6 +20,23 @@ include_directories(${GDALWRAP_INCLUDE_DIRS})
 # Load the 'install_pkg_config_file' macro
 include(InstallPkgConfigFile)
 
+
+
+# find octomap (for gdal wrapper)
+pkg_check_modules(PC_OCTOMAP REQUIRED octomap)
+set(OCTOMAP_DEFINITIONS ${PC_OCTOMAP_CFLAGS_OTHER})
+find_path(OCTOMAP_INCLUDE_DIR octomap/octomap.h
+    HINTS ${PC_OCTOMAP_INCLUDEDIR} ${PC_OCTOMAP_INCLUDE_DIRS}
+    PATH_SUFFIXES octomap)
+find_library(OCTOMAP_LIBRARY NAME octomap
+    HINTS ${PC_OCTOMAP_LIBDIR} ${PC_OCTOMAP_LIBRARY_DIRS} )
+set(OCTOMAP_INCLUDE_DIRS ${OCTOMAP_INCLUDE_DIR})
+set(OCTOMAP_LIBRARIES ${OCTOMAP_LIBRARY})
+##
+include_directories(${OCTOMAP_INCLUDE_DIRS})
+
+
+
 # RPath management http://www.cmake.org/Wiki/CMake_RPATH_handling
 set(CMAKE_SKIP_BUILD_RPATH  FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE) 
