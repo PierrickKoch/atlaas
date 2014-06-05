@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
-set(PACKAGE_NAME atlaas)
+project(atlaas)
+set(PACKAGE_NAME ${CMAKE_PROJECT_NAME})
 set(PACKAGE_VERSION "0.1.4")
 
 option(BUILD_TESTS  "Build tests" ON)
@@ -30,6 +31,10 @@ if("${isSystemDir}" STREQUAL "-1")
   set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 endif("${isSystemDir}" STREQUAL "-1")
 
+find_package(PCL 1.3 COMPONENTS common io filters)
+include_directories(${PCL_INCLUDE_DIRS})
+link_directories(${PCL_LIBRARY_DIRS})
+add_definitions(${PCL_DEFINITIONS})
 
 # Library and binary
 add_subdirectory(src)

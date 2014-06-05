@@ -11,7 +11,23 @@
 
 #include <atlaas/atlaas.hpp>
 
+#ifdef _USE_PCL
+#include <pcl/common/time.h>
+#include <pcl/point_cloud.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
+#include <pcl/filters/voxel_grid.h>
+#include <pcl/octree/octree.h>
+#include <pcl/octree/octree_impl.h>
+#include <pcl/octree/octree_pointcloud_adjacency.h>
+#endif
+
 namespace atlaas {
+
+template <class Point>
+inline float length_sq(const Point& p) {
+    return p[0]*p[0] + p[1]*p[1] + p[2]*p[2];
+}
 
 /**
  * Merge point cloud in the internal model
@@ -22,21 +38,62 @@ namespace atlaas {
  * @param transformation: sensor to world transformation
  */
 void atlaas::merge(points& cloud, const matrix& transformation) {
-    // transform the cloud from sensor to custom frame
-    transform(cloud, transformation);
     sensor_xy = matrix_to_point(transformation);
     // slide map while needed
-    while ( slide() );
-    // use dynamic merge
-    dynamic(cloud);
-}
+    do_slide();
 
-void atlaas::dynamic(const points& cloud) {
+#ifdef _USE_PCL
+    {
+        typedef pcl::PointCloud<pcl::PointXYZI> pc_t;
+        pc_t::Ptr pcloud(new pc_t);
+        pcloud->height = 1;
+        pcloud->is_dense = true;
+        pcloud->points.resize( cloud.size() );
+        auto it = pcloud->points.begin();
+        for (const auto& point : cloud) {
+            if (length_sq(point) < 400) {
+                (*it).x = point[0];
+                (*it).y = point[1];
+                (*it).z = point[2];
+                (*it).intensity = point[3];
+                ++it;
+            }
+        }
+        /* Removes the elements in the range [it,end] */
+        pcloud->points.erase(it, pcloud->points.end());
+        pcloud->width = pcloud->points.size();
+        // set transformation sensor-world
+        Eigen::Map<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>> m((double*)transformation.data());
+        pcloud->sensor_orientation_ = Eigen::Quaternionf( m.topLeftCorner<3,3>().cast<float>() );
+        pcloud->sensor_origin_ = Eigen::Vector4f(
+            transformation[3],
+            transformation[7],
+            transformation[11],
+            1.0f);
+        // voxel grid filter
+        pcl::VoxelGrid<pcl::PointXYZI> grid;
+        grid.setInputCloud (pcloud);
+        grid.setLeafSize (0.05f, 0.05f, 0.05f);
+        pcl::PointCloud<pcl::PointXYZI> output;
+        grid.filter (output);
+        // save pcd
+        std::ostringstream oss;
+        oss << ATLAAS_PATH << "/pcl." << seq++ << ".pcd";
+        std::cout<<"write "<<oss.str()<<std::endl;
+        pcl::PCDWriter w;
+        w.writeBinaryCompressed(oss.str(), output);
+    }
+#endif
+
+    // use dynamic merge
     // clear the dynamic map (zeros)
     cell_info_t zeros{}; // value-initialization w/empty initializer
     std::fill(dyninter.begin(), dyninter.end(), zeros);
+    // transform the cloud from sensor to custom frame
+    transform(cloud, transformation);
     // merge the point-cloud
     rasterize(cloud, dyninter);
+
     // merge the dynamic atlaas with internal data
     merge();
 }
@@ -162,7 +219,7 @@ void atlaas::merge() {
                     (*it)[DIST_SQ] - dyninfo[DIST_SQ] > 4 ) ) {
                 // init
                 *it = dyninfo;
-            } else if ( is_vertical == (*it)[VARIANCE] > variance_threshold) {
+            } else if ( is_vertical == ( (*it)[VARIANCE] > variance_threshold) ) {
                 // same state
                 // if the cells are flat and differ more than 10cm, swap
                 if (!is_vertical && (( (*it)[Z_MEAN] - dyninfo[Z_MEAN] ) > 0.1 )) {

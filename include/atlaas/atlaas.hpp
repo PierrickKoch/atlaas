@@ -34,6 +34,7 @@ inline std::string tilepath(int x, int y) {
  * atlaas
  */
 class atlaas {
+    size_t seq;
     /**
      * I/O data model
      */
@@ -101,6 +102,7 @@ public:
     void init(double size_x, double size_y, double scale,
               double custom_x, double custom_y, double custom_z,
               int utm_zone, bool utm_north = true) {
+        seq = 0;
         width  = std::ceil(size_x / scale);
         height = std::ceil(size_y / scale);
         meta.set_size(width, height); // does not change the container
@@ -175,6 +177,9 @@ public:
      * slide, save, load tiles
      */
     bool slide();
+    void do_slide() {
+        while ( slide() );
+    }
 
     void tile_load(int sx, int sy);
     void tile_save(int sx, int sy) const;
@@ -189,11 +194,6 @@ public:
         tile_save(2, 1);
         tile_save(2, 2);
     }
-
-    /**
-     * dynamic merge of cloud in custom frame
-     */
-    void dynamic(const points& cloud);
 
     /**
      * merge existing dtm for dynamic merge
