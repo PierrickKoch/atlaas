@@ -11,6 +11,15 @@
 
 #include <atlaas/atlaas.hpp>
 
+#include <pcl/common/time.h>
+#include <pcl/point_cloud.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
+#include <pcl/filters/voxel_grid.h>
+#include <pcl/octree/octree.h>
+#include <pcl/octree/octree_impl.h>
+#include <pcl/octree/octree_pointcloud_adjacency.h>
+
 namespace atlaas {
 
 /**
@@ -22,6 +31,35 @@ namespace atlaas {
  * @param transformation: sensor to world transformation
  */
 void atlaas::merge(points& cloud, const matrix& transformation) {
+    {
+        typedef pcl::PointCloud<pcl::PointXYZ> pcloud_t;
+        pcloud_t pcloud;
+        pcloud.height = 1;
+        pcloud.width  = cloud.size();
+        pcloud.is_dense = true;
+        pcloud.points.resize(pcloud.width);
+        for (size_t i = 0; i < pcloud.width; ++i) {
+            pcloud.points[i].x = cloud[i][0];
+            pcloud.points[i].y = cloud[i][1];
+            pcloud.points[i].z = cloud[i][2];
+        }
+        // cloud.sensor_origin_ (Eigen::Vector4f) from Matrix4d
+        // cloud.sensor_orientation_ (Eigen::Quaternionf) from Matrix4d
+        // voxel grid filter
+        // save pcd
+        //Eigen::Map<Eigen::Matrix4d> m((double*)transformation.data());
+        //pcloud.sensor_orientation_ = Eigen::Quaternionf(m.topLeftCorner<3,3>());
+        //pcloud.sensor_origin_      = Eigen::Vector4f(m.col(3).head(3));
+        std::ostringstream oss;
+        oss<<"pcl."<<seq++<<".pcd";
+        std::cout<<"write "<<oss.str()<<std::endl;
+        /*pcl::VoxelGrid<pcloud_t> sor;
+        sor.setLeafSize(0.1f, 0.1f, 0.1f);
+        sor.setInputCloud(pcloud);
+        pcloud_t cloud_filtered;
+        sor.filter(cloud_filtered);*/
+        pcl::io::savePCDFileBinary(oss.str(), pcloud);
+    }
     // transform the cloud from sensor to custom frame
     transform(cloud, transformation);
     sensor_xy = matrix_to_point(transformation);
