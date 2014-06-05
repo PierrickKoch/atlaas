@@ -32,8 +32,7 @@ namespace atlaas {
  */
 void atlaas::merge(points& cloud, const matrix& transformation) {
     {
-        typedef pcl::PointCloud<pcl::PointXYZ> pcloud_t;
-        pcloud_t pcloud;
+        pcl::PointCloud<pcl::PointXYZ> pcloud;
         pcloud.height = 1;
         pcloud.width  = cloud.size();
         pcloud.is_dense = true;
@@ -58,7 +57,18 @@ void atlaas::merge(points& cloud, const matrix& transformation) {
         sor.setInputCloud(pcloud);
         pcloud_t cloud_filtered;
         sor.filter(cloud_filtered);*/
-        pcl::io::savePCDFileBinary(oss.str(), pcloud);
+        //pcl::io::savePCDFileBinary(oss.str(), pcloud);
+
+
+        pcl::VoxelGrid<pcl::PointXYZ> grid;
+        grid.setInputCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr(&pcloud));
+        grid.setFilterFieldName ("z");
+        grid.setFilterLimits (-10.0, 20.0);
+        grid.setLeafSize (0.1f, 0.1f, 0.1f);
+        pcl::PointCloud<pcl::PointXYZ> output;
+        grid.filter (output);
+        pcl::PCDWriter w;
+        w.writeBinaryCompressed(oss.str(), output);
     }
     // transform the cloud from sensor to custom frame
     transform(cloud, transformation);

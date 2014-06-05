@@ -31,7 +31,7 @@ if("${isSystemDir}" STREQUAL "-1")
 endif("${isSystemDir}" STREQUAL "-1")
 
 set(PCL_DIR "/home/pkoch/work/pcl/build/prefix/share/pcl-1.7/")
-find_package(PCL 1.3 REQUIRED COMPONENTS common io)
+find_package(PCL 1.3 REQUIRED COMPONENTS common io filters)
 include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
