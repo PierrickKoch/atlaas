@@ -16,6 +16,7 @@
 
 namespace atlaas {
 
+static octomap::OcTree tree (0.1);
 /**
  * Merge point cloud in the internal model
  * with the sensor to world transformation,
@@ -27,19 +28,21 @@ namespace atlaas {
 void atlaas::merge(points& cloud, const matrix& transformation) {
     {
         //   TMP OCTOTEST
-        octomap::OcTree tree (0.1);
-        octomap::point3d origin (0.0f, 0.0f, 0.0f);
+        pose6d p = matrix_to_pose6d(transformation); // yaw,pitch,roll,x,y,z
+        octomap::pose6d otpose (p[3], p[4], p[5], p[2], p[1], p[0]); // xyz,rpy
         octomap::Pointcloud otcloud;
         for (const auto& point : cloud) {
             octomap::point3d otpoint (point[0], point[1], point[2]);
             otcloud.push_back(otpoint);
         }
-        tree.insertPointCloud(otcloud, origin, 20, true, true);
-        //tree.updateInnerOccupancy();
-        //std::ostringstream oss;
-        //oss<<"octomap5cm."<<seq++<<".bt";
-        //std::cout<<"write "<<oss.str()<<std::endl;
-        //tree.writeBinary(oss.str());
+        octomap::ScanNode otsn(&otcloud, otpose, seq);
+        tree.insertPointCloud(otsn, 20, true, true);
+        tree.updateInnerOccupancy();
+        std::ostringstream oss;
+        oss<<"octomap5cm."<<seq++<<".bt";
+        std::cout<<"write "<<oss.str()<<std::endl;
+        tree.writeBinary(oss.str());
+        otsn.scan=NULL; //avoid double free corruption, ~ScanNode delete scan...
         //  /TMP OCTOTEST
     }
 
