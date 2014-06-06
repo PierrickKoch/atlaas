@@ -32,41 +32,36 @@ namespace atlaas {
  */
 void atlaas::merge(points& cloud, const matrix& transformation) {
     {
-        pcl::PointCloud<pcl::PointXYZ> pcloud;
-        pcloud.height = 1;
-        pcloud.width  = cloud.size();
-        pcloud.is_dense = true;
-        pcloud.points.resize(pcloud.width);
-        for (size_t i = 0; i < pcloud.width; ++i) {
-            pcloud.points[i].x = cloud[i][0];
-            pcloud.points[i].y = cloud[i][1];
-            pcloud.points[i].z = cloud[i][2];
+        typedef pcl::PointCloud<pcl::PointXYZ> pc_t;
+        pc_t::Ptr pcloud(new pc_t);
+        pcloud->height = 1;
+        pcloud->width  = cloud.size();
+        pcloud->is_dense = true;
+        pcloud->points.resize(pcloud->width);
+        for (size_t i = 0; i < pcloud->width; ++i) {
+            pcloud->points[i].x = cloud[i][0];
+            pcloud->points[i].y = cloud[i][1];
+            pcloud->points[i].z = cloud[i][2];
         }
+
         // cloud.sensor_origin_ (Eigen::Vector4f) from Matrix4d
         // cloud.sensor_orientation_ (Eigen::Quaternionf) from Matrix4d
         // voxel grid filter
         // save pcd
         //Eigen::Map<Eigen::Matrix4d> m((double*)transformation.data());
-        //pcloud.sensor_orientation_ = Eigen::Quaternionf(m.topLeftCorner<3,3>());
-        //pcloud.sensor_origin_      = Eigen::Vector4f(m.col(3).head(3));
-        std::ostringstream oss;
-        oss<<"pcl."<<seq++<<".pcd";
-        std::cout<<"write "<<oss.str()<<std::endl;
-        /*pcl::VoxelGrid<pcloud_t> sor;
-        sor.setLeafSize(0.1f, 0.1f, 0.1f);
-        sor.setInputCloud(pcloud);
-        pcloud_t cloud_filtered;
-        sor.filter(cloud_filtered);*/
-        //pcl::io::savePCDFileBinary(oss.str(), pcloud);
-
+        //pcloud->sensor_orientation_ = Eigen::Quaternionf(m.topLeftCorner<3,3>());
+        //pcloud->sensor_origin_      = Eigen::Vector4f(m.col(3).head(3));
 
         pcl::VoxelGrid<pcl::PointXYZ> grid;
-        grid.setInputCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr(&pcloud));
+        grid.setInputCloud (pcloud);
         grid.setFilterFieldName ("z");
         grid.setFilterLimits (-10.0, 20.0);
         grid.setLeafSize (0.1f, 0.1f, 0.1f);
         pcl::PointCloud<pcl::PointXYZ> output;
         grid.filter (output);
+        std::ostringstream oss;
+        oss<<"pcl."<<seq++<<".pcd";
+        std::cout<<"write "<<oss.str()<<std::endl;
         pcl::PCDWriter w;
         w.writeBinaryCompressed(oss.str(), output);
     }
