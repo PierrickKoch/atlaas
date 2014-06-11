@@ -60,9 +60,12 @@ void atlaas::merge(points& cloud, const matrix& transformation) {
         // cloud.sensor_orientation_ (Eigen::Quaternionf) from Matrix4d
         Eigen::Map<Eigen::Matrix4d> m((double*)transformation.data());
         Eigen::Matrix3d rot = m.topLeftCorner<3,3>();
-        Eigen::Vector3d loc = m.col(3).head(3);
         pcloud->sensor_orientation_ = Eigen::Quaternionf( rot.cast<float>() );
-        pcloud->sensor_origin_.block(0,0,3,0) = loc.cast<float>();
+        pcloud->sensor_origin_ = Eigen::Vector4f(
+            transformation[3],
+            transformation[7],
+            transformation[11],
+            0.0f);
         // voxel grid filter
         pcl::VoxelGrid<pcl::PointXYZ> grid;
         grid.setInputCloud (pcloud);
