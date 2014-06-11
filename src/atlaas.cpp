@@ -54,20 +54,22 @@ void atlaas::merge(points& cloud, const matrix& transformation) {
         /* Removes the elements in the range [it,end] */
         pcloud->points.erase(it, pcloud->points.end());
         pcloud->width = pcloud->points.size();
-
+        // set transformation sensor-world
+        // there must be a better way of doing this
         // cloud.sensor_origin_ (Eigen::Vector4f) from Matrix4d
         // cloud.sensor_orientation_ (Eigen::Quaternionf) from Matrix4d
+        Eigen::Map<Eigen::Matrix4d> m((double*)transformation.data());
+        Eigen::Matrix3d rot = m.topLeftCorner<3,3>();
+        Eigen::Vector3d loc = m.col(3).head(3);
+        pcloud->sensor_orientation_ = Eigen::Quaternionf( rot.cast<float>() );
+        pcloud->sensor_origin_.block(0,0,3,0) = loc.cast<float>();
         // voxel grid filter
-        // save pcd
-        //Eigen::Map<Eigen::Matrix4d> m((double*)transformation.data());
-        //pcloud->sensor_orientation_ = Eigen::Quaternionf(m.topLeftCorner<3,3>());
-        //pcloud->sensor_origin_      = Eigen::Vector4f(m.col(3).head(3));
-
         pcl::VoxelGrid<pcl::PointXYZ> grid;
         grid.setInputCloud (pcloud);
         grid.setLeafSize (0.05f, 0.05f, 0.05f);
         pcl::PointCloud<pcl::PointXYZ> output;
         grid.filter (output);
+        // save pcd
         std::ostringstream oss;
         oss<<"pcl."<<seq++<<".pcd";
         std::cout<<"write "<<oss.str()<<std::endl;
