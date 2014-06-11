@@ -35,7 +35,7 @@ void atlaas::merge(points& cloud, const matrix& transformation) {
         octomap::OcTree tree (0.05f);
         for (const auto& point : cloud)
             if (length_sq(point) < 400)
-                tree.setNodeValue(point[0], point[1], point[2], 0.5, true);
+                tree.updateNode(point[0], point[1], point[2], true);
         std::ostringstream oss;
         oss<<"octomap5cm."<<seq++<<".bt";
         std::cout<<"write "<<oss.str()<<std::endl;
