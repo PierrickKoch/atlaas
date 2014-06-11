@@ -22,6 +22,11 @@
 
 namespace atlaas {
 
+template <class Point>
+inline float length_sq(const Point& p) {
+    return p[0]*p[0] + p[1]*p[1] + p[2]*p[2];
+}
+
 /**
  * Merge point cloud in the internal model
  * with the sensor to world transformation,
@@ -35,14 +40,20 @@ void atlaas::merge(points& cloud, const matrix& transformation) {
         typedef pcl::PointCloud<pcl::PointXYZ> pc_t;
         pc_t::Ptr pcloud(new pc_t);
         pcloud->height = 1;
-        pcloud->width  = cloud.size();
         pcloud->is_dense = true;
-        pcloud->points.resize(pcloud->width);
-        for (size_t i = 0; i < pcloud->width; ++i) {
-            pcloud->points[i].x = cloud[i][0];
-            pcloud->points[i].y = cloud[i][1];
-            pcloud->points[i].z = cloud[i][2];
+        pcloud->points.resize( cloud.size() );
+        auto it = pcloud->points.begin();
+        for (const auto& point : cloud) {
+            if (length_sq(point) < 400) {
+                (*it).x = point[0];
+                (*it).y = point[1];
+                (*it).z = point[2];
+                ++it;
+            }
         }
+        /* Removes the elements in the range [it,end] */
+        pcloud->points.erase(it, pcloud->points.end());
+        pcloud->width = pcloud->points.size();
 
         // cloud.sensor_origin_ (Eigen::Vector4f) from Matrix4d
         // cloud.sensor_orientation_ (Eigen::Quaternionf) from Matrix4d
@@ -54,9 +65,7 @@ void atlaas::merge(points& cloud, const matrix& transformation) {
 
         pcl::VoxelGrid<pcl::PointXYZ> grid;
         grid.setInputCloud (pcloud);
-        grid.setFilterFieldName ("z");
-        grid.setFilterLimits (-10.0, 20.0);
-        grid.setLeafSize (0.1f, 0.1f, 0.1f);
+        grid.setLeafSize (0.05f, 0.05f, 0.05f);
         pcl::PointCloud<pcl::PointXYZ> output;
         grid.filter (output);
         std::ostringstream oss;
