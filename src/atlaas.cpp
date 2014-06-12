@@ -58,7 +58,7 @@ void atlaas::merge(points& cloud, const matrix& transformation) {
         // there must be a better way of doing this
         // cloud.sensor_origin_ = Eigen::Vector4f
         // cloud.sensor_orientation_ = Eigen::Quaternionf
-        Eigen::Map<Eigen::Matrix4d> m((double*)transformation.data());
+        Eigen::Map<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>> m((double*)transformation.data());
         pcloud->sensor_orientation_ = Eigen::Quaternionf( m.topLeftCorner<3,3>().cast<float>() );
         pcloud->sensor_origin_ = Eigen::Vector4f(
             transformation[3],
