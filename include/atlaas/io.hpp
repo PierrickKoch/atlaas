@@ -26,27 +26,27 @@ namespace atlaas {
 inline void dump(const std::string& filepath,
 	const points& cloud, const matrix& transformation) {
 
-	// ofstream out_file;
+	ofstream out_file;
 
-	// out_file.open(filepath, ios::out | ios::trunc | ios::binary);
-	// if(out_file.fail())
-	// {
-	// 	cout << "\nCannot open file " << filepath << "for dumping data \n";
-	// 	system("pause");
-	// 	return;
-	// }
+	out_file.open(filepath, ios::out | ios::trunc | ios::binary);
+	if(out_file.fail())
+	{
+		cout << "\nCannot open file " << filepath << "for dumping data \n";
+		system("pause");
+		return;
+	}
 
-	// try{
-	// 	out_file.write((char *)&transformation[0], sizeof(matrix));
-	// 	int size = cloud.size();
-	// 	out_file.write((char*)&size,sizeof(int));
-	// 	out_file.write((char *)&cloud[0],sizeof(point_xy_t)*cloud.size());
-	// 	// cout << "number of bytes wrote " << out_file.gcount(); 
-	// } catch (exception &e){
-	// 	cout << "wrting error " << e.what() << endl;
-	// }
+	try{
+		out_file.write((char *)&transformation[0], sizeof(matrix));
+		int size = cloud.size();
+		out_file.write((char*)&size,sizeof(int));
+		out_file.write((char *)&cloud[0],sizeof(point_xy_t)*cloud.size());
+		// cout << "number of bytes wrote " << out_file.gcount(); 
+	} catch (exception &e){
+		cout << "wrting error " << e.what() << endl;
+	}
 	cout << "write cloud data into " << filepath << "done \n";
-	// out_file.close();
+	out_file.close();
 	
 }
 
@@ -61,8 +61,8 @@ inline void load(const std::string& filepath, points& cloud, matrix& transformat
 	}
 
 
-	// Read header
-	in_file.read((char*)&transformation[0],sizeof(matrix));
+    // Read header
+    in_file.read((char*)&transformation[0],sizeof(matrix));
 
 		// read Number of point 
 	try{
@@ -76,9 +76,27 @@ inline void load(const std::string& filepath, points& cloud, matrix& transformat
 	}
 
 	in_file.close();
+}
 
+// Print the transformation matrix
+inline void print_transformation(const matrix &transform){
+    std::cout << "-------------------------------\n";
+    std::cout << "Transformation Matrix " << std::endl;
+
+    for(uint i = 0; i < transform.size(); i++){
+        cout << transform[i] << "\t\t";
+        if(i%4 == 3) std::cout << std::endl;
+    }
+    std::cout << "-------------------------------\n";
 
 }
+
+inline void print_6dPose(const pose6d& pose){
+
+    std::cout << "euler angles : yaw = " << pose[0] << " pitch = " << pose[1] << " roll= " << pose[2] << std::endl;
+    std::cout << "Coord        :   x = " << pose[3] << "     y = " << pose[4] << "    z= " << pose[5] << std::endl;
+}
+
 
 } // namespace atlaas
 
