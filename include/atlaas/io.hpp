@@ -23,8 +23,9 @@ namespace atlaas {
  * Dump a point cloud and its transformation matrix 
  * into a file <filename>
  */
+template< typename PointT>
 inline void dump(const std::string& filepath,
-	const points& cloud, const matrix& transformation) {
+	const std::vector<PointT>& cloud, const matrix& transformation) {
 
 	ofstream out_file;
 
@@ -37,10 +38,13 @@ inline void dump(const std::string& filepath,
 	}
 
 	try{
+		// Write point size
+		int point_size = sizeof(PointT);
+		out_file.write((char *)&point_size,sizeof(int));
 		out_file.write((char *)&transformation[0], sizeof(matrix));
 		int size = cloud.size();
 		out_file.write((char*)&size,sizeof(int));
-		out_file.write((char *)&cloud[0],sizeof(point_xy_t)*cloud.size());
+		out_file.write((char *)&cloud[0],sizeof(PointT)*cloud.size());
 		// cout << "number of bytes wrote " << out_file.gcount(); 
 	} catch (exception &e){
 		cout << "wrting error " << e.what() << endl;
@@ -50,7 +54,8 @@ inline void dump(const std::string& filepath,
 	
 }
 
-inline void load(const std::string& filepath, points& cloud, matrix& transformation) {
+template<typename PointT>
+inline void load(const std::string& filepath, std::vector<PointT>& cloud, matrix& transformation) {
     ifstream in_file;
    	in_file.open(filepath, ios::in | ios::binary);
 	if(in_file.fail())
@@ -61,7 +66,11 @@ inline void load(const std::string& filepath, points& cloud, matrix& transformat
 	}
 
 
-    // Read header
+	// Read Point Size
+	int point_size;
+	in_file.read(reinterpret_cast<char*>(&point_size),sizeof(int));
+	assert(point_size == sizeof(PointT));
+    // Read Matrix Transformation
     in_file.read((char*)&transformation[0],sizeof(matrix));
 
 		// read Number of point 
@@ -70,7 +79,7 @@ inline void load(const std::string& filepath, points& cloud, matrix& transformat
 		in_file.read((char*)&n_point,sizeof(int));
 		assert(n_point >=0);
 		cloud.resize(n_point);
-		in_file.read((char*)&cloud[0],n_point*sizeof(point_xy_t));
+		in_file.read((char*)&cloud[0],n_point*sizeof(PointT));
 	} catch (exception& e){
 		cout << "read error " << e.what() << endl;
 	}
