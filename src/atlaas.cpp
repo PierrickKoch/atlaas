@@ -8,6 +8,7 @@
  * license: BSD
  */
 #include <cassert>
+#include <thread>
 
 #include <atlaas/atlaas.hpp>
 
@@ -36,8 +37,13 @@ inline float length_sq(const Point& p) {
  * @param transformation: sensor to world transformation
  */
 void atlaas::merge(points& cloud, const matrix& transformation) {
+    sensor_xy = matrix_to_point(transformation);
+    // slide map while needed
+    std::thread t_slide( &atlaas::do_slide, this );
+    //do_slide();
+
     {
-        typedef pcl::PointCloud<pcl::PointXYZ> pc_t;
+        typedef pcl::PointCloud<pcl::PointXYZI> pc_t;
         pc_t::Ptr pcloud(new pc_t);
         pcloud->height = 1;
         pcloud->is_dense = true;
@@ -48,6 +54,7 @@ void atlaas::merge(points& cloud, const matrix& transformation) {
                 (*it).x = point[0];
                 (*it).y = point[1];
                 (*it).z = point[2];
+                (*it).intensity = point[3];
                 ++it;
             }
         }
@@ -66,10 +73,10 @@ void atlaas::merge(points& cloud, const matrix& transformation) {
             transformation[11],
             1.0f);
         // voxel grid filter
-        pcl::VoxelGrid<pcl::PointXYZ> grid;
+        pcl::VoxelGrid<pcl::PointXYZI> grid;
         grid.setInputCloud (pcloud);
         grid.setLeafSize (0.05f, 0.05f, 0.05f);
-        pcl::PointCloud<pcl::PointXYZ> output;
+        pcl::PointCloud<pcl::PointXYZI> output;
         grid.filter (output);
         // save pcd
         std::ostringstream oss;
@@ -78,21 +85,17 @@ void atlaas::merge(points& cloud, const matrix& transformation) {
         pcl::PCDWriter w;
         w.writeBinaryCompressed(oss.str(), output);
     }
-    // transform the cloud from sensor to custom frame
-    transform(cloud, transformation);
-    sensor_xy = matrix_to_point(transformation);
-    // slide map while needed
-    while ( slide() );
-    // use dynamic merge
-    dynamic(cloud);
-}
 
-void atlaas::dynamic(const points& cloud) {
+    // use dynamic merge
     // clear the dynamic map (zeros)
     cell_info_t zeros{}; // value-initialization w/empty initializer
     std::fill(dyninter.begin(), dyninter.end(), zeros);
+    // transform the cloud from sensor to custom frame
+    transform(cloud, transformation);
     // merge the point-cloud
     rasterize(cloud, dyninter);
+
+    t_slide.join();
     // merge the dynamic atlaas with internal data
     merge();
 }

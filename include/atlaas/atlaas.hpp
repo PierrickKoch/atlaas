@@ -177,6 +177,9 @@ public:
      * slide, save, load tiles
      */
     bool slide();
+    void do_slide() {
+        while ( slide() );
+    }
 
     void tile_load(int sx, int sy);
     void tile_save(int sx, int sy) const;
@@ -191,11 +194,6 @@ public:
         tile_save(2, 1);
         tile_save(2, 2);
     }
-
-    /**
-     * dynamic merge of cloud in custom frame
-     */
-    void dynamic(const points& cloud);
 
     /**
      * merge existing dtm for dynamic merge
