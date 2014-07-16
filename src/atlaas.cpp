@@ -8,7 +8,6 @@
  * license: BSD
  */
 #include <cassert>
-#include <thread>
 
 #include <atlaas/atlaas.hpp>
 
@@ -39,8 +38,7 @@ inline float length_sq(const Point& p) {
 void atlaas::merge(points& cloud, const matrix& transformation) {
     sensor_xy = matrix_to_point(transformation);
     // slide map while needed
-    std::thread t_slide( &atlaas::do_slide, this );
-    //do_slide();
+    do_slide();
 
     {
         typedef pcl::PointCloud<pcl::PointXYZI> pc_t;
@@ -62,9 +60,6 @@ void atlaas::merge(points& cloud, const matrix& transformation) {
         pcloud->points.erase(it, pcloud->points.end());
         pcloud->width = pcloud->points.size();
         // set transformation sensor-world
-        // there must be a better way of doing this
-        // cloud.sensor_origin_ = Eigen::Vector4f
-        // cloud.sensor_orientation_ = Eigen::Quaternionf
         Eigen::Map<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>> m((double*)transformation.data());
         pcloud->sensor_orientation_ = Eigen::Quaternionf( m.topLeftCorner<3,3>().cast<float>() );
         pcloud->sensor_origin_ = Eigen::Vector4f(
@@ -95,7 +90,6 @@ void atlaas::merge(points& cloud, const matrix& transformation) {
     // merge the point-cloud
     rasterize(cloud, dyninter);
 
-    t_slide.join();
     // merge the dynamic atlaas with internal data
     merge();
 }
