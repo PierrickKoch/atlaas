@@ -16,6 +16,7 @@
 #include <vector>
 #include <string>
 #include <sys/stat.h> // stat, file_exists
+#include <sstream>
 
 namespace atlaas {
 
@@ -48,9 +49,9 @@ inline std::string getenv(const std::string& name, const std::string& def) {
 static const std::string ATLAAS_PATH = getenv("ATLAAS_PATH", ".");
 
 inline std::string tilepath(int x, int y) {
-    std::ostringstream oss;
-    oss << ATLAAS_PATH << "/atlaas." << x << "x" << y << ".tif";
-    return oss.str();
+   std::ostringstream oss;
+   oss << ATLAAS_PATH << "/atlaas." << x << "x" << y << ".tif";
+   return oss.str();
 }
 
 /**

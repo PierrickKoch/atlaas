@@ -10,7 +10,7 @@
 #include <cassert>
 
 #include <atlaas/atlaas.hpp>
-#include <atlaas/io.hpp>
+// #include <atlaas/io.hpp>
 
 namespace atlaas {
 
@@ -26,6 +26,7 @@ void atlaas::merge(points& cloud, const matrix& transformation) {
     // transform the cloud from sensor to custom frame
     transform(cloud, transformation);
     sensor_xy = matrix_to_point(transformation);
+	std::cout << sensor_xy[0] << " " << sensor_xy[1] << std::endl;
     // slide map while needed
     while ( slide() );
     // use dynamic merge

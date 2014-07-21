@@ -5,3 +5,4 @@ macro(add_atlaas_test name)
 endmacro()
 
 add_atlaas_test( merge_test )
+add_atlaas_test( io_test )

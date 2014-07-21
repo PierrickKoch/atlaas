@@ -11,19 +11,103 @@
 #define ATLAAS_IO_HPP
 
 #include <string>
-
+#include <iostream>
+#include <fstream>
+#include <cassert>
 #include <atlaas/common.hpp>
 
+using namespace std;
 namespace atlaas {
 
-inline void dump(const std::string& filepath,
-        const points& cloud, const matrix& transformation) {
-    // TODO serialize/archive cloud and transformation into filepath
+/*
+ * Dump a point cloud and its transformation matrix 
+ * into a file <filename>
+ */
+template< typename PointT>
+inline int dump(const std::string& filepath,
+	const std::vector<PointT>& cloud, const matrix& transformation) {
+
+	ofstream out_file;
+
+	out_file.open(filepath, ios::out | ios::trunc | ios::binary);
+	if(out_file.fail())
+	{
+		cout << "\nCannot open file " << filepath << "for dumping data \n";
+		system("pause");
+		return -1;
+	}
+
+	try{
+		// Write point size
+		int point_size = sizeof(PointT);
+		out_file.write((char *)&point_size,sizeof(int));
+		out_file.write((char *)&transformation[0], sizeof(matrix));
+		int size = cloud.size();
+		out_file.write((char*)&size,sizeof(int));
+		out_file.write((char *)&cloud[0],sizeof(PointT)*cloud.size());
+		// cout << "number of bytes wrote " << out_file.gcount(); 
+	} catch (exception &e){
+		cout << "wrting error " << e.what() << endl;
+	}
+	cout << "write cloud data into " << filepath << " done \n";
+	out_file.close();
+	return 0;
+	
 }
 
-inline void load(const std::string& filepath, points& cloud, matrix& transformation) {
-    // TODO parse filepath into cloud and transformation
+template<typename PointT>
+inline int load(const std::string& filepath, std::vector<PointT>& cloud, matrix& transformation) {
+    ifstream in_file;
+   	in_file.open(filepath, ios::in | ios::binary);
+	if(in_file.fail())
+	{	
+		cout << "\nCannot open file " << filepath << "for reading data \n";
+		system("pause");
+		return -1;
+	}
+
+
+	// Read Point Size
+	int point_size;
+	in_file.read(reinterpret_cast<char*>(&point_size),sizeof(int));
+	assert(point_size == sizeof(PointT));
+    // Read Matrix Transformation
+    in_file.read((char*)&transformation[0],sizeof(matrix));
+
+		// read Number of point 
+	try{
+		int n_point = -1;
+		in_file.read((char*)&n_point,sizeof(int));
+		assert(n_point >=0);
+		cloud.resize(n_point);
+		in_file.read((char*)&cloud[0],n_point*sizeof(PointT));
+	} catch (exception& e){
+		cout << "read error " << e.what() << endl;
+	}
+
+	in_file.close();
+	return 0;
 }
+
+// Print the transformation matrix
+inline void print_transformation(const matrix &transform){
+    std::cout << "-------------------------------\n";
+    std::cout << "Transformation Matrix " << std::endl;
+
+    for(uint i = 0; i < transform.size(); i++){
+        cout << transform[i] << "\t\t";
+        if(i%4 == 3) std::cout << std::endl;
+    }
+    std::cout << "-------------------------------\n";
+
+}
+
+inline void print_6dPose(const pose6d& pose){
+
+    std::cout << "euler angles : yaw = " << pose[0] << " pitch = " << pose[1] << " roll= " << pose[2] << std::endl;
+    std::cout << "Coord        :   x = " << pose[3] << "     y = " << pose[4] << "    z= " << pose[5] << std::endl;
+}
+
 
 } // namespace atlaas
 
