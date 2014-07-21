@@ -24,7 +24,7 @@ namespace atlaas {
  * into a file <filename>
  */
 template< typename PointT>
-inline void dump(const std::string& filepath,
+inline int dump(const std::string& filepath,
 	const std::vector<PointT>& cloud, const matrix& transformation) {
 
 	ofstream out_file;
@@ -34,7 +34,7 @@ inline void dump(const std::string& filepath,
 	{
 		cout << "\nCannot open file " << filepath << "for dumping data \n";
 		system("pause");
-		return;
+		return -1;
 	}
 
 	try{
@@ -49,20 +49,21 @@ inline void dump(const std::string& filepath,
 	} catch (exception &e){
 		cout << "wrting error " << e.what() << endl;
 	}
-	cout << "write cloud data into " << filepath << "done \n";
+	cout << "write cloud data into " << filepath << " done \n";
 	out_file.close();
+	return 0;
 	
 }
 
 template<typename PointT>
-inline void load(const std::string& filepath, std::vector<PointT>& cloud, matrix& transformation) {
+inline int load(const std::string& filepath, std::vector<PointT>& cloud, matrix& transformation) {
     ifstream in_file;
    	in_file.open(filepath, ios::in | ios::binary);
 	if(in_file.fail())
 	{	
 		cout << "\nCannot open file " << filepath << "for reading data \n";
 		system("pause");
-		return;
+		return -1;
 	}
 
 
@@ -85,6 +86,7 @@ inline void load(const std::string& filepath, std::vector<PointT>& cloud, matrix
 	}
 
 	in_file.close();
+	return 0;
 }
 
 // Print the transformation matrix
