@@ -174,6 +174,23 @@ public:
     void merge(points& cloud, const matrix& transformation);
 
     /**
+     * merge from raw C array (using std::copy !)
+     * used for numpy -> C++ interface
+     * transformation must be double[16] : row-major Matrix(4,4)
+     * cloud must be float[cloud_len1][cloud_len2]
+     * cloud_len2 must be either 3 (XYZ) or 4 (XYZI)
+     */
+    void c_merge(const float* cloud, size_t cloud_len1, size_t cloud_len2,
+                 const double* transformation) {
+        matrix tr;
+        points cd( cloud_len1 );
+        std::copy(transformation, transformation + 16, tr.begin());
+        for (size_t i = 0; i < cloud_len1; i++)
+            std::copy(cloud+i*cloud_len2, cloud+(i+1)*cloud_len2, cd[i].begin());
+        merge(cd, tr);
+    }
+
+    /**
      * slide, save, load tiles
      */
     bool slide();
