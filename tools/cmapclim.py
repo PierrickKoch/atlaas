@@ -17,17 +17,23 @@ import Image
 import numpy as np
 from matplotlib import cm
 
-def convert(fin, fout, cmin, cmax, cmap=cm.spectral):
+names = {v:k for k,v in enumerate(["N_POINTS", "Z_MIN", "Z_MAX", "Z_MEAN", "VARIANCE", "TIME", "DIST_SQ"])}
+
+def convert(fin, fout, cmin, cmax, cmap=cm.spectral, npt=None):
     geo = gdal.Open(fin)
     img = geo.ReadAsArray() # get band as a numpy.array
+    if len(img.shape) > 2: # multi-layer
+        npt = img[names["N_POINTS"]]
+        img = img[names["Z_MEAN"]]
     img = (img - cmin) * (1./(cmax - cmin))
     img[img > 1] = 1
     img[img < 0] = 0
+    img[npt < 1] = 0
     # in case of JPEG or WebP, set quality to 90%, else this option is ignored
     Image.fromarray(np.uint8(cmap(img)*255)).save(fout, quality=90)
 
 def main(argv):
-    if len(argv) < 3:
+    if len(argv) < 4:
         sys.stderr.write(__doc__%argv[0])
         return 1
 
