@@ -44,5 +44,6 @@ cdef class PyAtlaas:
               utm_zone):
         self.thisptr.init(size_x, size_y, scale, custom_x, custom_y, custom_z,
               utm_zone)
-
+    #def merge(self, cloud, transformation):
+    #    self.thisptr.merge(cloud, transformation)
 
