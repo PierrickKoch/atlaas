@@ -11,6 +11,7 @@
 
 #include <atlaas/atlaas.hpp>
 
+#ifdef _USE_PCL
 #include <pcl/common/time.h>
 #include <pcl/point_cloud.h>
 #include <pcl/io/pcd_io.h>
@@ -19,6 +20,7 @@
 #include <pcl/octree/octree.h>
 #include <pcl/octree/octree_impl.h>
 #include <pcl/octree/octree_pointcloud_adjacency.h>
+#endif
 
 namespace atlaas {
 
@@ -40,6 +42,7 @@ void atlaas::merge(points& cloud, const matrix& transformation) {
     // slide map while needed
     do_slide();
 
+#ifdef _USE_PCL
     {
         typedef pcl::PointCloud<pcl::PointXYZI> pc_t;
         pc_t::Ptr pcloud(new pc_t);
@@ -80,6 +83,7 @@ void atlaas::merge(points& cloud, const matrix& transformation) {
         pcl::PCDWriter w;
         w.writeBinaryCompressed(oss.str(), output);
     }
+#endif
 
     // use dynamic merge
     // clear the dynamic map (zeros)
