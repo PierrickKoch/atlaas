@@ -17,9 +17,14 @@ cdef extern from "<array>" namespace "std":
 from libcpp cimport bool
 from libcpp.vector cimport vector
 
+cdef extern from *:
+    ctypedef int int_parameter
+    int_parameter _N4 = "4"
+    int_parameter _N16 = "16"
+
 cdef extern from "../include/atlaas/atlaas.hpp" namespace "atlaas":
-    #ctypedef vector[array[double, 4]] points
-    #ctypedef array[double, 16] matrix
+    ctypedef vector[array[double, _N4]] points
+    ctypedef array[double, _N16] matrix
     cdef cppclass atlaas:
         atlaas()
         void init(double size_x, double size_y, double scale,
@@ -28,7 +33,7 @@ cdef extern from "../include/atlaas/atlaas.hpp" namespace "atlaas":
         void init(double size_x, double size_y, double scale,
               double custom_x, double custom_y, double custom_z,
               int utm_zone) except +
-        #void merge(points& cloud, const matrix& transformation)
+        void merge(points& cloud, const matrix& transformation)
 
 cdef class PyAtlaas:
     cdef atlaas *thisptr # hold a C++ instance which we're wrapping
