@@ -5,15 +5,11 @@ from distutils.extension import Extension
 
 # python setup.py build_ext --inplace
 
-def pkg_config(*libraries):
-    arg = ' '.join(libraries)
-    flags = subprocess.check_output(['pkg-config', '--cflags-only-I', arg])
-    include_dirs = [flag[2:] for flag in flags.split()]
-    flags = subprocess.check_output(['pkg-config', '--libs-only-L', arg])
-    library_dirs = [flag[2:] for flag in flags.split()]
-    return {'libraries': libraries,
-            'include_dirs': include_dirs,
-            'library_dirs': library_dirs}
+def pkg_config(*packages, **kw):
+    flag_map = {'-I': 'include_dirs', '-L': 'library_dirs', '-l': 'libraries'}
+    for token in subprocess.check_output(['pkg-config', '--libs', '--cflags']+list(packages)).split():
+        kw.setdefault(flag_map.get(token[:2]), []).append(token[2:])
+    return kw
 
 extensions = [
     Extension(
@@ -25,7 +21,7 @@ extensions = [
         ],
         language = "c++",
         extra_compile_args = ["-std=c++0x"],
-        **pkg_config("atlaas", "gdalwrap")
+        **pkg_config("atlaas")
     ),
 ]
 

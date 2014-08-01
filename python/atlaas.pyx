@@ -1,8 +1,13 @@
 # import dereference and increment operators
 from cython.operator cimport dereference as deref, preincrement as inc
 
+cdef extern from *:
+    ctypedef void* int_parameter
+    int_parameter _N4 = "4"
+    int_parameter _N16 = "16"
+
 cdef extern from "<array>" namespace "std":
-    cdef cppclass array[T, N]:
+    cdef cppclass array[T, int_parameter]:
         cppclass iterator:
             T operator*()
             iterator operator++()
@@ -16,11 +21,6 @@ cdef extern from "<array>" namespace "std":
 
 from libcpp cimport bool
 from libcpp.vector cimport vector
-
-cdef extern from *:
-    ctypedef int int_parameter
-    int_parameter _N4 = "4"
-    int_parameter _N16 = "16"
 
 cdef extern from "../include/atlaas/atlaas.hpp" namespace "atlaas":
     ctypedef vector[array[double, _N4]] points
