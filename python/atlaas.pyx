@@ -1,9 +1,3 @@
-# import dereference and increment operators
-from cython.operator cimport dereference as deref, preincrement as inc
-
-#import cython
-#import numpy as np
-#cimport numpy as np
 from libcpp cimport bool
 from libcpp.vector cimport vector
 
