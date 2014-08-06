@@ -7,7 +7,7 @@ from distutils.extension import Extension
 
 def pkg_config(*packages, **kw):
     flag_map = {'-I': 'include_dirs', '-L': 'library_dirs', '-l': 'libraries'}
-    for token in subprocess.check_output(['pkg-config', '--libs', '--cflags']+list(packages)).split():
+    for token in subprocess.check_output(['pkg-config', '--libs', '--cflags']+list(packages)).decode().split():
         kw.setdefault(flag_map.get(token[:2]), []).append(token[2:])
     return kw
 

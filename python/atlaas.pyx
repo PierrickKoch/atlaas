@@ -7,7 +7,7 @@ cdef extern from "../include/atlaas/atlaas.hpp" namespace "atlaas":
         void init(double size_x, double size_y, double scale,
               double custom_x, double custom_y, double custom_z,
               int utm_zone, bool utm_north) except +
-        void merge_np(vector[vector[float]], vector[double])
+        void merge_np(vector[vector[float]], const vector[double])
 
 cdef class PyAtlaas:
     cdef atlaas *thisptr # hold a C++ instance which we're wrapping
