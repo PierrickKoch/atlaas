@@ -31,12 +31,10 @@ if("${isSystemDir}" STREQUAL "-1")
   set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 endif("${isSystemDir}" STREQUAL "-1")
 
-set(PCL_DIR "/home/pkoch/work/pcl/build/prefix/share/pcl-1.7/")
-find_package(PCL 1.3 REQUIRED COMPONENTS common io filters)
+find_package(PCL 1.3 COMPONENTS common io filters)
 include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
-
 
 # Library and binary
 add_subdirectory(src)

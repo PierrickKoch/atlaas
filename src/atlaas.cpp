@@ -78,7 +78,7 @@ void atlaas::merge(points& cloud, const matrix& transformation) {
         grid.filter (output);
         // save pcd
         std::ostringstream oss;
-        oss<<"pcl."<<seq++<<".pcd";
+        oss << ATLAAS_PATH << "/pcl." << seq++ << ".pcd";
         std::cout<<"write "<<oss.str()<<std::endl;
         pcl::PCDWriter w;
         w.writeBinaryCompressed(oss.str(), output);
@@ -219,7 +219,7 @@ void atlaas::merge() {
                     (*it)[DIST_SQ] - dyninfo[DIST_SQ] > 4 ) ) {
                 // init
                 *it = dyninfo;
-            } else if ( is_vertical == (*it)[VARIANCE] > variance_threshold) {
+            } else if ( is_vertical == ( (*it)[VARIANCE] > variance_threshold) ) {
                 // same state
                 // if the cells are flat and differ more than 10cm, swap
                 if (!is_vertical && (( (*it)[Z_MEAN] - dyninfo[Z_MEAN] ) > 0.1 )) {

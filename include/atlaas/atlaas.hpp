@@ -172,6 +172,11 @@ public:
      * transform, merge, slide, save, load tiles
      */
     void merge(points& cloud, const matrix& transformation);
+    void merge_np(std::vector<std::vector<float>>& cloud,
+                  const std::vector<double>& transformation) {
+        merge(reinterpret_cast<points&>(cloud),
+              reinterpret_cast<const matrix&>(transformation));
+    }
 
     /**
      * slide, save, load tiles
