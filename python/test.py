@@ -4,12 +4,7 @@ import numpy as np
 test = atlaas.Atlaas()
 test.init(120.0, 120.0, 0.1, 0, 0, 0, 31, True)
 
-transformation = np.array([
-    1,0,0,0,
-    0,1,0,0,
-    0,0,1,0,
-    0,0,0,1,
-], dtype=np.double)
+transformation = np.identity(4, dtype=np.double)
 
 cloud = np.array([
     [ 1, 2, 3, 0],

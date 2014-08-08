@@ -209,10 +209,10 @@ public:
      */
     void merge(points& cloud, const matrix& transformation);
     void merge_np(const float* cloud, size_t cloud_len1, size_t cloud_len2,
-                  const double* transformation, size_t transfo_len) {
+                  const double* transformation) {
         matrix tr;
         points cd( cloud_len1 );
-        std::copy(transformation, transformation + transfo_len, tr.begin());
+        std::copy(transformation, transformation + 16, tr.begin());
         for (size_t i = 0; i < cloud_len1; i++)
             std::copy(cloud+i*cloud_len2, cloud+(i+1)*cloud_len2, cd[i].begin());
         //std::cout<<cd<<std::endl;
