@@ -19,7 +19,7 @@ def msg_to_cloud_numpy(msg):
     arr  = np.frombuffer(data, dtype=np.float32)
     return arr.reshape(arr.size/3, 3)
 
-def get_mat(cfg):
+def mat_cfg(cfg):
     otr = cfg.result()['configurations']['object_to_robot']
     rotation = otr['rotation']
     translation = otr['translation']
@@ -28,7 +28,7 @@ def get_mat(cfg):
     M[:3, 3] = translation[:3]
     return M
 
-def get_pose(pose):
+def mat_pose(pose):
     rotation = [pose[k] for k in ('roll','pitch','yaw')]
     translation = [pose[k] for k in ('x','y','z')]
     M = euler_matrix(*rotation)
@@ -40,13 +40,14 @@ def main():
     test.init(120.0, 120.0, 0.1, 0, 0, 0, 31, True)
     with pymorse.Morse() as morse:
         cfg = morse.robot.camera.get_configurations()
-        cam_mat = get_mat( cfg )
+        cam_mat = mat_cfg(cfg)
         while morse.is_up():
             pose = morse.robot.pose.get()
             msg = morse.robot.camera.get()
             cloud = msg_to_cloud_numpy( msg )
-            rob_mat = get_pose(pose)
+            rob_mat = mat_pose(pose)
             tr = rob_mat.dot(cam_mat)
+            import pdb; pdb.set_trace()
             test.merge( cloud, tr.flatten() )
             test.save_currents()
             #import pdb; pdb.set_trace()
