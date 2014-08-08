@@ -41,16 +41,20 @@ def main():
     with pymorse.Morse() as morse:
         cfg = morse.robot.camera.get_configurations()
         cam_mat = mat_cfg(cfg)
-        while morse.is_up():
-            pose = morse.robot.pose.get()
-            msg = morse.robot.camera.get()
-            cloud = msg_to_cloud_numpy( msg )
-            rob_mat = mat_pose(pose)
-            tr = rob_mat.dot(cam_mat)
-            import pdb; pdb.set_trace()
-            test.merge( cloud, tr.flatten() )
+        try:
+            while morse.is_up():
+                pose = morse.robot.pose.get()
+                msg = morse.robot.camera.get()
+                cloud = msg_to_cloud_numpy( msg )
+                rob_mat = mat_pose(pose)
+                tr = rob_mat.dot(cam_mat)
+                rt = cam_mat.dot(rob_mat)
+                test.merge( cloud, rt.flatten() )
+                #import pdb; pdb.set_trace()
+        except KeyboardInterrupt:
+            print("Bye.")
+        finally:
             test.save_currents()
-            #import pdb; pdb.set_trace()
 
 if __name__ == "__main__":
     main()
