@@ -214,13 +214,13 @@ public:
         points cd( cloud.size() );
         matrix tr;
         std::copy(transformation.begin(), transformation.end(), tr.begin());
-        for (const auto& p : cloud)
-            std::copy(p.begin(), p.end(), cd[i++].begin());
-        std::cout<<cloud<<std::endl;
-        std::cout<<cd<<std::endl;
-        std::cout<<transformation<<std::endl;
-        std::cout<<tr<<std::endl;
-        merge(copy, tr);
+        for (const auto& pt : cloud)
+            std::copy(pt.begin(), pt.end(), cd[i++].begin());
+        //std::cout<<cloud<<std::endl;
+        //std::cout<<cd<<std::endl;
+        //std::cout<<transformation<<std::endl;
+        //std::cout<<tr<<std::endl;
+        merge(cd, tr);
     }
 
     /**
