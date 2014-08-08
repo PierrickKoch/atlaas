@@ -21,6 +21,42 @@
 
 namespace atlaas {
 
+/**
+ * Display
+ */
+template <typename T>
+std::string to_string(const T& t)
+{
+    std::ostringstream oss;
+    oss << t;
+    return oss.str();
+}
+
+template<typename Container>
+inline std::ostream& stream_it(std::ostream& os, Container& c)
+{
+    bool first = true;
+    os << "[";
+    for (auto& v : c) {
+        if (first)
+            first = false;
+        else
+            os << ", ";
+        os << v;
+    }
+    return os << "]";
+}
+
+template <typename T>
+inline std::ostream& operator<<(std::ostream& os, const std::vector<T>& v) {
+    return stream_it(os, v);
+}
+
+template <typename T, size_t N>
+inline std::ostream& operator<<(std::ostream& os, const std::array<T, N>& v) {
+    return stream_it(os, v);
+}
+
 // init tile-path from the environment variable ATLAAS_PATH
 static const std::string ATLAAS_PATH = getenv("ATLAAS_PATH", ".");
 
@@ -172,10 +208,19 @@ public:
      * transform, merge, slide, save, load tiles
      */
     void merge(points& cloud, const matrix& transformation);
-    void merge_np(std::vector<std::vector<float>>& cloud,
+    void merge_np(const std::vector<std::vector<float>>& cloud,
                   const std::vector<double>& transformation) {
-        merge(reinterpret_cast<points&>(cloud),
-              reinterpret_cast<const matrix&>(transformation));
+        size_t i = 0;
+        points cd( cloud.size() );
+        matrix tr;
+        std::copy(transformation.begin(), transformation.end(), tr.begin());
+        for (const auto& p : cloud)
+            std::copy(p.begin(), p.end(), cd[i++].begin());
+        std::cout<<cloud<<std::endl;
+        std::cout<<cd<<std::endl;
+        std::cout<<transformation<<std::endl;
+        std::cout<<tr<<std::endl;
+        merge(copy, tr);
     }
 
     /**
