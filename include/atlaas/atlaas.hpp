@@ -208,17 +208,14 @@ public:
      * transform, merge, slide, save, load tiles
      */
     void merge(points& cloud, const matrix& transformation);
-    void merge_np(const std::vector<std::vector<float>>& cloud,
-                  const std::vector<double>& transformation) {
-        size_t i = 0;
-        points cd( cloud.size() );
+    void merge_np(const float* cloud, size_t cloud_len1, size_t cloud_len2,
+                  const double* transformation, size_t transfo_len) {
         matrix tr;
-        std::copy(transformation.begin(), transformation.end(), tr.begin());
-        for (const auto& pt : cloud)
-            std::copy(pt.begin(), pt.end(), cd[i++].begin());
-        //std::cout<<cloud<<std::endl;
+        points cd( cloud_len1 );
+        std::copy(transformation, transformation + transfo_len, tr.begin());
+        for (size_t i = 0; i < cloud_len1; i++)
+            std::copy(cloud+i*cloud_len2, cloud+(i+1)*cloud_len2, cd[i].begin());
         //std::cout<<cd<<std::endl;
-        //std::cout<<transformation<<std::endl;
         //std::cout<<tr<<std::endl;
         merge(cd, tr);
     }

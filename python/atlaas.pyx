@@ -1,5 +1,6 @@
 from libcpp cimport bool
-from libcpp.vector cimport vector
+import numpy as np
+cimport numpy as np
 
 cdef extern from "../include/atlaas/atlaas.hpp" namespace "atlaas":
     cdef cppclass atlaas:
@@ -7,7 +8,8 @@ cdef extern from "../include/atlaas/atlaas.hpp" namespace "atlaas":
         void init(double size_x, double size_y, double scale,
               double custom_x, double custom_y, double custom_z,
               int utm_zone, bool utm_north) except +
-        void merge_np(vector[vector[float]], const vector[double])
+        void merge_np(const float* cloud, size_t cloud_len1, size_t cloud_len2,
+                      const double* transformation, size_t transfo_len)
         void save_currents()
 
 cdef class Atlaas:
@@ -20,7 +22,10 @@ cdef class Atlaas:
               utm_zone, utm_north):
         self.thisptr.init(size_x, size_y, scale, custom_x, custom_y, custom_z,
               utm_zone, utm_north)
-    def merge(self, cloud, transformation):
-        self.thisptr.merge_np(cloud, transformation)
+    def merge(self,
+              np.ndarray[np.float32_t, ndim=2] C,
+              np.ndarray[np.double_t,  ndim=1] T):
+        self.thisptr.merge_np(<const float*> C.data, C.shape[0], C.shape[1],
+                              <const double*> T.data, T.shape[0])
     def save_currents(self):
         self.thisptr.save_currents()

@@ -48,8 +48,7 @@ def main():
                 cloud = msg_to_cloud_numpy( msg )
                 rob_mat = mat_pose(pose)
                 tr = rob_mat.dot(cam_mat)
-                rt = cam_mat.dot(rob_mat)
-                test.merge( cloud, rt.flatten() )
+                test.merge( cloud, tr.flatten() )
                 #import pdb; pdb.set_trace()
         except KeyboardInterrupt:
             print("Bye.")
