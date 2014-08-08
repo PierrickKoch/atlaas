@@ -5,12 +5,13 @@ import logging
 import atlaas
 import pymorse
 import numpy as np
+import transformations as tf
 
 logger = logging.getLogger("pymorse")
 console = logging.StreamHandler()
 formatter = logging.Formatter('%(asctime)s %(name)s: %(levelname)s - %(message)s')
 console.setFormatter(formatter)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 logger.addHandler(console)
 
 def msg_to_cloud_struct(msg):
@@ -31,19 +32,28 @@ def get_mat(cfg):
     M = np.identity(4)
     M[:3, :3] = rotation
     M[:3, 3] = translation[:3]
-    return M.flatten()
+    return M
+
+def get_pose(pose):
+    rotation = [pose[k] for k in ('pitch','roll','yaw')]
+    translation = [pose[k] for k in ('x','y','z')]
+    M = tf.euler_matrix(*rotation)
+    M[:3, 3] = translation[:3]
+    return M
 
 def main():
     test = atlaas.PyAtlaas()
     test.init(120.0, 120.0, 0.1, 0, 0, 0, 31, True)
     with pymorse.Morse() as morse:
+        cfg = morse.robot.camera.get_configurations()
+        cam_mat = get_mat( cfg )
         while morse.is_up():
-            pose  = morse.robot.pose.get()
-            msg   = morse.robot.camera.get()
-            cfg   = morse.robot.camera.get_configurations()
+            msg = morse.robot.camera.get()
+            pose = morse.robot.pose.get()
             cloud = msg_to_cloud_numpy( msg )
-            tr    = get_mat( cfg )
-            test.merge(cloud, tr)
+            rob_mat = get_pose(pose)
+            tr = rob_mat.dot(cam_mat)
+            test.merge( cloud, tr.flatten() )
             test.save_currents()
             #import pdb; pdb.set_trace()
 
