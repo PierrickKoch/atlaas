@@ -8,6 +8,7 @@ cdef extern from "../include/atlaas/atlaas.hpp" namespace "atlaas":
               double custom_x, double custom_y, double custom_z,
               int utm_zone, bool utm_north) except +
         void merge_np(vector[vector[float]], const vector[double])
+        void save_currents()
 
 cdef class PyAtlaas:
     cdef atlaas *thisptr # hold a C++ instance which we're wrapping
@@ -21,3 +22,5 @@ cdef class PyAtlaas:
               utm_zone, utm_north)
     def merge(self, cloud, transformation):
         self.thisptr.merge_np(cloud, transformation)
+    def save_currents(self):
+        self.thisptr.save_currents()
