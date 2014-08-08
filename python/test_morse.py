@@ -3,7 +3,7 @@ from morse.builder import *
 robot = ATRV()
 
 kb = Keyboard()
-kb.properties(Speed=5)
+kb.properties(Speed=2)
 robot.append(kb)
 
 pose = Pose()

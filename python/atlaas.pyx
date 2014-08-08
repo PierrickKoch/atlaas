@@ -10,7 +10,7 @@ cdef extern from "../include/atlaas/atlaas.hpp" namespace "atlaas":
         void merge_np(vector[vector[float]], const vector[double])
         void save_currents()
 
-cdef class PyAtlaas:
+cdef class Atlaas:
     cdef atlaas *thisptr # hold a C++ instance which we're wrapping
     def __cinit__(self):
         self.thisptr = new atlaas()

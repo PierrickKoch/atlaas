@@ -29,14 +29,14 @@ def get_mat(cfg):
     return M
 
 def get_pose(pose):
-    rotation = [pose[k] for k in ('pitch','roll','yaw')]
+    rotation = [pose[k] for k in ('roll','pitch','yaw')]
     translation = [pose[k] for k in ('x','y','z')]
     M = euler_matrix(*rotation)
     M[:3, 3] = translation[:3]
     return M
 
 def main():
-    test = atlaas.PyAtlaas()
+    test = atlaas.Atlaas()
     test.init(120.0, 120.0, 0.1, 0, 0, 0, 31, True)
     with pymorse.Morse() as morse:
         cfg = morse.robot.camera.get_configurations()
