@@ -33,6 +33,42 @@ typedef std::vector<cell_info_t> cells_info_t;
 typedef std::array<int, 2> map_id_t; // tiles location
 
 /**
+ * Display
+ */
+template <typename T>
+std::string to_string(const T& t)
+{
+    std::ostringstream oss;
+    oss << t;
+    return oss.str();
+}
+
+template<typename Container>
+inline std::ostream& stream_it(std::ostream& os, Container& c)
+{
+    bool first = true;
+    os << "[";
+    for (auto& v : c) {
+        if (first)
+            first = false;
+        else
+            os << ", ";
+        os << v;
+    }
+    return os << "]";
+}
+
+template <typename T>
+inline std::ostream& operator<<(std::ostream& os, const std::vector<T>& v) {
+    return stream_it(os, v);
+}
+
+template <typename T, size_t N>
+inline std::ostream& operator<<(std::ostream& os, const std::array<T, N>& v) {
+    return stream_it(os, v);
+}
+
+/**
  * System helpers
  */
 
