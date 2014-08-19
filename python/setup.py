@@ -14,11 +14,7 @@ def pkg_config(*packages, **kw):
 extensions = [
     Extension(
         name = "atlaas",
-        sources = [
-            "atlaas.pyx",
-            "../src/atlaas.cpp",
-            "../src/slide.cpp",
-        ],
+        sources = ["atlaas.pyx"],
         language = "c++",
         extra_compile_args = ["-std=c++0x"],
         **pkg_config("atlaas")

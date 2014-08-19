@@ -1,8 +1,7 @@
-import numpy as np
 cimport numpy as np
 from libcpp cimport bool
 
-cdef extern from "../include/atlaas/atlaas.hpp" namespace "atlaas":
+cdef extern from "atlaas/atlaas.hpp" namespace "atlaas":
     cdef cppclass atlaas:
         atlaas()
         void init(double size_x, double size_y, double scale,
