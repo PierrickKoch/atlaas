@@ -5,7 +5,6 @@ import logging
 import atlaas
 import pymorse
 import numpy as np
-from transformations import euler_matrix
 
 logger = logging.getLogger("pymorse")
 console = logging.StreamHandler()
@@ -19,37 +18,15 @@ def msg_to_cloud_numpy(msg):
     buff = np.frombuffer(data, dtype=np.float32)
     return buff.reshape(buff.size/3, 3)
 
-def mat_cfg(cfg):
-    otr = cfg.result()['configurations']['object_to_robot']
-    rotation = otr['rotation']
-    translation = otr['translation']
-    M = np.identity(4)
-    M[:3, :3] = rotation
-    M[:3, 3] = translation[:3]
-    return M
-
-def mat_pose(pose):
-    rotation = [pose[k] for k in ('roll','pitch','yaw')]
-    translation = [pose[k] for k in ('x','y','z')]
-    M = euler_matrix(*rotation)
-    M[:3, 3] = translation[:3]
-    return M
-
 def main():
     test = atlaas.Atlaas()
     test.init(120.0, 120.0, 0.1, 0, 0, 0, 31, True)
     with pymorse.Morse() as morse:
-        cfg = morse.robot.camera.get_configurations()
-        cam_mat = mat_cfg(cfg)
         try:
             while morse.is_up():
-                pose = morse.robot.pose.get()
                 msg = morse.robot.camera.get()
-                cloud = msg_to_cloud_numpy( msg )
-                rob_mat = mat_pose(pose)
-                tr = rob_mat.dot(cam_mat)
-                test.merge( cloud, tr )
-                #import pdb; pdb.set_trace()
+                test.merge( msg_to_cloud_numpy( msg ),
+                            np.array(msg['sensor_world']) )
         except KeyboardInterrupt:
             print("Bye.")
         finally:

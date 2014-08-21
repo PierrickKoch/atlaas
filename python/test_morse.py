@@ -9,7 +9,7 @@ robot.append(kb)
 pose = Pose()
 robot.append(pose)
 
-camera = DepthCamera()
+camera = Velodyne()
 camera.translate(z = 1)
 camera.frequency(3)
 robot.append(camera)

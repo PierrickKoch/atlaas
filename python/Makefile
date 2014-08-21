@@ -7,6 +7,3 @@ clean:
 
 test: atlaas*.so
 	@python3.4 test.py
-
-transformations.py:
-	wget -cq http://www.lfd.uci.edu/~gohlke/code/transformations.py
