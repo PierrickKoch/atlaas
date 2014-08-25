@@ -38,6 +38,8 @@ inline float length_sq(const Point& p) {
  * @param transformation: sensor to world transformation
  */
 void atlaas::merge(points& cloud, const matrix& transformation) {
+    if (cloud.size() < 1)
+        return; // pcl writeBinaryCompressed crash with empty cloud
     sensor_xy = matrix_to_point(transformation);
     // slide map while needed
     do_slide();
