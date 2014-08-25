@@ -7,6 +7,7 @@ set(PACKAGE_VERSION "0.1.4")
 option(BUILD_TESTS  "Build tests" ON)
 option(BUILD_TOOLS  "Build tools" OFF)
 option(BUILD_DOC    "Build documentation" OFF)
+option(BUILD_WPCL   "Build with the PointCloud library" OFF)
 
 # C++11 for GCC 4.6
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
@@ -31,10 +32,13 @@ if("${isSystemDir}" STREQUAL "-1")
   set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 endif("${isSystemDir}" STREQUAL "-1")
 
-find_package(PCL 1.3 COMPONENTS common io filters)
-include_directories(${PCL_INCLUDE_DIRS})
-link_directories(${PCL_LIBRARY_DIRS})
-add_definitions(${PCL_DEFINITIONS})
+if (BUILD_WPCL)
+  find_package(PCL 1.3 REQUIRED COMPONENTS common io filters)
+  include_directories(${PCL_INCLUDE_DIRS})
+  link_directories(${PCL_LIBRARY_DIRS})
+  add_definitions(${PCL_DEFINITIONS})
+  add_definitions(-D_USE_PCL)
+endif(BUILD_WPCL)
 
 # Library and binary
 add_subdirectory(src)
