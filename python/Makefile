@@ -7,3 +7,6 @@ clean:
 
 test: atlaas*.so
 	@python3.4 test.py
+
+py2:
+	@python setup.py build_ext --inplace

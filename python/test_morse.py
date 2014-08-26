@@ -8,12 +8,11 @@ robot.append(kb)
 
 pose = Pose()
 robot.append(pose)
+pose.add_stream('ros', method='morse.middleware.ros.pose.TFPublisher')
 
 camera = Velodyne()
 camera.translate(z = 1)
-camera.frequency(3)
 robot.append(camera)
-
-robot.add_default_interface('socket')
+camera.add_stream('ros')
 
 env = Environment('indoors-1/boxes')
