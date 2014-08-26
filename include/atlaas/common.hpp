@@ -203,6 +203,14 @@ inline float distance(const Point& pA, const Point& pB) {
     return std::sqrt(distance_sq(pA, pB));
 }
 
+/**
+ * Euclidian distance (squared) 3D point "length"
+ */
+template <class Point>
+inline float length_sq(const Point& p) {
+    return p[0]*p[0] + p[1]*p[1] + p[2]*p[2];
+}
+
 } // namespace atlaas
 
 #endif // ATLAAS_COMMON_HPP

@@ -10,24 +10,16 @@
 #include <cassert>
 
 #include <atlaas/atlaas.hpp>
+#include <atlaas/common.hpp>
 
 #ifdef _USE_PCL
-#include <pcl/common/time.h>
 #include <pcl/point_cloud.h>
-#include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
 #include <pcl/filters/voxel_grid.h>
-#include <pcl/octree/octree.h>
-#include <pcl/octree/octree_impl.h>
-#include <pcl/octree/octree_pointcloud_adjacency.h>
+#include <pcl/io/pcd_io.h>
 #endif
 
 namespace atlaas {
-
-template <class Point>
-inline float length_sq(const Point& p) {
-    return p[0]*p[0] + p[1]*p[1] + p[2]*p[2];
-}
 
 /**
  * Merge point cloud in the internal model
