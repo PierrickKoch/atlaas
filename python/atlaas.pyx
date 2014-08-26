@@ -1,5 +1,6 @@
 cimport numpy as np
 from libcpp cimport bool
+from libcpp.string cimport string
 
 cdef extern from "atlaas/atlaas.hpp" namespace "atlaas":
     cdef cppclass atlaas:
@@ -10,6 +11,8 @@ cdef extern from "atlaas/atlaas.hpp" namespace "atlaas":
         void c_merge(const float* cloud, size_t cloud_len1, size_t cloud_len2,
                      const double* transformation)
         void save_currents()
+        void export8u(const string& filepath)
+        void export_zmean(const string& filepath)
 
 cdef class Atlaas:
     cdef atlaas *thisptr # hold a C++ instance which we're wrapping
@@ -30,3 +33,8 @@ cdef class Atlaas:
                              <const double*> T.data)
     def save_currents(self):
         self.thisptr.save_currents()
+    def export8u(self, filepath):
+        self.thisptr.export8u(filepath)
+    def export_zmean(self, filepath):
+        self.thisptr.export_zmean(filepath)
+
