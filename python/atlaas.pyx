@@ -13,6 +13,8 @@ cdef extern from "atlaas/atlaas.hpp" namespace "atlaas":
         void save_currents()
         void export8u(const string& filepath)
         void export_zmean(const string& filepath)
+        size_t process_pcd(size_t start)
+        size_t process_pcd(size_t start, size_t end)
 
 cdef class Atlaas:
     cdef atlaas *thisptr # hold a C++ instance which we're wrapping
@@ -37,4 +39,8 @@ cdef class Atlaas:
         self.thisptr.export8u(filepath)
     def export_zmean(self, filepath):
         self.thisptr.export_zmean(filepath)
-
+    def process_pcd(self, start=0, end=0):
+        if end > start:
+            return self.thisptr.process_pcd(start, end)
+        else:
+            return self.thisptr.process_pcd(start)

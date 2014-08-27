@@ -30,11 +30,17 @@ inline std::string tilepath(int x, int y) {
     return oss.str();
 }
 
+inline std::string pcdpath(size_t seq) {
+    std::ostringstream oss;
+    oss << ATLAAS_PATH << "/pcl." << seq << ".pcd";
+    return oss.str();
+}
+
 /**
  * atlaas
  */
 class atlaas {
-    size_t seq;
+    size_t pcd_seq;
     /**
      * I/O data model
      */
@@ -102,7 +108,7 @@ public:
     void init(double size_x, double size_y, double scale,
               double custom_x, double custom_y, double custom_z,
               int utm_zone, bool utm_north = true) {
-        seq = 0;
+        pcd_seq = 0;
         width  = std::ceil(size_x / scale);
         height = std::ceil(size_y / scale);
         meta.set_size(width, height); // does not change the container
@@ -171,7 +177,22 @@ public:
     /**
      * transform, merge, slide, save, load tiles
      */
-    void merge(points& cloud, const matrix& transformation);
+    void merge(points& cloud, const matrix& transformation, bool dump = true);
+
+    /**
+     * write pcd file
+     */
+    void write_pcd(const points& cloud, const matrix& transformation);
+
+    /**
+     * write pcd file
+     */
+    void write_pcd(const std::string& filepath, const points& cloud, const matrix& transformation);
+
+    /**
+     * read pcd file
+     */
+    void read_pcd(const std::string& filepath, points& cloud, matrix& transformation);
 
     /**
      * merge from raw C array (using std::copy !)
@@ -188,6 +209,21 @@ public:
         for (size_t i = 0; i < cloud_len1; i++)
             std::copy(cloud+i*cloud_len2, cloud+(i+1)*cloud_len2, cd[i].begin());
         merge(cd, tr);
+    }
+
+    size_t process_pcd(size_t start = 0, size_t end = std::numeric_limits<size_t>::max()) {
+        size_t inc = start;
+        std::string filepath = pcdpath(inc);
+        points cloud;
+        matrix transformation = {{ 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 }};
+        while ( inc <= end ) {
+            if ( ! file_exists(filepath) )
+                break;
+            read_pcd(filepath, cloud, transformation);
+            merge(cloud, transformation, false);
+            filepath = pcdpath(inc++);
+        }
+        return inc;
     }
 
     /**

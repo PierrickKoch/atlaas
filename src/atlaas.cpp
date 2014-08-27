@@ -12,13 +12,6 @@
 #include <atlaas/atlaas.hpp>
 #include <atlaas/common.hpp>
 
-#ifdef _USE_PCL
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
-#include <pcl/filters/voxel_grid.h>
-#include <pcl/io/pcd_io.h>
-#endif
-
 namespace atlaas {
 
 /**
@@ -29,56 +22,15 @@ namespace atlaas {
  * @param cloud: point cloud in the sensor frame
  * @param transformation: sensor to world transformation
  */
-void atlaas::merge(points& cloud, const matrix& transformation) {
+void atlaas::merge(points& cloud, const matrix& transformation, bool dump) {
     if (cloud.size() < 1)
         return; // pcl writeBinaryCompressed crash with empty cloud
     sensor_xy = matrix_to_point(transformation);
     // slide map while needed
     do_slide();
 
-#ifdef _USE_PCL
-    {
-        typedef pcl::PointCloud<pcl::PointXYZI> pc_t;
-        pc_t::Ptr pcloud(new pc_t);
-        pcloud->height = 1;
-        pcloud->is_dense = true;
-        pcloud->points.resize( cloud.size() );
-        auto it = pcloud->points.begin();
-        for (const auto& point : cloud) {
-            if (length_sq(point) < 400) {
-                (*it).x = point[0];
-                (*it).y = point[1];
-                (*it).z = point[2];
-                (*it).intensity = point[3];
-                ++it;
-            }
-        }
-        /* Removes the elements in the range [it,end] */
-        pcloud->points.erase(it, pcloud->points.end());
-        pcloud->width = pcloud->points.size();
-        // set transformation sensor-world
-        Eigen::Map<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>> m((double*)transformation.data());
-        pcloud->sensor_orientation_ = Eigen::Quaternionf( m.topLeftCorner<3,3>().cast<float>() );
-        pcloud->sensor_origin_ = Eigen::Vector4f(
-            transformation[3],
-            transformation[7],
-            transformation[11],
-            1.0f);
-        // voxel grid filter
-        pcl::VoxelGrid<pcl::PointXYZI> grid;
-        grid.setInputCloud (pcloud);
-        grid.setLeafSize (0.05f, 0.05f, 0.05f);
-        pcl::PointCloud<pcl::PointXYZI> output;
-        grid.filter (output);
-        // save pcd
-        std::ostringstream oss;
-        oss << ATLAAS_PATH << "/pcl." << seq++ << ".pcd";
-        std::cout<<"write "<<oss.str()<<std::endl;
-        pcl::PCDWriter w;
-        w.writeBinaryCompressed(oss.str(), output);
-    }
-#endif
-
+    if (dump)
+        write_pcd(cloud, transformation);
     // use dynamic merge
     // clear the dynamic map (zeros)
     cell_info_t zeros{}; // value-initialization w/empty initializer
