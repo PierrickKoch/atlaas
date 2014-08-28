@@ -3,6 +3,8 @@ echo "atlaas"
 echo "======"
 uname -a # show kernel info
 n=`awk '/cpu cores/ {print $NF; exit}' /proc/cpuinfo`
+# `awk '/^processor/ {N++} END {print N}' /proc/cpuinfo`
+# `grep -c processor /proc/cpuinfo`
 
 SRC_DIR=$(pwd)
 mkdir devel

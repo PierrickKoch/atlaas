@@ -22,7 +22,8 @@ namespace atlaas {
 
 #ifdef _USE_PCL
 
-void atlaas::read_pcd(const std::string& filepath, points& cloud, matrix& transformation) {
+void atlaas::read_pcd(const std::string& filepath, points& cloud,
+        matrix& transformation) const {
     pcl::PCDReader reader;
     pcl::PointCloud<pcl::PointXYZI> input;
     reader.read(filepath, input);
@@ -36,20 +37,24 @@ void atlaas::read_pcd(const std::string& filepath, points& cloud, matrix& transf
         ++it;
     }
     transformation = {{ 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1, }}; // identity
-    Eigen::Map<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>> eigen_matrix((double*)transformation.data());
-    eigen_matrix.topLeftCorner<3,3>() = input.sensor_orientation_.toRotationMatrix().cast<double>();
-    eigen_matrix.topRightCorner<4,1>() = input.sensor_origin_.cast<double>();
+    Eigen::Map<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>
+        eigen_matrix((double*)transformation.data());
+    eigen_matrix.topLeftCorner<3,3>() =
+        input.sensor_orientation_.toRotationMatrix().cast<double>();
+    eigen_matrix.topRightCorner<4,1>() =
+        input.sensor_origin_.cast<double>();
 }
 
-void atlaas::write_pcd(const std::string& filepath, const points& cloud, const matrix& transformation) {
-    typedef pcl::PointCloud<pcl::PointXYZI> pc_t;
-    pc_t::Ptr pcloud(new pc_t);
+void atlaas::write_pcd(const std::string& filepath, const points& cloud,
+        const matrix& transformation, float voxel_size, float dist_sq) const {
+    pcl::PointCloud<pcl::PointXYZI>::Ptr pcloud(new pcl::PointCloud<pcl::PointXYZI>);
+    pcl::PointCloud<pcl::PointXYZI> output;
     pcloud->height = 1;
     pcloud->is_dense = true;
     pcloud->points.resize( cloud.size() );
     auto it = pcloud->points.begin();
     for (const auto& point : cloud) {
-        if (length_sq(point) < 400) {
+        if (length_sq(point) < dist_sq) {
             (*it).x = point[0];
             (*it).y = point[1];
             (*it).z = point[2];
@@ -61,29 +66,28 @@ void atlaas::write_pcd(const std::string& filepath, const points& cloud, const m
     pcloud->points.erase(it, pcloud->points.end());
     pcloud->width = pcloud->points.size();
     // set transformation sensor-world
-    Eigen::Map<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>> eigen_matrix((double*)transformation.data());
-    pcloud->sensor_orientation_ = Eigen::Quaternionf( eigen_matrix.topLeftCorner<3,3>().cast<float>() );
-    pcloud->sensor_origin_ = Eigen::Vector4f( eigen_matrix.topRightCorner<4,1>().cast<float>() );
+    Eigen::Map<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>
+        eigen_matrix((double*)transformation.data());
+    pcloud->sensor_orientation_ =
+        Eigen::Quaternionf( eigen_matrix.topLeftCorner<3,3>().cast<float>() );
+    pcloud->sensor_origin_ =
+        Eigen::Vector4f( eigen_matrix.topRightCorner<4,1>().cast<float>() );
     // voxel grid filter
     pcl::VoxelGrid<pcl::PointXYZI> grid;
-    grid.setInputCloud (pcloud);
-    grid.setLeafSize (0.05f, 0.05f, 0.05f);
-    pcl::PointCloud<pcl::PointXYZI> output;
+    grid.setInputCloud ( pcloud );
+    grid.setLeafSize (voxel_size, voxel_size, voxel_size);
     grid.filter (output);
     // save pcd
     pcl::PCDWriter writer;
     writer.writeBinaryCompressed(filepath, output);
 }
 
-void atlaas::write_pcd(const points& cloud, const matrix& transformation) {
-    write_pcd(pcdpath(pcd_seq++), cloud, transformation);
-}
-
 #else
 
-void atlaas::write_pcd(const points& cloud, const matrix& transformation) {}
-void atlaas::write_pcd(const std::string& filepath, const points& cloud, const matrix& transformation) {}
-void atlaas::read_pcd(const std::string& filepath, points& cloud, matrix& transformation) {}
+void atlaas::read_pcd(const std::string& filepath, points& cloud,
+        matrix& transformation) const {}
+void atlaas::write_pcd(const std::string& filepath, const points& cloud,
+        const matrix& transformation, float voxel_size, float dist_sq) const {}
 
 #endif
 

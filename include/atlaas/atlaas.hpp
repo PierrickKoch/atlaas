@@ -18,6 +18,8 @@
 #include <gdalwrap/gdal.hpp>
 #include <atlaas/common.hpp>
 
+#define PCD_VOXEL_SIZE 0.5f
+#define PCD_DIST_SQ 400.0f
 
 namespace atlaas {
 
@@ -182,17 +184,22 @@ public:
     /**
      * write pcd file
      */
-    void write_pcd(const points& cloud, const matrix& transformation);
+    void write_pcd(const points& cloud, const matrix& transformation) {
+        write_pcd(pcdpath(pcd_seq++), cloud, transformation);
+    }
 
     /**
      * write pcd file
      */
-    void write_pcd(const std::string& filepath, const points& cloud, const matrix& transformation);
+    void write_pcd(const std::string& filepath, const points& cloud,
+        const matrix& transformation, float voxel_size = PCD_VOXEL_SIZE,
+        float dist_sq = PCD_DIST_SQ) const;
 
     /**
      * read pcd file
      */
-    void read_pcd(const std::string& filepath, points& cloud, matrix& transformation);
+    void read_pcd(const std::string& filepath, points& cloud,
+        matrix& transformation) const;
 
     /**
      * merge from raw C array (using std::copy !)
