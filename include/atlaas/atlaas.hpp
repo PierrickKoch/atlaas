@@ -18,7 +18,7 @@
 #include <gdalwrap/gdal.hpp>
 #include <atlaas/common.hpp>
 
-#define PCD_VOXEL_SIZE 0.5f
+#define PCD_VOXEL_SIZE 0.05f
 #define PCD_DIST_SQ 400.0f
 
 namespace atlaas {
