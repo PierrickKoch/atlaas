@@ -46,6 +46,33 @@ void atlaas::read_pcd(const std::string& filepath, points& cloud,
 }
 
 void atlaas::write_pcd(const std::string& filepath, const points& cloud,
+        const matrix& transformation) const {
+    pcl::PointCloud<pcl::PointXYZI> output;
+    output.height = 1;
+    output.width = cloud.size();
+    output.is_dense = true;
+    output.points.resize( cloud.size() );
+    auto it = output.points.begin();
+    for (const auto& point : cloud) {
+        (*it).x = point[0];
+        (*it).y = point[1];
+        (*it).z = point[2];
+        (*it).intensity = point[3];
+        ++it;
+    }
+    // set transformation sensor-world
+    Eigen::Map<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>
+        eigen_matrix((double*)transformation.data());
+    output.sensor_orientation_ =
+        Eigen::Quaternionf( eigen_matrix.topLeftCorner<3,3>().cast<float>() );
+    output.sensor_origin_ =
+        Eigen::Vector4f( eigen_matrix.topRightCorner<4,1>().cast<float>() );
+    // save pcd
+    pcl::PCDWriter writer;
+    writer.writeBinaryCompressed(filepath, output);
+}
+
+void atlaas::write_pcd_voxel(const std::string& filepath, const points& cloud,
         const matrix& transformation, float voxel_size, float dist_sq) const {
     pcl::PointCloud<pcl::PointXYZI>::Ptr pcloud(new pcl::PointCloud<pcl::PointXYZI>);
     pcl::PointCloud<pcl::PointXYZI> output;
@@ -87,6 +114,8 @@ void atlaas::write_pcd(const std::string& filepath, const points& cloud,
 void atlaas::read_pcd(const std::string& filepath, points& cloud,
         matrix& transformation) const {}
 void atlaas::write_pcd(const std::string& filepath, const points& cloud,
+        const matrix& transformation) const {}
+void atlaas::write_pcd_voxel(const std::string& filepath, const points& cloud,
         const matrix& transformation, float voxel_size, float dist_sq) const {}
 
 #endif

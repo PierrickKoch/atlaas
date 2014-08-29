@@ -192,6 +192,11 @@ public:
      * write pcd file
      */
     void write_pcd(const std::string& filepath, const points& cloud,
+        const matrix& transformation) const;
+    /**
+     * write pcd file after voxel-grid filter
+     */
+    void write_pcd_voxel(const std::string& filepath, const points& cloud,
         const matrix& transformation, float voxel_size = PCD_VOXEL_SIZE,
         float dist_sq = PCD_DIST_SQ) const;
 
