@@ -219,18 +219,17 @@ public:
     }
 
     size_t process_pcd(size_t start = 0, size_t end = std::numeric_limits<size_t>::max()) {
-        size_t inc = start;
-        std::string filepath = pcdpath(inc);
         points cloud;
         matrix transformation = {{ 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 }};
-        while ( inc <= end ) {
+        std::string filepath = pcdpath(start);
+        while ( start <= end ) {
             if ( ! file_exists(filepath) )
                 break;
             read_pcd(filepath, cloud, transformation);
             merge(cloud, transformation, false);
-            filepath = pcdpath(inc++);
+            filepath = pcdpath(start++);
         }
-        return inc;
+        return start;
     }
 
     /**

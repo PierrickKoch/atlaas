@@ -39,8 +39,8 @@ cdef class Atlaas:
         self.thisptr.export8u(filepath)
     def export_zmean(self, filepath):
         self.thisptr.export_zmean(filepath)
-    def process_pcd(self, start=0, end=0):
-        if end > start:
+    def process_pcd(self, start=0, end=-1):
+        if end >= start:
             return self.thisptr.process_pcd(start, end)
         else:
             return self.thisptr.process_pcd(start)
