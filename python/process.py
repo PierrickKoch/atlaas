@@ -12,3 +12,7 @@ total = time.time() - start
 test.save_currents()
 
 print( "process avg %.3f ms" % (1000. * total / npcds) )
+
+# gdal_merge.py -co "COMPRESS=DEFLATE" atlaas.*x*.tif
+# gdaldem hillshade -b 4 out.tif -of PNG out.hillshade.png
+# xdg-open out.hillshade.png

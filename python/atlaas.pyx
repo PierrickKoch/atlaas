@@ -23,16 +23,18 @@ cdef class Atlaas:
     def __dealloc__(self):
         del self.thisptr
     def init(self, size_x, size_y, scale, custom_x, custom_y, custom_z,
-              utm_zone, utm_north):
+              utm_zone, utm_north=True):
         self.thisptr.init(size_x, size_y, scale, custom_x, custom_y, custom_z,
               utm_zone, utm_north)
     def merge(self,
-              np.ndarray[np.float32_t, ndim=2] C,
-              np.ndarray[np.double_t,  ndim=2] T):
-        assert T.size == 16 # Matrix(4,4)
-        assert 3 <= C.shape[1] <= 4 # XYZ[I]
-        self.thisptr.c_merge(<const float*> C.data, C.shape[0], C.shape[1],
-                             <const double*> T.data)
+              np.ndarray[np.float32_t, ndim=2] cloud,
+              np.ndarray[np.double_t,  ndim=2] transformation):
+        if not transformation.size == 16:
+            raise TypeError("array size must be 16, transformation: Matrix(4,4)")
+        if not 3 <= cloud.shape[1] <= 4:
+            raise TypeError("array shape[1] must be 3 or 4, cloud: XYZ[I]")
+        self.thisptr.c_merge(<const float*> cloud.data, cloud.shape[0], cloud.shape[1],
+                             <const double*> transformation.data)
     def save_currents(self):
         self.thisptr.save_currents()
     def export8u(self, filepath):

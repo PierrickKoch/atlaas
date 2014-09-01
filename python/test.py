@@ -30,7 +30,7 @@ def merge_test():
     >>> test.merge(cloud, transformation)
     Traceback (most recent call last):
         ...
-    AssertionError
+    TypeError: array shape[1] must be 3 or 4, cloud: XYZ[I]
     >>> 
     >>> cloud = np.array([
     ...     [ 1, 2],
@@ -40,7 +40,7 @@ def merge_test():
     >>> test.merge(cloud, transformation)
     Traceback (most recent call last):
         ...
-    AssertionError
+    TypeError: array shape[1] must be 3 or 4, cloud: XYZ[I]
     """
     return
 
