@@ -7,7 +7,7 @@
  * created: 2013-10-08
  * license: BSD
  */
-#include <cassert>
+#include <iostream>
 
 #include <atlaas/atlaas.hpp>
 
@@ -112,11 +112,17 @@ void atlaas::write_pcd_voxel(const std::string& filepath, const points& cloud,
 #else
 
 void atlaas::read_pcd(const std::string& filepath, points& cloud,
-        matrix& transformation) const {}
+        matrix& transformation) const {
+    std::cerr<<"[warn] atlaas was not compiled with PCL: "<<__func__<<std::endl;
+}
 void atlaas::write_pcd(const std::string& filepath, const points& cloud,
-        const matrix& transformation) const {}
+        const matrix& transformation) const {
+    std::cerr<<"[warn] atlaas was not compiled with PCL: "<<__func__<<std::endl;
+}
 void atlaas::write_pcd_voxel(const std::string& filepath, const points& cloud,
-        const matrix& transformation, float voxel_size, float dist_sq) const {}
+        const matrix& transformation, float voxel_size, float dist_sq) const {
+    std::cerr<<"[warn] atlaas was not compiled with PCL: "<<__func__<<std::endl;
+}
 
 #endif
 

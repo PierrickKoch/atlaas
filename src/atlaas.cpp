@@ -29,8 +29,11 @@ void atlaas::merge(points& cloud, const matrix& transformation, bool dump) {
     // slide map while needed
     do_slide();
 
+#ifdef _USE_PCL
     if (dump)
         write_pcd(cloud, transformation);
+#endif
+
     // use dynamic merge
     // clear the dynamic map (zeros)
     cell_info_t zeros{}; // value-initialization w/empty initializer
