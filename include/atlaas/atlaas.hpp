@@ -14,6 +14,7 @@
 #include <ctime> // std::time
 #include <string>
 #include <sstream> // ostringstream
+#include <iomanip> // setfill,setw
 
 #include <gdalwrap/gdal.hpp>
 #include <atlaas/common.hpp>
@@ -34,7 +35,7 @@ inline std::string tilepath(int x, int y) {
 
 inline std::string pcdpath(size_t seq) {
     std::ostringstream oss;
-    oss << ATLAAS_PATH << "/pcl." << seq << ".pcd";
+    oss << ATLAAS_PATH << "/pcl." << std::setfill('0') << std::setw(5) << seq << ".pcd";
     return oss.str();
 }
 
