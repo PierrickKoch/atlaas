@@ -3,7 +3,7 @@ from morse.builder import *
 robot = ATRV()
 
 kb = Keyboard()
-kb.properties(Speed=2)
+kb.properties(Speed = 3)
 robot.append(kb)
 
 pose = Pose()
@@ -15,4 +15,4 @@ camera.translate(z = 1)
 robot.append(camera)
 camera.add_stream('ros')
 
-env = Environment('indoors-1/boxes')
+env = Environment('outdoors')
