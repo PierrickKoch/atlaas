@@ -24,6 +24,7 @@ def callback(msg):
     start = time.time()
     test.merge(cloud(msg.data), transformation("/map", msg.header))
     profile.append(time.time() - start)
+    test.export8u('atlaas.jpg')
 
 rospy.init_node("atlaas_ros")
 tfl = TransformListener()
