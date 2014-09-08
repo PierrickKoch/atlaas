@@ -9,6 +9,7 @@ robot.append(kb)
 pose = Pose()
 robot.append(pose)
 pose.add_stream('ros', method='morse.middleware.ros.pose.TFPublisher')
+pose.alter(classpath='morse.modifiers.pose_noise.PositionNoiseModifier', _2D=True)
 
 camera = Velodyne()
 camera.translate(z = 1)
