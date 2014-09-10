@@ -47,9 +47,9 @@ int main(int argc, char * argv[]) {
     }
 
     std::string filename = "test.scan";
-    std::cout << " dump scan into file " << filename << std::endl;
+    std::cout << " save scan into file " << filename << std::endl;
 
-    atlaas::dump(filename, cloud, transformation);
+    atlaas::save(filename, cloud, transformation);
 
     atlaas::matrix transformation2;
     atlaas::points cloud2;

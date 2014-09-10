@@ -19,10 +19,8 @@
 
 #include <gdalwrap/gdal.hpp>
 #include <atlaas/common.hpp>
+#include <atlaas/pcd.hpp>
 #include <atlaas/io.hpp>
-
-#define PCD_VOXEL_SIZE 0.05f
-#define PCD_DIST_SQ 400.0f
 
 namespace atlaas {
 
@@ -199,28 +197,14 @@ public:
     /**
      * write pcd file
      */
-    void write_pcd(const points& cloud, const matrix& transformation) {
+    void save_inc(const points& cloud, const matrix& transformation) {
         pcd_time.push_back( get_current_time() );
+#ifdef _USE_PCL
         write_pcd(pcdpath( pcd_time.size() - 1 ), cloud, transformation);
+#else
+        save(pcdpath( pcd_time.size() - 1 ), cloud, transformation);
+#endif
     }
-
-    /**
-     * write pcd file
-     */
-    void write_pcd(const std::string& filepath, const points& cloud,
-        const matrix& transformation) const;
-    /**
-     * write pcd file after voxel-grid filter
-     */
-    void write_pcd_voxel(const std::string& filepath, const points& cloud,
-        const matrix& transformation, float voxel_size = PCD_VOXEL_SIZE,
-        float dist_sq = PCD_DIST_SQ) const;
-
-    /**
-     * read pcd file
-     */
-    void read_pcd(const std::string& filepath, points& cloud,
-        matrix& transformation) const;
 
     /**
      * merge from raw C array (using std::copy !)
@@ -239,7 +223,7 @@ public:
         merge(cd, tr);
     }
 
-    size_t process_pcd(size_t start = 0, size_t end = std::numeric_limits<size_t>::max()) {
+    size_t process(size_t start = 0, size_t end = std::numeric_limits<size_t>::max()) {
         points cloud;
         matrix transformation = {{ 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 }};
         std::string filepath;
@@ -247,10 +231,25 @@ public:
             filepath = pcdpath(start);
             if ( ! file_exists(filepath) )
                 break;
+#ifdef _USE_PCL
             read_pcd(filepath, cloud, transformation);
+#else
+            load(filepath, cloud, transformation);
+#endif
             merge(cloud, transformation, false);
         }
         return start;
+    }
+
+    /**
+     * Load a cloud and a transformation from file for replay.
+     * could be done at the middleware level...
+     */
+    void merge(const std::string& filepath) {
+        points cloud;
+        matrix transformation;
+        load(filepath, cloud, transformation);
+        merge(cloud, transformation);
     }
 
     /**
@@ -330,12 +329,6 @@ public:
             });
         heightmap.save(filepath);
     }
-    /*
-     * Load a cloud and a transformation from file for replay.
-     * could be done at the middleware level...
-     */
-    void merge(const std::string& filepath);
-
 };
 
 } // namespace atlaas

@@ -15,6 +15,7 @@
 #include <cmath> // std::sqrt
 #include <vector>
 #include <string>
+#include <sstream> // ostringstream
 #include <sys/stat.h> // stat, file_exists
 
 namespace atlaas {

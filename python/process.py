@@ -6,7 +6,7 @@ test = atlaas.Atlaas()
 test.init(120.0, 120.0, 0.1, 0, 0, 0, 31, True)
 
 start = time.time()
-npcds = test.process_pcd()
+npcds = test.process()
 total = time.time() - start
 
 test.save_currents()

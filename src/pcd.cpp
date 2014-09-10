@@ -1,5 +1,5 @@
 /*
- * atlaas.cpp
+ * pcd.cpp
  *
  * Atlas at LAAS
  *
@@ -8,8 +8,7 @@
  * license: BSD
  */
 #include <iostream>
-
-#include <atlaas/atlaas.hpp>
+#include <atlaas/pcd.hpp>
 
 #ifdef _USE_PCL
 #include <pcl/point_cloud.h>
@@ -22,8 +21,8 @@ namespace atlaas {
 
 #ifdef _USE_PCL
 
-void atlaas::read_pcd(const std::string& filepath, points& cloud,
-        matrix& transformation) const {
+void read_pcd(const std::string& filepath, points& cloud,
+        matrix& transformation) {
     pcl::PCDReader reader;
     pcl::PointCloud<pcl::PointXYZI> input;
     reader.read(filepath, input);
@@ -45,8 +44,8 @@ void atlaas::read_pcd(const std::string& filepath, points& cloud,
         input.sensor_origin_.cast<double>();
 }
 
-void atlaas::write_pcd(const std::string& filepath, const points& cloud,
-        const matrix& transformation) const {
+void write_pcd(const std::string& filepath, const points& cloud,
+        const matrix& transformation) {
     pcl::PointCloud<pcl::PointXYZI> output;
     output.height = 1;
     output.width = cloud.size();
@@ -72,8 +71,8 @@ void atlaas::write_pcd(const std::string& filepath, const points& cloud,
     writer.writeBinaryCompressed(filepath, output);
 }
 
-void atlaas::write_pcd_voxel(const std::string& filepath, const points& cloud,
-        const matrix& transformation, float voxel_size, float dist_sq) const {
+void write_pcd_voxel(const std::string& filepath, const points& cloud,
+        const matrix& transformation, float voxel_size, float dist_sq) {
     pcl::PointCloud<pcl::PointXYZI>::Ptr pcloud(new pcl::PointCloud<pcl::PointXYZI>);
     pcl::PointCloud<pcl::PointXYZI> output;
     pcloud->height = 1;
@@ -111,16 +110,16 @@ void atlaas::write_pcd_voxel(const std::string& filepath, const points& cloud,
 
 #else
 
-void atlaas::read_pcd(const std::string& filepath, points& cloud,
-        matrix& transformation) const {
+void read_pcd(const std::string& filepath, points& cloud,
+        matrix& transformation) {
     std::cerr<<"[warn] atlaas was not compiled with PCL: "<<__func__<<std::endl;
 }
-void atlaas::write_pcd(const std::string& filepath, const points& cloud,
-        const matrix& transformation) const {
+void write_pcd(const std::string& filepath, const points& cloud,
+        const matrix& transformation) {
     std::cerr<<"[warn] atlaas was not compiled with PCL: "<<__func__<<std::endl;
 }
-void atlaas::write_pcd_voxel(const std::string& filepath, const points& cloud,
-        const matrix& transformation, float voxel_size, float dist_sq) const {
+void write_pcd_voxel(const std::string& filepath, const points& cloud,
+        const matrix& transformation, float voxel_size, float dist_sq) {
     std::cerr<<"[warn] atlaas was not compiled with PCL: "<<__func__<<std::endl;
 }
 
