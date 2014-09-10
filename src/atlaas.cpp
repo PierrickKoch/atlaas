@@ -47,6 +47,13 @@ void atlaas::merge(points& cloud, const matrix& transformation, bool dump) {
     merge();
 }
 
+void atlaas::merge(const std::string& filepath) {
+    points cloud;
+    matrix transformation;
+    load(filepath, cloud, transformation);
+    merge(cloud, transformation);
+}
+
 void atlaas::tile_load(int sx, int sy) {
     std::string filepath = tilepath(current[0] + sx, current[1] + sy);
     if ( ! file_exists( filepath ) )

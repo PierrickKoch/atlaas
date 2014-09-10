@@ -6,3 +6,4 @@ endmacro()
 
 add_atlaas_test( merge_test )
 add_atlaas_test( pcd_test )
+add_atlaas_test( io_test )

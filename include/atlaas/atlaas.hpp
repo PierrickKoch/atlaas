@@ -19,6 +19,7 @@
 
 #include <gdalwrap/gdal.hpp>
 #include <atlaas/common.hpp>
+#include <atlaas/io.hpp>
 
 #define PCD_VOXEL_SIZE 0.05f
 #define PCD_DIST_SQ 400.0f
@@ -329,6 +330,12 @@ public:
             });
         heightmap.save(filepath);
     }
+    /*
+     * Load a cloud and a transformation from file for replay.
+     * could be done at the middleware level...
+     */
+    void merge(const std::string& filepath);
+
 };
 
 } // namespace atlaas
