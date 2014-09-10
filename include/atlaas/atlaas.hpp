@@ -15,6 +15,7 @@
 #include <string>
 #include <sstream> // ostringstream
 #include <iomanip> // setfill,setw
+#include <chrono>
 
 #include <gdalwrap/gdal.hpp>
 #include <atlaas/common.hpp>
@@ -43,7 +44,13 @@ inline std::string pcdpath(size_t seq) {
  * atlaas
  */
 class atlaas {
-    size_t pcd_seq;
+    /**
+     * keep track of time at which we receive each cloud
+     * to be able to correct them if needed in the future
+     */
+    std::vector<double> pcd_time;
+    std::chrono::time_point<std::chrono::system_clock> start_time;
+
     /**
      * I/O data model
      */
@@ -111,7 +118,6 @@ public:
     void init(double size_x, double size_y, double scale,
               double custom_x, double custom_y, double custom_z,
               int utm_zone, bool utm_north = true) {
-        pcd_seq = 0;
         width  = std::ceil(size_x / scale);
         height = std::ceil(size_y / scale);
         meta.set_size(width, height); // does not change the container
@@ -146,11 +152,18 @@ public:
         dyninter.resize( width * height );
         gndinter.resize( width * height );
         variance_threshold = 0.05;
+        start_time = std::chrono::system_clock::now();
     }
 
     void set_time_base(std::time_t base) {
         time_base = base;
         meta.metadata["TIME"] = std::to_string(time_base);
+    }
+
+    double get_current_time() {
+        std::chrono::duration<double> elapsed_seconds =
+            std::chrono::system_clock::now() - start_time;
+        return elapsed_seconds.count() + time_base;
     }
 
     void set_variance_threshold(float threshold) {
@@ -186,7 +199,8 @@ public:
      * write pcd file
      */
     void write_pcd(const points& cloud, const matrix& transformation) {
-        write_pcd(pcdpath(pcd_seq++), cloud, transformation);
+        pcd_time.push_back( get_current_time() );
+        write_pcd(pcdpath( pcd_time.size() - 1 ), cloud, transformation);
     }
 
     /**
