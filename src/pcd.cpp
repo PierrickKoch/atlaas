@@ -23,9 +23,8 @@ namespace atlaas {
 
 void read_pcd(const std::string& filepath, points& cloud,
         matrix& transformation) {
-    pcl::PCDReader reader;
     pcl::PointCloud<pcl::PointXYZI> input;
-    reader.read(filepath, input);
+    pcl::io::loadPCDFile(filepath, input);
     cloud.resize( input.points.size() );
     auto it = cloud.begin();
     for (const auto& point : input.points) {
@@ -67,8 +66,7 @@ void write_pcd(const std::string& filepath, const points& cloud,
     output.sensor_origin_ =
         Eigen::Vector4f( eigen_matrix.topRightCorner<4,1>().cast<float>() );
     // save pcd
-    pcl::PCDWriter writer;
-    writer.writeBinaryCompressed(filepath, output);
+    pcl::io::savePCDFileBinaryCompressed(filepath, output);
 }
 
 void write_pcd_voxel(const std::string& filepath, const points& cloud,
@@ -104,8 +102,7 @@ void write_pcd_voxel(const std::string& filepath, const points& cloud,
     grid.setLeafSize (voxel_size, voxel_size, voxel_size);
     grid.filter (output);
     // save pcd
-    pcl::PCDWriter writer;
-    writer.writeBinaryCompressed(filepath, output);
+    pcl::io::savePCDFileBinaryCompressed(filepath, output);
 }
 
 #else
