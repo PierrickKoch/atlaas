@@ -35,7 +35,12 @@ inline std::string tilepath(int x, int y) {
 
 inline std::string pcdpath(size_t seq) {
     std::ostringstream oss;
-    oss << ATLAAS_PATH << "/pcl." << std::setfill('0') << std::setw(5) << seq << ".pcd";
+    oss << ATLAAS_PATH << "/cloud." << std::setfill('0') << std::setw(5) << seq
+#ifdef _USE_PCL
+        << ".pcd";
+#else
+        << ".atlaas";
+#endif
     return oss.str();
 }
 
