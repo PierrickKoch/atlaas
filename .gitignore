@@ -5,4 +5,10 @@ build/
 *.pyc
 # other files
 *~
+# atlaas
+atlaas.so
+atlaas.*.tif
+atlaas.jpg*
+cloud.*.*
+out.*
 
