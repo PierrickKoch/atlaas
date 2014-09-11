@@ -244,13 +244,16 @@ public:
     }
 
     /**
-     * Load a cloud and a transformation from file for replay.
-     * could be done at the middleware level...
+     * Load a cloud and a transformation from file for replay
      */
     void merge(const std::string& filepath) {
         points cloud;
         matrix transformation;
+#ifdef _USE_PCL
+        read_pcd(filepath, cloud, transformation);
+#else
         load(filepath, cloud, transformation);
+#endif
         merge(cloud, transformation);
     }
 
