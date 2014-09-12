@@ -52,7 +52,7 @@ class atlaas {
      * keep track of time at which we receive each cloud
      * to be able to correct them if needed in the future
      */
-    std::vector<uint64_t> pcd_time;
+    std::vector<std::pair<uint64_t, map_id_t>> pcd_time;
 
     /**
      * I/O data model
@@ -200,7 +200,7 @@ public:
      * write pcd file
      */
     void save_inc(const points& cloud, const matrix& transformation) {
-        pcd_time.push_back( get_time_since_epoch_ms() );
+        pcd_time.push_back({ get_time_since_epoch_ms(), current });
 #ifdef _USE_PCL
         write_pcd(pcdpath( pcd_time.size() - 1 ), cloud, transformation);
 #else
