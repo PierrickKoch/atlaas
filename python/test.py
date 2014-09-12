@@ -8,39 +8,29 @@ transformation = np.identity(4, dtype=np.double)
 
 def merge_test():
     """
-    >>> cloud = np.array([
-    ...     [ 1, 2, 3, 0],
-    ...     [-1,-2,-3, 0],
-    ... ], dtype=np.float32)
-    >>> 
+    >>> cloud = np.random.rand(200000, 4).astype('float32')
     >>> test.merge(cloud, transformation)
-    >>> 
-    >>> cloud = np.array([
-    ...     [ 1, 2, 3],
-    ...     [-1,-2,-3],
-    ... ], dtype=np.float32)
-    >>> 
-    >>> test.merge(cloud, transformation)
-    >>> 
-    >>> cloud = np.array([
-    ...     [ 1, 2, 3, 0, 5],
-    ...     [-1,-2,-3, 0, 5],
-    ... ], dtype=np.float32)
-    >>> 
+
+    >>> cloud = np.random.rand(200000, 5).astype('float32')
     >>> test.merge(cloud, transformation)
     Traceback (most recent call last):
         ...
     TypeError: array shape[1] must be 3 or 4, cloud: XYZ[I]
-    >>> 
-    >>> cloud = np.array([
-    ...     [ 1, 2],
-    ...     [-1,-2],
-    ... ], dtype=np.float32)
-    >>> 
+
+    >>> cloud = np.random.rand(200000, 2).astype('float32')
     >>> test.merge(cloud, transformation)
     Traceback (most recent call last):
         ...
     TypeError: array shape[1] must be 3 or 4, cloud: XYZ[I]
+
+    >>> cloud = np.random.rand(200000, 3)
+    >>> test.merge(cloud, transformation)
+    Traceback (most recent call last):
+        ...
+    ValueError: Buffer dtype mismatch, expected 'float32_t' but got 'double'
+
+    >>> cloud = np.random.rand(200000, 3).astype('float32')
+    >>> test.merge(cloud, transformation)
     """
     return
 
