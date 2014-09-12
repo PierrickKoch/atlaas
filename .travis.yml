@@ -1,9 +1,8 @@
 language: cpp
 
 before_install:
- - sudo apt-get update
- - sudo apt-get install cmake
- - sudo apt-get install libgdal1h
- - sudo apt-get install libgdal-dev
+ - sudo add-apt-repository ppa:cython-dev/master-ppa -y
+ - sudo apt-get update -qq
+ - sudo apt-get install -qq cmake cython python-numpy libgdal1h libgdal-dev
 
 script: "time ./.travis.bash"

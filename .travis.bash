@@ -31,4 +31,8 @@ make -j$n
 make test
 make install
 
+# cython
+cd ../python
+make test
+
 echo "==================================="
