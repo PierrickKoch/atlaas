@@ -10,10 +10,11 @@
 #ifndef ATLAAS_IO_HPP
 #define ATLAAS_IO_HPP
 
-#include <string>
-#include <iostream>
-#include <fstream>
-#include <cassert>
+#include <string> // std::string
+#include <iostream> // std::ios
+#include <fstream> // {i,o}fstream
+#include <cassert> // assert
+#include <stdexcept> // std::runtime_error
 
 #include <atlaas/common.hpp>
 
