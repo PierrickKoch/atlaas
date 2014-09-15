@@ -33,6 +33,10 @@ inline std::string tilepath(int x, int y) {
     return oss.str();
 }
 
+inline std::string tilepath(const map_id_t& p) {
+    return tilepath(p[0], p[1]);
+}
+
 inline std::string pcdpath(size_t seq) {
     std::ostringstream oss;
     oss << ATLAAS_PATH << "/cloud." << std::setfill('0') << std::setw(5) << seq
@@ -242,6 +246,85 @@ public:
         }
         return start;
     }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Magic fix path between 2 good GPS signals
+    ////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * 1.
+     */
+    size_t get_closest_pcd_id(uint64_t miliseconds) {
+        size_t i = 0;
+        for (; i < pcd_time.size(); i++) {
+            if (miliseconds >= pcd_time[i].first) {
+                if (i > 0 && ((miliseconds - pcd_time[i-1].first) <
+                              (pcd_time[i].first - miliseconds)))
+                    i--;
+                break;
+            }
+        }
+        return i;
+    }
+    void clear_all() {
+        // clear the dynamic map (zeros)
+        cell_info_t zeros{}; // value-initialization w/empty initializer
+        std::fill(dyninter.begin(), dyninter.end(), zeros);
+        std::fill(gndinter.begin(), gndinter.end(), zeros);
+        std::fill(internal.begin(), internal.end(), zeros);
+    }
+
+    /**
+     * last_good_pose:  miliseconds since epoch
+     * time_of_fix:     miliseconds since epoch
+     * point_xy_t:      2D point {x,y}
+     */
+    size_t reprocess(uint64_t last_good_pose, uint64_t time_of_fix, double fixed_pose_x, double fixed_pose_y) {
+        // 1. find the pcd id at time `last_good_pose`
+        size_t last_good_pcd_id = get_closest_pcd_id(last_good_pose),
+               fixed_pcd_id = get_closest_pcd_id(time_of_fix);
+        std::cout << __func__ << "diff miliseconds last good pose: " << (int)(last_good_pose - pcd_time[last_good_pcd_id].first) << std::endl;
+        // 2. build correct path, get path length
+        points cloud;
+        matrix transformation;
+        std::vector<point_xy_t> path(1+fixed_pcd_id-last_good_pcd_id);
+        for (size_t i = last_good_pcd_id; i <= fixed_pcd_id; i++) {
+            read_pcd(pcdpath( i ), cloud, transformation);
+            path.push_back( matrix_to_point(transformation) );
+        }
+        float dist = 0;
+        std::vector<float> inc_dist(path.size());
+        for (size_t i = 1; i < path.size(); i++) {
+            dist += distance(path[i-1], path[i]);
+            inc_dist.push_back(dist);
+        }
+        double dx = fixed_pose_x - path[path.size()-1][0],
+               dy = fixed_pose_y - path[path.size()-1][1];
+        for (size_t i = last_good_pcd_id, j = 0; i <= fixed_pcd_id; i++) {
+            std::string filepath = pcdpath( i );
+            read_pcd(filepath, cloud, transformation);
+            float factor = inc_dist[j++] / dist;
+            transformation[3] += dx * factor; // transformation.x
+            transformation[7] += dy * factor; // transformation.y
+            write_pcd(filepath, cloud, transformation);
+        }
+        // 4. move all atlaas.*.tif from map_id related to the fix to old.pcd_id.*.tif
+        for (size_t i = last_good_pcd_id; i <= fixed_pcd_id; i++) {
+            std::string tile_path = tilepath(pcd_time[i].second);
+            if ( file_exists(tile_path) ) {
+                std::ostringstream oss;
+                oss << tile_path << fixed_pcd_id << ".tif";
+                std::rename( tile_path.c_str() , oss.str().c_str() );
+            }
+        }
+        // 5. clear internal
+        clear_all();
+        // 6. process all pcd from pcd id last good to fixed time, correcting their pose
+        return process(last_good_pcd_id, fixed_pcd_id);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
 
     /**
      * Load a cloud and a transformation from file for replay

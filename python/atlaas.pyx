@@ -2,6 +2,9 @@ cimport numpy as np
 from libcpp cimport bool
 from libcpp.string cimport string
 
+cdef extern from "stdint.h":
+    ctypedef unsigned long long uint64_t
+
 cdef extern from "atlaas/atlaas.hpp" namespace "atlaas":
     cdef cppclass atlaas:
         atlaas()
@@ -15,6 +18,7 @@ cdef extern from "atlaas/atlaas.hpp" namespace "atlaas":
         void export_zmean(const string& filepath)
         size_t process(size_t start)
         size_t process(size_t start, size_t end)
+        size_t reprocess(uint64_t last_good_pose, uint64_t time_of_fix, double fixed_pose_x, double fixed_pose_y)
 
 cdef class Atlaas:
     cdef atlaas *thisptr # hold a C++ instance which we're wrapping
@@ -46,3 +50,5 @@ cdef class Atlaas:
             return self.thisptr.process(start, end)
         else:
             return self.thisptr.process(start)
+    def reprocess(self, last_good_pose, time_of_fix, fixed_pose_x, fixed_pose_y):
+        self.thisptr.reprocess(last_good_pose, time_of_fix, fixed_pose_x, fixed_pose_y)
