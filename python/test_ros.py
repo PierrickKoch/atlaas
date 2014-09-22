@@ -16,13 +16,13 @@ def transformation(frame, header):
     M[:3, 3] = position[:3]
     return M
 
-def cloud(data):
-    buff = np.frombuffer(data, dtype=np.float32)
-    return buff.reshape(buff.size/3, 3)
+def cloud(msg):
+    assert(msg.height == 1)
+    return np.ndarray(shape=(msg.width, 3), dtype=np.float32, buffer=msg.data)
 
 def callback(msg):
     start = time.time()
-    test.merge(cloud(msg.data), transformation("/map", msg.header))
+    test.merge(cloud(msg), transformation("/map", msg.header))
     profile.append(time.time() - start)
     test.export8u('atlaas.jpg')
 
