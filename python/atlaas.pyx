@@ -16,7 +16,6 @@ cdef extern from "atlaas/atlaas.hpp" namespace "atlaas":
         void save_currents()
         void export8u(const string& filepath)
         void export_zmean(const string& filepath)
-        size_t process(size_t start)
         size_t process(size_t start, size_t end)
         size_t reprocess(uint64_t last_good_pose, uint64_t time_of_fix, double fixed_pose_x, double fixed_pose_y)
 
@@ -45,10 +44,7 @@ cdef class Atlaas:
         self.thisptr.export8u(filepath)
     def export_zmean(self, filepath):
         self.thisptr.export_zmean(filepath)
-    def process(self, start=0, end=-1):
-        if end >= start:
-            return self.thisptr.process(start, end)
-        else:
-            return self.thisptr.process(start)
+    def process(self, start=0, end=2**32):
+        return self.thisptr.process(start, end)
     def reprocess(self, last_good_pose, time_of_fix, fixed_pose_x, fixed_pose_y):
-        self.thisptr.reprocess(last_good_pose, time_of_fix, fixed_pose_x, fixed_pose_y)
+        return self.thisptr.reprocess(last_good_pose, time_of_fix, fixed_pose_x, fixed_pose_y)

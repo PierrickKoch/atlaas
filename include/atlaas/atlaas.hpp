@@ -13,40 +13,13 @@
 #include <memory> // unique_ptr C++11
 #include <ctime> // std::time
 #include <string>
-#include <sstream> // ostringstream
-#include <iomanip> // setfill,setw
 #include <chrono>
 
 #include <gdalwrap/gdal.hpp>
 #include <atlaas/common.hpp>
-#include <atlaas/pcd.hpp>
 #include <atlaas/io.hpp>
 
 namespace atlaas {
-
-// init tile-path from the environment variable ATLAAS_PATH
-static const std::string ATLAAS_PATH = getenv("ATLAAS_PATH", ".");
-
-inline std::string tilepath(int x, int y) {
-    std::ostringstream oss;
-    oss << ATLAAS_PATH << "/atlaas." << x << "x" << y << ".tif";
-    return oss.str();
-}
-
-inline std::string tilepath(const map_id_t& p) {
-    return tilepath(p[0], p[1]);
-}
-
-inline std::string pcdpath(size_t seq) {
-    std::ostringstream oss;
-    oss << ATLAAS_PATH << "/cloud." << std::setfill('0') << std::setw(5) << seq
-#ifdef _USE_PCL
-        << ".pcd";
-#else
-        << ".atlaas";
-#endif
-    return oss.str();
-}
 
 /**
  * atlaas
@@ -205,11 +178,7 @@ public:
      */
     void save_inc(const points& cloud, const matrix& transformation) {
         pcd_time.push_back({ get_time_since_epoch_ms(), current });
-#ifdef _USE_PCL
-        write_pcd(pcdpath( pcd_time.size() - 1 ), cloud, transformation);
-#else
         save(pcdpath( pcd_time.size() - 1 ), cloud, transformation);
-#endif
     }
 
     /**
@@ -237,11 +206,7 @@ public:
             filepath = pcdpath(start);
             if ( ! file_exists(filepath) )
                 break;
-#ifdef _USE_PCL
-            read_pcd(filepath, cloud, transformation);
-#else
             load(filepath, cloud, transformation);
-#endif
             merge(cloud, transformation, false);
         }
         return start;
@@ -289,7 +254,7 @@ public:
         matrix transformation;
         std::vector<point_xy_t> path(1+fixed_pcd_id-last_good_pcd_id);
         for (size_t i = last_good_pcd_id; i <= fixed_pcd_id; i++) {
-            read_pcd(pcdpath( i ), cloud, transformation);
+            load(pcdpath( i ), cloud, transformation);
             path.push_back( matrix_to_point(transformation) );
         }
         float dist = 0;
@@ -302,11 +267,11 @@ public:
                dy = fixed_pose_y - path[path.size()-1][1];
         for (size_t i = last_good_pcd_id, j = 0; i <= fixed_pcd_id; i++) {
             std::string filepath = pcdpath( i );
-            read_pcd(filepath, cloud, transformation);
+            load(filepath, cloud, transformation);
             float factor = inc_dist[j++] / dist;
             transformation[3] += dx * factor; // transformation.x
             transformation[7] += dy * factor; // transformation.y
-            write_pcd(filepath, cloud, transformation);
+            save(filepath, cloud, transformation);
         }
         // 4. move all atlaas.*.tif from map_id related to the fix to old.pcd_id.*.tif
         for (size_t i = last_good_pcd_id; i <= fixed_pcd_id; i++) {
@@ -332,11 +297,7 @@ public:
     void merge(const std::string& filepath) {
         points cloud;
         matrix transformation;
-#ifdef _USE_PCL
-        read_pcd(filepath, cloud, transformation);
-#else
         load(filepath, cloud, transformation);
-#endif
         merge(cloud, transformation);
     }
 
@@ -422,4 +383,3 @@ public:
 } // namespace atlaas
 
 #endif // ATLAAS_HPP
-

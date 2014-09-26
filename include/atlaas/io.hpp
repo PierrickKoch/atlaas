@@ -25,7 +25,7 @@ namespace atlaas {
  * into a file <filename>
  */
 template<typename PointT>
-inline void save(const std::string& filepath,
+inline void write_raw(const std::string& filepath,
     const std::vector<PointT>& cloud, const matrix& transformation) {
 
     std::ofstream file(filepath, std::ios::out | std::ios::trunc | std::ios::binary);
@@ -45,7 +45,7 @@ inline void save(const std::string& filepath,
 }
 
 template<typename PointT>
-inline void load(const std::string& filepath,
+inline void read_raw(const std::string& filepath,
     std::vector<PointT>& cloud, matrix& transformation) {
 
     std::ifstream file(filepath, std::ios::in | std::ios::binary);
@@ -65,6 +65,12 @@ inline void load(const std::string& filepath,
     // read cloud
     file.read((char*)&cloud[0], cloud_size * sizeof(PointT));
 }
+
+void save(const std::string& filepath,
+    const points& cloud, const matrix& transformation);
+void load(const std::string& filepath,
+    points& cloud, matrix& transformation);
+std::string pcdpath(size_t seq);
 
 } // namespace atlaas
 

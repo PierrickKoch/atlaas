@@ -16,6 +16,7 @@
 #include <vector>
 #include <string>
 #include <sstream> // ostringstream
+#include <iomanip> // setfill,setw
 #include <sys/stat.h> // stat, file_exists
 
 namespace atlaas {
@@ -88,6 +89,25 @@ inline bool file_exists(const std::string& name) {
     struct stat buffer;
     return ( stat(name.c_str(), &buffer) == 0 );
 }
+
+
+/**
+ * Configuration
+ */
+
+// init tile-path from the environment variable ATLAAS_PATH
+static const std::string ATLAAS_PATH = getenv("ATLAAS_PATH", ".");
+
+inline std::string tilepath(int x, int y) {
+    std::ostringstream oss;
+    oss << ATLAAS_PATH << "/atlaas." << x << "x" << y << ".tif";
+    return oss.str();
+}
+
+inline std::string tilepath(const map_id_t& p) {
+    return tilepath(p[0], p[1]);
+}
+
 
 /**
  * Transformation helpers
@@ -215,4 +235,3 @@ inline float length_sq(const Point& p) {
 } // namespace atlaas
 
 #endif // ATLAAS_COMMON_HPP
-
