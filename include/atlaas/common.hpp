@@ -70,6 +70,12 @@ inline std::ostream& operator<<(std::ostream& os, const std::array<T, N>& v) {
     return stream_it(os, v);
 }
 
+template <typename T1, typename T2>
+inline std::ostream& operator<<(std::ostream& os, const std::pair<T1, T2>& v) {
+    os << "(" << v.first << ", " << v.second << ")";
+    return os;
+}
+
 /**
  * System helpers
  */

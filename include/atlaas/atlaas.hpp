@@ -222,7 +222,7 @@ public:
     size_t get_closest_pcd_id(uint64_t miliseconds) {
         size_t i = 0;
         for (; i < pcd_time.size(); i++) {
-            if (miliseconds >= pcd_time[i].first) {
+            if (pcd_time[i].first >= miliseconds) {
                 if (i > 0 && ((miliseconds - pcd_time[i-1].first) <
                               (pcd_time[i].first - miliseconds)))
                     i--;
@@ -248,23 +248,32 @@ public:
         // 1. find the pcd id at time `last_good_pose`
         size_t last_good_pcd_id = get_closest_pcd_id(last_good_pose),
                fixed_pcd_id = get_closest_pcd_id(time_of_fix);
-        std::cout << __func__ << "diff miliseconds last good pose: " << (int)(last_good_pose - pcd_time[last_good_pcd_id].first) << std::endl;
+        std::cout << __func__ << " last_good_pcd_id = " << last_good_pcd_id << std::endl;
+        std::cout << __func__ << " fixed_pcd_id =     " << fixed_pcd_id << std::endl;
+        std::cout << __func__ << " last_good_time = " << pcd_time[last_good_pcd_id].first << std::endl;
+        std::cout << __func__ << " fixed_pcd_time = " << pcd_time[fixed_pcd_id].first << std::endl;
+        std::cout << __func__ << " diff miliseconds last good pose: " << (int)(last_good_pose - pcd_time[last_good_pcd_id].first) << std::endl;
+        std::cout << __func__ << " diff miliseconds time of fix:    " << (int)(time_of_fix - pcd_time[fixed_pcd_id].first) << std::endl;
+        std::cout << __func__ << " pcd_time = " << to_string(pcd_time) << std::endl;
         // 2. build correct path, get path length
         points cloud;
         matrix transformation;
         std::vector<point_xy_t> path(1+fixed_pcd_id-last_good_pcd_id);
-        for (size_t i = last_good_pcd_id; i <= fixed_pcd_id; i++) {
+        for (size_t i = last_good_pcd_id, j = 0; i <= fixed_pcd_id; i++, j++) {
             load(pcdpath( i ), cloud, transformation);
-            path.push_back( matrix_to_point(transformation) );
+            path[j] = matrix_to_point(transformation) ;
         }
         float dist = 0;
         std::vector<float> inc_dist(path.size());
-        for (size_t i = 1; i < path.size(); i++) {
-            dist += distance(path[i-1], path[i]);
-            inc_dist.push_back(dist);
+        for (size_t i = 0; i < path.size() - 1; i++) {
+            dist += distance(path[i], path[i+1]);
+            inc_dist[i] = dist;
         }
         double dx = fixed_pose_x - path[path.size()-1][0],
                dy = fixed_pose_y - path[path.size()-1][1];
+        std::cout << "dx,dy = " << dx << ", " << dy << std::endl;
+        std::cout << "path = " << path << std::endl;
+        std::cout << "inc_dist = " << inc_dist << std::endl;
         for (size_t i = last_good_pcd_id, j = 0; i <= fixed_pcd_id; i++) {
             std::string filepath = pcdpath( i );
             load(filepath, cloud, transformation);
@@ -275,11 +284,15 @@ public:
         }
         // 4. move all atlaas.*.tif from map_id related to the fix to old.pcd_id.*.tif
         for (size_t i = last_good_pcd_id; i <= fixed_pcd_id; i++) {
-            std::string tile_path = tilepath(pcd_time[i].second);
-            if ( file_exists(tile_path) ) {
-                std::ostringstream oss;
-                oss << tile_path << fixed_pcd_id << ".tif";
-                std::rename( tile_path.c_str() , oss.str().c_str() );
+            for (uint sx=0; sx <= 2; sx++)
+            for (uint sy=0; sy <= 2; sy++) {
+                std::string tile_path = tilepath(pcd_time[i].second[0]+sx,
+                                                 pcd_time[i].second[1]+sy);
+                if ( file_exists(tile_path) ) {
+                    std::ostringstream oss;
+                    oss << tile_path << fixed_pcd_id << ".tif";
+                    std::rename( tile_path.c_str() , oss.str().c_str() );
+                }
             }
         }
         // 5. clear internal
