@@ -18,6 +18,7 @@
 #include <sstream> // ostringstream
 #include <iomanip> // setfill,setw
 #include <sys/stat.h> // stat, file_exists
+#include <chrono> // system_clock
 
 namespace atlaas {
 
@@ -96,6 +97,11 @@ inline bool file_exists(const std::string& name) {
     return ( stat(name.c_str(), &buffer) == 0 );
 }
 
+
+inline uint64_t milliseconds_since_epoch() {
+    return std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch() ).count();
+}
 
 /**
  * Configuration

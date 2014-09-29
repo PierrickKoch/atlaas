@@ -13,7 +13,6 @@
 #include <memory> // unique_ptr C++11
 #include <ctime> // std::time
 #include <string>
-#include <chrono>
 
 #include <gdalwrap/gdal.hpp>
 #include <atlaas/common.hpp>
@@ -139,11 +138,6 @@ public:
         meta.metadata["TIME"] = std::to_string(time_base);
     }
 
-    uint64_t get_time_since_epoch_ms() {
-        return std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::system_clock::now().time_since_epoch() ).count();
-    }
-
     void set_variance_threshold(float threshold) {
         variance_threshold = threshold;
     }
@@ -177,7 +171,7 @@ public:
      * write pcd file
      */
     void save_inc(const points& cloud, const matrix& transformation) {
-        pcd_time.push_back({ get_time_since_epoch_ms(), current });
+        pcd_time.push_back({ milliseconds_since_epoch(), current });
         save(pcdpath( pcd_time.size() - 1 ), cloud, transformation);
     }
 
@@ -219,12 +213,12 @@ public:
     /**
      * 1.
      */
-    size_t get_closest_pcd_id(uint64_t miliseconds) {
+    size_t get_closest_pcd_id(uint64_t miliseconds) const {
         size_t i = 0;
         for (; i < pcd_time.size(); i++) {
             if (pcd_time[i].first >= miliseconds) {
-                if (i > 0 && ((miliseconds - pcd_time[i-1].first) <
-                              (pcd_time[i].first - miliseconds)))
+                if ((i > 0) && ((miliseconds - pcd_time[i-1].first) <
+                                (pcd_time[i].first - miliseconds)))
                     i--;
                 break;
             }
@@ -248,13 +242,6 @@ public:
         // 1. find the pcd id at time `last_good_pose`
         size_t last_good_pcd_id = get_closest_pcd_id(last_good_pose),
                fixed_pcd_id = get_closest_pcd_id(time_of_fix);
-        std::cout << __func__ << " last_good_pcd_id = " << last_good_pcd_id << std::endl;
-        std::cout << __func__ << " fixed_pcd_id =     " << fixed_pcd_id << std::endl;
-        std::cout << __func__ << " last_good_time = " << pcd_time[last_good_pcd_id].first << std::endl;
-        std::cout << __func__ << " fixed_pcd_time = " << pcd_time[fixed_pcd_id].first << std::endl;
-        std::cout << __func__ << " diff miliseconds last good pose: " << (int)(last_good_pose - pcd_time[last_good_pcd_id].first) << std::endl;
-        std::cout << __func__ << " diff miliseconds time of fix:    " << (int)(time_of_fix - pcd_time[fixed_pcd_id].first) << std::endl;
-        std::cout << __func__ << " pcd_time = " << to_string(pcd_time) << std::endl;
         // 2. build correct path, get path length
         points cloud;
         matrix transformation;
@@ -271,9 +258,6 @@ public:
         }
         double dx = fixed_pose_x - path[path.size()-1][0],
                dy = fixed_pose_y - path[path.size()-1][1];
-        std::cout << "dx,dy = " << dx << ", " << dy << std::endl;
-        std::cout << "path = " << path << std::endl;
-        std::cout << "inc_dist = " << inc_dist << std::endl;
         for (size_t i = last_good_pcd_id, j = 0; i <= fixed_pcd_id; i++) {
             std::string filepath = pcdpath( i );
             load(filepath, cloud, transformation);
@@ -290,7 +274,7 @@ public:
                                                  pcd_time[i].second[1]+sy);
                 if ( file_exists(tile_path) ) {
                     std::ostringstream oss;
-                    oss << tile_path << fixed_pcd_id << ".tif";
+                    oss << tile_path << "." << fixed_pcd_id << ".bak";
                     std::rename( tile_path.c_str() , oss.str().c_str() );
                 }
             }
@@ -298,7 +282,7 @@ public:
         // 5. clear internal
         clear_all();
         // 6. process all pcd from pcd id last good to fixed time, correcting their pose
-        return process(last_good_pcd_id, fixed_pcd_id);
+        return process(last_good_pcd_id) - last_good_pcd_id;
     }
 
     ////////////////////////////////////////////////////////////////////////////
