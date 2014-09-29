@@ -10,12 +10,12 @@ int main(int argc, char * argv[]) {
     atlaas::points cloud = atlaas::random_cloud();
     atlaas::matrix transformation = atlaas::identity;
 
-    atlaas::save("test.scan", cloud, transformation);
+    atlaas::write_raw("test.scan", cloud, transformation);
 
     atlaas::points cloud2;
     atlaas::matrix transformation2;
 
-    atlaas::load("test.scan", cloud2, transformation2);
+    atlaas::read_raw("test.scan", cloud2, transformation2);
 
     assert( atlaas::allclose( cloud, cloud2 ) );
     assert( atlaas::allclose( transformation, transformation2 ) );
