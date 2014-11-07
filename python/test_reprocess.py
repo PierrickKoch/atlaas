@@ -10,8 +10,7 @@ cloud = np.random.rand(2000, 3).astype('float32')
 time_ms = []
 for i in range(100):
     time_ms.append( int(time.time()*1000) )
-    transformation[0][3] = i
-    transformation[1][3] = i
+    transformation[0:2,3] = i
     test.merge(cloud, transformation)
 
 start = time.time()

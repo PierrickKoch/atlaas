@@ -33,10 +33,9 @@ void load(const std::string& filepath,
       _CLOUD_LOAD(filepath, cloud, transformation);
 }
 
-std::string pcdpath(size_t seq) {
+std::string cloud_filename(size_t seq) {
     std::ostringstream oss;
-    oss << ATLAAS_PATH << "/cloud." << std::setfill('0') <<
-        std::setw(5) << seq << _CLOUD_EXT;
+    oss << "cloud." << std::setfill('0') << std::setw(5) << seq << _CLOUD_EXT;
     return oss.str();
 }
 

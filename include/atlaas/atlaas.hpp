@@ -36,6 +36,8 @@ class atlaas {
     gdalwrap::gdal meta;
     mutable gdalwrap::gdal tile;
 
+    std::string atlaas_path;
+
     /**
      * internal data model
      */
@@ -131,6 +133,21 @@ public:
         dyninter.resize( width * height );
         gndinter.resize( width * height );
         variance_threshold = 0.05;
+        atlaas_path = getenv("ATLAAS_PATH", ".");
+    }
+
+    void set_atlaas_path(const std::string& path) {
+        atlaas_path = path;
+    }
+
+    std::string tilepath(int x, int y) const {
+        std::ostringstream oss;
+        oss << atlaas_path << "/atlaas." << x << "x" << y << ".tif";
+        return oss.str();
+    }
+
+    std::string tilepath(const map_id_t& p) const {
+        return tilepath(p[0], p[1]);
     }
 
     void set_time_base(std::time_t base) {
@@ -167,12 +184,18 @@ public:
      */
     void merge(points& cloud, const matrix& transformation, bool dump = true);
 
+    std::string cloud_filepath(size_t seq) const {
+        std::ostringstream oss;
+        oss << atlaas_path << "/" << cloud_filename(seq);
+        return oss.str();
+    }
+
     /**
      * write pcd file
      */
     void save_inc(const points& cloud, const matrix& transformation) {
         pcd_time.push_back({ milliseconds_since_epoch(), current });
-        save(pcdpath( pcd_time.size() - 1 ), cloud, transformation);
+        save(cloud_filepath( pcd_time.size() - 1 ), cloud, transformation);
     }
 
     /**
@@ -197,7 +220,7 @@ public:
         matrix transformation = {{ 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 }};
         std::string filepath;
         for (; start <= end; start++ ) {
-            filepath = pcdpath(start);
+            filepath = cloud_filepath(start);
             if ( ! file_exists(filepath) )
                 break;
             load(filepath, cloud, transformation);
@@ -243,11 +266,13 @@ public:
         size_t last_good_pcd_id = get_closest_pcd_id(last_good_pose),
                fixed_pcd_id = get_closest_pcd_id(time_of_fix);
         // 2. build correct path, get path length
+        if (last_good_pcd_id >= fixed_pcd_id)
+            return 0;
         points cloud;
         matrix transformation;
         std::vector<point_xy_t> path(1+fixed_pcd_id-last_good_pcd_id);
         for (size_t i = last_good_pcd_id, j = 0; i <= fixed_pcd_id; i++, j++) {
-            load(pcdpath( i ), cloud, transformation);
+            load(cloud_filepath( i ), cloud, transformation);
             path[j] = matrix_to_point(transformation) ;
         }
         float dist = 0;
@@ -259,7 +284,7 @@ public:
         double dx = fixed_pose_x - path[path.size()-1][0],
                dy = fixed_pose_y - path[path.size()-1][1];
         for (size_t i = last_good_pcd_id, j = 0; i <= fixed_pcd_id; i++) {
-            std::string filepath = pcdpath( i );
+            std::string filepath = cloud_filepath( i );
             load(filepath, cloud, transformation);
             float factor = inc_dist[j++] / dist;
             transformation[3] += dx * factor; // transformation.x

@@ -70,7 +70,7 @@ void save(const std::string& filepath,
     const points& cloud, const matrix& transformation);
 void load(const std::string& filepath,
     points& cloud, matrix& transformation);
-std::string pcdpath(size_t seq);
+std::string cloud_filename(size_t seq);
 
 } // namespace atlaas
 

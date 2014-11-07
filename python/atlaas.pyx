@@ -17,7 +17,8 @@ cdef extern from "atlaas/atlaas.hpp" namespace "atlaas":
         void export8u(const string& filepath)
         void export_zmean(const string& filepath)
         size_t process(size_t start, size_t end)
-        size_t reprocess(uint64_t last_good_pose, uint64_t time_of_fix, double fixed_pose_x, double fixed_pose_y)
+        size_t reprocess(uint64_t last_good_pose, uint64_t time_of_fix,
+                         double fixed_pose_x, double fixed_pose_y)
 
 cdef class Atlaas:
     cdef atlaas *thisptr # hold a C++ instance which we're wrapping
