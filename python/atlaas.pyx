@@ -19,6 +19,7 @@ cdef extern from "atlaas/atlaas.hpp" namespace "atlaas":
         size_t process(size_t start, size_t end)
         size_t reprocess(uint64_t last_good_pose, uint64_t time_of_fix,
                          double fixed_pose_x, double fixed_pose_y)
+        void set_atlaas_path(const string& path)
 
 cdef class Atlaas:
     cdef atlaas *thisptr # hold a C++ instance which we're wrapping
@@ -49,3 +50,5 @@ cdef class Atlaas:
         return self.thisptr.process(start, end)
     def reprocess(self, last_good_pose, time_of_fix, fixed_pose_x, fixed_pose_y):
         return self.thisptr.reprocess(last_good_pose, time_of_fix, fixed_pose_x, fixed_pose_y)
+    def set_atlaas_path(self, path):
+        self.thisptr.set_atlaas_path(path)
