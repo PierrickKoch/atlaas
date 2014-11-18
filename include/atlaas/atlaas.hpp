@@ -136,6 +136,10 @@ public:
         atlaas_path = getenv("ATLAAS_PATH", ".");
     }
 
+    std::string get_atlaas_path() {
+        return atlaas_path;
+    }
+
     void set_atlaas_path(const std::string& path) {
         atlaas_path = path;
     }
