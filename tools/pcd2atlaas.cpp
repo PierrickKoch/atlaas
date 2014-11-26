@@ -12,7 +12,7 @@ int main(int argc, char * argv[]) {
     atlaas::matrix transformation;
     try {
         atlaas::read_pcd(argv[1], cloud, transformation);
-        atlaas::save(argv[2], cloud, transformation);
+        atlaas::write_raw(argv[2], cloud, transformation);
     } catch (std::exception& e) {
         std::cerr << "[error] " << e.what();
         return EXIT_FAILURE;

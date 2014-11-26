@@ -11,7 +11,7 @@ int main(int argc, char * argv[]) {
     atlaas::points cloud;
     atlaas::matrix transformation;
     try {
-        atlaas::load(argv[1], cloud, transformation);
+        atlaas::read_raw(argv[1], cloud, transformation);
         atlaas::write_pcd(argv[2], cloud, transformation);
     } catch (std::exception& e) {
         std::cerr << "[error] " << e.what();
