@@ -1,4 +1,7 @@
 language: cpp
+compiler:
+  - clang
+  - gcc
 
 before_install:
  - sudo add-apt-repository ppa:cython-dev/master-ppa -y
