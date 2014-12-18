@@ -17,7 +17,7 @@ extensions = [
         name = "atlaas",
         sources = ["atlaas.pyx"],
         language = "c++",
-        extra_compile_args = ["-std=c++0x"],
+        extra_compile_args = ["-std=c++0x", "-Wno-unused-function"],
         # configure rpath
         runtime_library_dirs = pkg_config_dict['library_dirs'],
         **pkg_config_dict
