@@ -13,6 +13,7 @@ cdef extern from "atlaas/atlaas.hpp" namespace "atlaas":
               int utm_zone, bool utm_north) except +
         void c_merge(const float* cloud, size_t cloud_len1, size_t cloud_len2,
                      const double* transformation)
+        void merge(const string& filepath)
         void save_currents()
         void export8u(const string& filepath)
         void export_zmean(const string& filepath)
@@ -21,6 +22,7 @@ cdef extern from "atlaas/atlaas.hpp" namespace "atlaas":
                          double fixed_pose_x, double fixed_pose_y)
         void set_atlaas_path(const string& path)
         string get_atlaas_path()
+
 
 cdef class Atlaas:
     cdef atlaas *thisptr # hold a C++ instance which we're wrapping
@@ -41,6 +43,8 @@ cdef class Atlaas:
             raise TypeError("array shape[1] must be 3 or 4, cloud: XYZ[I]")
         self.thisptr.c_merge(<const float*> cloud.data, cloud.shape[0], cloud.shape[1],
                              <const double*> transformation.data)
+    def merge_file(self, filepath):
+        self.thisptr.merge(filepath)
     def save_currents(self):
         self.thisptr.save_currents()
     def export8u(self, filepath):
