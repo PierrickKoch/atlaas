@@ -219,6 +219,23 @@ public:
         merge(cd, tr);
     }
 
+    /**
+    * save from raw C array (using std::copy !)
+    * used for numpy -> C++ interface
+    * transformation must be double[16] : row-major Matrix(4,4)
+    * cloud must be float[cloud_len1][cloud_len2]
+    * cloud_len2 must be either 3 (XYZ) or 4 (XYZI)
+    */
+    void c_save(const std::string& filepath, const float* cloud,
+            size_t cloud_len1, size_t cloud_len2, const double* transformation) {
+        matrix tr;
+        points cd( cloud_len1 );
+        std::copy(transformation, transformation + 16, tr.begin());
+        for (size_t i = 0; i < cloud_len1; i++)
+            std::copy(cloud+i*cloud_len2, cloud+(i+1)*cloud_len2, cd[i].begin());
+        save(filepath, cd, tr);
+    }
+
     size_t process(size_t start = 0, size_t end = std::numeric_limits<size_t>::max()) {
         points cloud;
         matrix transformation = {{ 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 }};
@@ -320,11 +337,11 @@ public:
     /**
      * Load a cloud and a transformation from file for replay
      */
-    void merge(const std::string& filepath) {
+    void merge(const std::string& filepath, bool dump = false) {
         points cloud;
         matrix transformation;
         load(filepath, cloud, transformation);
-        merge(cloud, transformation);
+        merge(cloud, transformation, dump);
     }
 
     /**
