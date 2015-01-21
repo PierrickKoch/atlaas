@@ -5,6 +5,8 @@ ATLAAS
 
 [![Build Status](https://travis-ci.org/pierriko/atlaas.png?branch=master)]
 (https://travis-ci.org/pierriko/atlaas)
+[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.14086.svg)]
+(http://dx.doi.org/10.5281/zenodo.14086)
 
 * http://www.openrobots.org/wiki
 * http://trac.laas.fr/git/atlaas
@@ -54,4 +56,4 @@ LICENSE
 
 [BSD 2-Clause](http://opensource.org/licenses/BSD-2-Clause)
 
-Copyright © 2013-2014 CNRS-LAAS
+Copyright © 2013-2015 CNRS-LAAS
