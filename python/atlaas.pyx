@@ -12,7 +12,7 @@ cdef extern from "atlaas/atlaas.hpp" namespace "atlaas":
               double custom_x, double custom_y, double custom_z,
               int utm_zone, bool utm_north) except +
         void c_merge(const float* cloud, size_t cloud_len1, size_t cloud_len2,
-                     const double* transformation)
+                     const double* transformation, bool dump)
         void c_save(const string& filepath, const float* cloud,
                     size_t cloud_len1, size_t cloud_len2,
                     const double* transformation)
@@ -39,13 +39,14 @@ cdef class Atlaas:
               utm_zone, utm_north)
     def merge(self,
               np.ndarray[np.float32_t, ndim=2] cloud,
-              np.ndarray[np.double_t,  ndim=2] transformation):
+              np.ndarray[np.double_t,  ndim=2] transformation, dump=True):
         if not transformation.size == 16:
             raise TypeError("array size must be 16, transformation: Matrix(4,4)")
         if not 3 <= cloud.shape[1] <= 4:
             raise TypeError("array shape[1] must be 3 or 4, cloud: XYZ[I]")
-        self.thisptr.c_merge(<const float*> cloud.data, cloud.shape[0],
-                             cloud.shape[1], <const double*> transformation.data)
+        self.thisptr.c_merge(<const float*> cloud.data,
+                             cloud.shape[0], cloud.shape[1],
+                             <const double*> transformation.data, dump)
     def save(self, filepath,
         np.ndarray[np.float32_t, ndim=2] cloud,
         np.ndarray[np.double_t,  ndim=2] transformation):

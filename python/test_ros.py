@@ -22,7 +22,7 @@ def cloud(msg):
 
 def callback(msg):
     start = time.time()
-    test.merge(cloud(msg), transformation("/map", msg.header))
+    test.merge(cloud(msg), transformation("/map", msg.header), False)
     profile.append(time.time() - start)
     test.export8u('atlaas.jpg')
 

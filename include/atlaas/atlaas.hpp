@@ -210,13 +210,13 @@ public:
      * cloud_len2 must be either 3 (XYZ) or 4 (XYZI)
      */
     void c_merge(const float* cloud, size_t cloud_len1, size_t cloud_len2,
-                 const double* transformation) {
+                 const double* transformation, bool dump = true) {
         matrix tr;
         points cd( cloud_len1 );
         std::copy(transformation, transformation + 16, tr.begin());
         for (size_t i = 0; i < cloud_len1; i++)
             std::copy(cloud+i*cloud_len2, cloud+(i+1)*cloud_len2, cd[i].begin());
-        merge(cd, tr);
+        merge(cd, tr, dump);
     }
 
     /**
