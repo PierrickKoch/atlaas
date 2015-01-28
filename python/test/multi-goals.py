@@ -15,11 +15,11 @@ goals = {'mana': [
     [140, -72, -1],
     [160, -105,0.8],
     [190, -70, 0.8],
-    [240, -10, 0], # back at starting location
+    [242, -12, 0],
 ]}
 traj2 = goals['mana'][:-1]
 traj2.reverse()
-goals['momo'] = [[x,y,z-pi] for x,y,z in traj2] + [[242, -12, 0]]
+goals['momo'] = [[x,y,z-pi] for x,y,z in traj2] + [[240, -10, 0]]
 
 trajectory = goals[robot_name]
 
