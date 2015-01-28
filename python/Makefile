@@ -7,3 +7,6 @@ clean:
 
 test: atlaas*.so
 	@python test.py
+
+install:
+	@python setup.py install --user

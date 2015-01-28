@@ -24,4 +24,19 @@ extensions = [
     ),
 ]
 
-setup(ext_modules = cythonize(extensions))
+setup(name='atlaas',
+      version='0.1',
+      description='Python bindings for Atlaas (using Cython)',
+      author='Pierrick Koch',
+      author_email='pierrick.koch@laas.fr',
+      url='https://github.com/pierriko/atlaas',
+      classifiers=[
+        'Development Status :: 4 - Beta',
+        'License :: OSI Approved :: BSD License',
+        'Operating System :: POSIX',
+        'Programming Language :: Python',
+        'Topic :: Scientific/Engineering',
+      ],
+      requires=['numpy'],
+      ext_modules=cythonize(extensions),
+)
