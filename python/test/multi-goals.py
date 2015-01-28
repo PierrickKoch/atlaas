@@ -15,11 +15,9 @@ goals = {'mana': [
     [140, -72, -1],
     [160, -105,0.8],
     [190, -70, 0.8],
-    [242, -12, 0],
+    [236, -16, 0.5],
 ]}
-traj2 = goals['mana'][:-1]
-traj2.reverse()
-goals['momo'] = [[x,y,z-pi] for x,y,z in traj2] + [[240, -10, 0]]
+goals['momo'] = [[x,y,theta-pi] for x,y,theta in reversed(goals['mana'][:-1])] + [[237, -5, -1]]
 
 trajectory = goals[robot_name]
 
@@ -31,9 +29,12 @@ def distance_sq(p1, p2):
 goal = None
 def callback(msg):
     global goal, pub
-    if trajectory and (not goal or distance_sq(goal, msg.pose.position) < 4):
-        goal = Pose2D(*trajectory.pop(0))
-        pub.publish(goal)
+    if not goal or distance_sq(goal, msg.pose.position) < 4:
+        if trajectory:
+            goal = Pose2D(*trajectory.pop(0))
+            pub.publish(goal)
+        else:
+            rospy.signal_shutdown('done')
 
 rospy.init_node("control_%s"%robot_name)
 pub = rospy.Publisher("/%s/waypoint"%robot_name, Pose2D, queue_size=5, latch=True)
