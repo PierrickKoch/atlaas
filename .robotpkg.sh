@@ -49,7 +49,7 @@ echo "" >> $COMMITM
 cat $SHORTLG >> $COMMITM
 git commit . -F $COMMITM
 
-scp $RPKROOT/distfiles/$ARCHIVE samus.laas.fr:/usr/local/openrobots/distfiles/$PKGNAME/
+scp $RPKROOT/distfiles/$ARCHIVE ftp.openrobots.org:/var/ftp/pub/openrobots/$PKGNAME/
 
 echo "You need to push in '$RPKROOT/$PKGTYPE/$PKGNAME' and '$OLDPWD'"
 echo "... After checking everything is fine :-)"
