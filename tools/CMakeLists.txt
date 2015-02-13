@@ -18,7 +18,3 @@ install(TARGETS atlaas2pcd DESTINATION bin)
 add_executable(atlaas2region atlaas2region.cpp)
 target_link_libraries( atlaas2region atlaas )
 install(TARGETS atlaas2region DESTINATION bin)
-
-add_executable(fastmerge fastmerge.cpp)
-target_link_libraries( fastmerge atlaas )
-install(TARGETS fastmerge DESTINATION bin)
