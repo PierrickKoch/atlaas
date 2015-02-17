@@ -2,19 +2,16 @@
 #include <atlaas/atlaas.hpp>
 #include <gdalwrap/gdal.hpp>
 
-static const float THRES_VARIANCE   = 0.5;
-static const float THRES_ROUGH      = 0.1; // 3 * 0.1m
-static const float THRES_OBSTACLE   = 0.9; // 3 * 0.2m
-static const float VAL_OBSTACLE     = 255;
-static const float VAL_ROUGH        = 100;
-static const float VAL_FLAT         = 0;
+static const float VARIANCE_THRESHOLD = 0.01;
+static const float EDGE_FACTOR = 1337;
+static const float NO_DATA = -10000;
 
-void select(std::vector<gdalwrap::gdal>& files) {
+void select(std::vector<gdalwrap::gdal>& files, float vt = VARIANCE_THRESHOLD) {
     for (gdalwrap::gdal& file : files) {
         for (size_t id = 0; id < file.bands[0].size(); id++) {
             if (file.bands[atlaas::N_POINTS][id] < 1) {
-                file.bands[atlaas::Z_MEAN][id] = -10000;
-            } else if (file.bands[atlaas::VARIANCE][id] > THRES_VARIANCE) {
+                file.bands[atlaas::Z_MEAN][id] = NO_DATA;
+            } else if (file.bands[atlaas::VARIANCE][id] > vt) {
                 file.bands[atlaas::Z_MEAN][id] = file.bands[atlaas::Z_MAX][id];
             }
         }
@@ -24,18 +21,25 @@ void select(std::vector<gdalwrap::gdal>& files) {
 }
 
 void scale(std::vector<gdalwrap::gdal>& files) {
-    // TODO
+    // TODO scale down 10% (to a metric scale)q
 }
 
-std::vector<uint8_t> edge(const gdalwrap::raster& r, size_t sx, size_t sy) {
+std::vector<uint8_t> edge(const gdalwrap::raster& r, size_t sx, size_t sy,
+        float factor = EDGE_FACTOR) {
+    size_t cx = 0;
+    float r1, r2, r3;
     std::vector<uint8_t> bytes(r.size());
-    for (size_t ix = 0; ix < sx - 1; ix++)
-    for (size_t iy = 0; iy < sy - 1; iy++) {
-        float di = std::abs(r[ix + iy*sx] - r[ix + iy * sx + 1])
-                 + std::abs(r[ix + iy*sx] - r[ix + (iy + 1) * sx])
-                 + std::abs(r[ix + iy*sx] - r[ix + (iy + 1) * sx + 1]);
-        bytes[ix + iy*sx] = (di > THRES_ROUGH) ? (
-            (di > THRES_OBSTACLE) ? VAL_OBSTACLE : VAL_ROUGH ) : VAL_FLAT;
+    auto bit = bytes.begin();
+    for (auto rit = r.begin(), end = r.end() - sx - 1; rit < end; rit++, bit++) {
+        if (cx == sx - 1) {
+            cx = 0;
+        } else if (*rit > NO_DATA) {
+            cx++;
+            r1 = *rit - *(rit + 1);
+            r2 = *rit - *(rit + sx);
+            r2 = *rit - *(rit + sx + 1);
+            *bit = std::min(255.0f, 1 + (r1*r1 + r2*r2 + r3*r3) * factor);
+        }
     }
     return bytes;
 }
@@ -55,7 +59,7 @@ int main(int argc, char * argv[]) {
     // select only dtm band
     select(files);
     // scale down 10% (to a metric scale)
-    scale(files);
+    // TODDO scale(files);
     // merge all files
     gdalwrap::gdal result = merge(files);
     // edge detect / sobel like
