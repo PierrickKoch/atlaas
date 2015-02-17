@@ -27,15 +27,17 @@ void scale(std::vector<gdalwrap::gdal>& files) {
     // TODO
 }
 
-void edge(gdalwrap::raster& r, size_t sx, size_t sy) {
+std::vector<uint8_t> edge(const gdalwrap::raster& r, size_t sx, size_t sy) {
+    std::vector<uint8_t> bytes(r.size());
     for (size_t ix = 0; ix < sx - 1; ix++)
     for (size_t iy = 0; iy < sy - 1; iy++) {
         float di = std::abs(r[ix + iy*sx] - r[ix + iy * sx + 1])
                  + std::abs(r[ix + iy*sx] - r[ix + (iy + 1) * sx])
                  + std::abs(r[ix + iy*sx] - r[ix + (iy + 1) * sx + 1]);
-        r[ix + iy*sx] = (di > THRES_ROUGH) ? (
+        bytes[ix + iy*sx] = (di > THRES_ROUGH) ? (
             (di > THRES_OBSTACLE) ? VAL_OBSTACLE : VAL_ROUGH ) : VAL_FLAT;
     }
+    return bytes;
 }
 
 int main(int argc, char * argv[]) {
@@ -57,7 +59,7 @@ int main(int argc, char * argv[]) {
     // merge all files
     gdalwrap::gdal result = merge(files);
     // edge detect / sobel like
-    edge(result.bands[0], result.get_width(), result.get_height());
-    result.save(argv[argc - 1]);
+    result.export8u(argv[argc - 1],
+        edge(result.bands[0], result.get_width(), result.get_height()), "PNG");
     return 0;
 }
