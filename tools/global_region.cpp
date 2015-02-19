@@ -1,3 +1,6 @@
+#include <glob.h>
+#include <vector>
+#include <string>
 #include <iostream>
 #include <atlaas/common.hpp>
 #include <gdalwrap/gdal.hpp>
@@ -5,6 +8,19 @@
 static const float VARIANCE_THRESHOLD = 0.01;
 static const float EDGE_FACTOR = 100;
 static const float NO_DATA = -10000;
+
+inline std::vector<std::string> glob(const std::string& pattern) {
+    glob_t glob_result;
+    std::vector<std::string> match;
+    // might add |GLOB_BRACE for "{0-9}*x{0-9}*"
+    // and |GLOB_TILDE for ~/path/from/home
+    glob(pattern.c_str(), GLOB_NOSORT, NULL, &glob_result);
+    for (size_t i = 0; i < glob_result.gl_pathc; ++i) {
+        match.push_back(glob_result.gl_pathv[i]);
+    }
+    globfree(&glob_result);
+    return match;
+}
 
 void select(std::vector<gdalwrap::gdal>& files, float vt = VARIANCE_THRESHOLD) {
     for (gdalwrap::gdal& file : files) {
@@ -20,14 +36,15 @@ void select(std::vector<gdalwrap::gdal>& files, float vt = VARIANCE_THRESHOLD) {
     }
 }
 
-void decimate(gdalwrap::gdal& region, float scale = 5) {
-    size_t sx = region.get_width(), sy = region.get_height();
-    auto it = region.bands[0].begin(), new_it = it;
+void decimate(gdalwrap::gdal& region, size_t scale = 5) {
+    const size_t sx = region.get_width(), sy = region.get_height();
+    auto it = region.bands[0].begin(), begin = it;
     for (size_t i = 0; i < sy; i+=scale) {
         for (size_t j = 0; j < sx; j+=scale, it++) {
-            for (int u = 0; u < scale; u++) {
-                for (int v = 0; v < scale; v++) {
-                    *it = std::max(*it, *(new_it + j + v + (i + u) * sy));
+            *it = *(begin + j + i * sx);
+            for (size_t u = 0; u < scale; u++) {
+                for (size_t v = 0; v < scale; v++) {
+                    *it = std::max(*it, *(begin + j + v + (i + u) * sx));
                 }
             }
         }
@@ -38,18 +55,14 @@ void decimate(gdalwrap::gdal& region, float scale = 5) {
 }
 
 void edge(gdalwrap::gdal& region, float factor = EDGE_FACTOR) {
-    size_t sx = region.get_width();
-    for (auto rit = region.bands[0].begin(), rit1 = rit + 1, rit2 = rit + sx,
-            rit3 = rit2 + 1, end = region.bands[0].end(); rit3 < end; rit++,
-            rit1++, rit2++, rit3++) {
-        if (*rit > NO_DATA) {
-            *rit = std::min(255.0f, 1 + factor *
-                (std::abs(*rit - *rit1) +
-                 std::abs(*rit - *rit2) +
-                 std::abs(*rit - *rit3) ));
-        } else {
-            *rit = 0;
-        }
+    for (auto it = region.bands[0].begin(), it1 = it + 1,
+            it2 = it + region.get_width(), it3 = it2 + 1,
+            end = region.bands[0].end(); it3 < end; it++,
+            it1++, it2++, it3++) {
+        *it = (*it > NO_DATA) ? std::min(255.0f, 1 + factor *
+            (std::abs(*it - *it1) +
+             std::abs(*it - *it2) +
+             std::abs(*it - *it3) )) : 0;
     }
 }
 
