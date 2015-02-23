@@ -16,6 +16,7 @@
 
 #include <gdalwrap/gdal.hpp>
 #include <atlaas/common.hpp>
+#include <atlaas/region.hpp>
 #include <atlaas/io.hpp>
 
 namespace atlaas {
@@ -364,6 +365,11 @@ public:
         tile_save(2, 0);
         tile_save(2, 1);
         tile_save(2, 2);
+    }
+
+    void region(const std::string& file_out) {
+        save_currents();
+        glob_region(atlaas_path + "/atlaas.*x*.tif", file_out);
     }
 
     /**
