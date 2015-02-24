@@ -24,15 +24,14 @@ static const float EDGE_FACTOR = 100;
 static const float NO_DATA = -10000;
 
 inline std::vector<std::string> glob(const std::string& pattern) {
-    glob_t glob_result;
+    glob_t result;
     std::vector<std::string> match;
     // might add |GLOB_BRACE for "{0-9}*x{0-9}*"
     // and |GLOB_TILDE for ~/path/from/home
-    glob(pattern.c_str(), GLOB_NOSORT, NULL, &glob_result);
-    for (size_t i = 0; i < glob_result.gl_pathc; ++i) {
-        match.push_back(glob_result.gl_pathv[i]);
+    if (!glob(pattern.c_str(), GLOB_NOSORT, NULL, &result)) {
+        match.assign(result.gl_pathv, result.gl_pathv + result.gl_pathc);
     }
-    globfree(&glob_result);
+    globfree(&result);
     return match;
 }
 
@@ -41,31 +40,44 @@ inline void select(std::vector<gdalwrap::gdal>& files, float vt = VARIANCE_THRES
         for (size_t id = 0; id < file.bands[0].size(); id++) {
             if (file.bands[atlaas::N_POINTS][id] < 1) {
                 file.bands[atlaas::Z_MEAN][id] = NO_DATA;
-            } else if (file.bands[atlaas::VARIANCE][id] > vt) {
-                file.bands[atlaas::Z_MEAN][id] = file.bands[atlaas::Z_MAX][id];
+                file.bands[atlaas::DIST_SQ][id] = NO_DATA;
+            } else {
+                file.bands[atlaas::DIST_SQ][id] /= 20; // f(x) = x^2 / 20
+                if (file.bands[atlaas::VARIANCE][id] > vt) {
+                    file.bands[atlaas::Z_MEAN][id] = file.bands[atlaas::Z_MAX][id];
+                }
             }
         }
-        file.bands = {file.bands[atlaas::Z_MEAN]};
-        file.names = {"DTM"};
+        file.bands = gdalwrap::rasters({
+            file.bands[atlaas::Z_MEAN],
+            file.bands[atlaas::DIST_SQ]
+        });
+        file.names = {"DTM", "DIST_SQ"};
     }
 }
 
 inline void decimate(gdalwrap::gdal& region, size_t scale = 5) {
     const size_t sx = region.get_width(), sy = region.get_height();
-    auto it = region.bands[0].begin(), begin = it;
+    auto it_gray = region.bands[0].begin(), begin_gray = it_gray,
+         it_alph = region.bands[1].begin(), begin_alph = it_alph;
     for (size_t i = 0; i < sy; i+=scale) {
-        for (size_t j = 0; j < sx; j+=scale, it++) {
-            *it = *(begin + j + i * sx);
+        for (size_t j = 0; j < sx; j+=scale, it_gray++, it_alph++) {
+            *it_gray = *(begin_gray + j + i * sx);
+            *it_alph = *(begin_alph + j + i * sx);
             for (size_t u = 0; u < scale; u++) {
                 for (size_t v = 0; v < scale; v++) {
-                    *it = std::max(*it, *(begin + j + v + (i + u) * sx));
+                    size_t p = j + v + (i + u) * sx;
+                    if (*(begin_gray + p) > *it_gray) {
+                        *it_gray = *(begin_gray + p);
+                        *it_alph = *(begin_alph + p);
+                    }
                 }
             }
         }
     }
     region.set_transform(region.get_utm_pose_x(), region.get_utm_pose_y(),
         region.get_scale_x() * scale, region.get_scale_y() * scale);
-    region.set_size(1, sx / scale, sy / scale);
+    region.set_size(region.bands.size(), sx / scale, sy / scale);
 }
 
 inline void edge(gdalwrap::gdal& region, float factor = EDGE_FACTOR) {
@@ -91,7 +103,10 @@ inline void region(std::vector<gdalwrap::gdal>& tiles, const std::string& filepa
     decimate(result);
     // convert to grayscale PNG
     std::vector<uint8_t> gray(result.bands[0].begin(), result.bands[0].end());
-    result.export8u(filepath, gray, "PNG");
+    std::vector<uint8_t> alph(result.bands[1].size());
+    std::transform(result.bands[1].begin(), result.bands[1].end(), alph.begin(),
+        [](float v) -> uint8_t { return v > 255 ? 0 : v < 0 ? 0 : 255 - v; });
+    result.export8u(filepath, {gray, alph}, "PNG");
 }
 
 inline void glob_region(const std::string& pattern_in,  const std::string& file_out) {
