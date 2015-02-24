@@ -36,7 +36,9 @@ rospy.Subscriber("/%s/velodyne"%robot_name, PointCloud2, callback)
 try:
     rospy.spin() # this will block untill you hit Ctrl+C
 finally:
-    test.save_currents()
+    start = time.time()
+    test.region('%s/region.png'%robot_name)
+    print("region = %.3f ms" % (1000 * (time.time() - start)))
     print("merge min/max/avg = %.3f / %.3f / %.3f ms" % \
         ( 1000*min(profile), 1000*max(profile),
           1000*sum(profile) / len(profile) ) )
