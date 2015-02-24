@@ -25,6 +25,7 @@ cdef extern from "atlaas/atlaas.hpp" namespace "atlaas":
                          double fixed_pose_x, double fixed_pose_y)
         void set_atlaas_path(const string& path)
         string get_atlaas_path()
+        void region(const string& filepath)
 
 
 cdef class Atlaas:
@@ -73,3 +74,5 @@ cdef class Atlaas:
         self.thisptr.set_atlaas_path(path)
     def get_atlaas_path(self):
         return self.thisptr.get_atlaas_path()
+    def region(self, filepath):
+        self.thisptr.region(filepath)
