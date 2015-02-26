@@ -11,6 +11,7 @@ def pkg_config(*packages, **kw):
     return kw
 
 pkg_config_dict = pkg_config("atlaas")
+pkg_config_dict.pop(None, None) # in case of unwanted result, eg. -Wl,-rpath,
 
 extensions = [
     Extension(
