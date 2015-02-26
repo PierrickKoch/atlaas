@@ -23,6 +23,9 @@ static const float VARIANCE_THRESHOLD = 0.01;
 static const float EDGE_FACTOR = 100;
 static const float NO_DATA = -10000;
 
+/**
+ * C++ version of POSIX glob() function, see `man 3 glob`
+ */
 inline std::vector<std::string> glob(const std::string& pattern) {
     glob_t result;
     std::vector<std::string> match;
@@ -35,7 +38,12 @@ inline std::vector<std::string> glob(const std::string& pattern) {
     return match;
 }
 
-inline void select(std::vector<gdalwrap::gdal>& files, float vt = VARIANCE_THRESHOLD) {
+/**
+ * Keep only band of interest in each tiles,
+ * before to merge them, save memory and cpu.
+ */
+inline void select(std::vector<gdalwrap::gdal>& files,
+                   float vt = VARIANCE_THRESHOLD) {
     for (gdalwrap::gdal& file : files) {
         for (size_t id = 0; id < file.bands[0].size(); id++) {
             if (file.bands[atlaas::N_POINTS][id] < 1) {
@@ -44,18 +52,22 @@ inline void select(std::vector<gdalwrap::gdal>& files, float vt = VARIANCE_THRES
             } else {
                 file.bands[atlaas::DIST_SQ][id] /= 20; // f(x) = x^2 / 20
                 if (file.bands[atlaas::VARIANCE][id] > vt) {
-                    file.bands[atlaas::Z_MEAN][id] = file.bands[atlaas::Z_MAX][id];
+                    file.bands[atlaas::Z_MEAN][id] =
+                        file.bands[atlaas::Z_MAX][id];
                 }
             }
         }
-        file.bands = gdalwrap::rasters({
+        file.bands = {
             file.bands[atlaas::Z_MEAN],
             file.bands[atlaas::DIST_SQ]
-        });
+        };
         file.names = {"DTM", "DIST_SQ"};
     }
 }
 
+/**
+ * Conservative decimate keeping max "edge" value
+ */
 inline void decimate(gdalwrap::gdal& region, size_t scale = 5) {
     const size_t sx = region.get_width(), sy = region.get_height();
     auto it_gray = region.bands[0].begin(), begin_gray = it_gray,
@@ -80,6 +92,9 @@ inline void decimate(gdalwrap::gdal& region, size_t scale = 5) {
     region.set_size(region.bands.size(), sx / scale, sy / scale);
 }
 
+/**
+ * Gradient will sum absolute differences of next neighbours, in place.
+ */
 inline void edge(gdalwrap::gdal& region, float factor = EDGE_FACTOR) {
     for (auto it = region.bands[0].begin(), it1 = it + 1,
             it2 = it + region.get_width(), it3 = it2 + 1,
@@ -92,7 +107,16 @@ inline void edge(gdalwrap::gdal& region, float factor = EDGE_FACTOR) {
     }
 }
 
-inline void region(std::vector<gdalwrap::gdal>& tiles, const std::string& filepath) {
+/**
+ * Region converts a list of tiles into a 2 layers PNG file,
+ * 1st is 8 bit grayscale representation of traversability:
+ *  0 = unknown, [1..255] roughness, 1 = flat, 255 = obstacle.
+ * 2nd is 8 bit alpha/transparency representation of uncertainty:
+ *  [0..255] confidence, 0 = high uncertainty, 255 = low uncertainty.
+ * PNG comes with .aux.xml file containing georeferenced metadata (GDAL).
+ */
+inline void region(std::vector<gdalwrap::gdal>& tiles,
+                   const std::string& filepath) {
     // select only dtm band
     select(tiles);
     // merge all tiles
@@ -109,7 +133,12 @@ inline void region(std::vector<gdalwrap::gdal>& tiles, const std::string& filepa
     result.export8u(filepath, {gray, alph}, "PNG");
 }
 
-inline void glob_region(const std::string& pattern_in,  const std::string& file_out) {
+/**
+ * Same as region, to which we pass a patern to get the list of tiles.
+ * See: region() and glob()
+ */
+inline void glob_region(const std::string& pattern_in,
+                        const std::string& file_out) {
     std::vector<std::string> files = glob(pattern_in);
     std::vector<gdalwrap::gdal> tiles(files.size());
     auto it = tiles.begin();
