@@ -12,20 +12,20 @@ cdef extern from "atlaas/atlaas.hpp" namespace "atlaas":
               double custom_x, double custom_y, double custom_z,
               int utm_zone, bool utm_north) except +
         void c_merge(const float* cloud, size_t cloud_len1, size_t cloud_len2,
-                     const double* transformation, bool dump)
+                     const double* transformation, bool dump) except +
         void c_save(const string& filepath, const float* cloud,
                     size_t cloud_len1, size_t cloud_len2,
-                    const double* transformation)
+                    const double* transformation) except +
         void merge(const string& filepath, bool dump)
         void save_currents()
-        void export8u(const string& filepath)
-        void export_zmean(const string& filepath)
+        void export8u(const string& filepath) except +
+        void export_zmean(const string& filepath) except +
         size_t process(size_t start, size_t end)
         size_t reprocess(uint64_t last_good_pose, uint64_t time_of_fix,
                          double fixed_pose_x, double fixed_pose_y)
         void set_atlaas_path(const string& path)
         string get_atlaas_path()
-        void region(const string& filepath)
+        void region(const string& filepath) except +
 
 
 cdef class Atlaas:
