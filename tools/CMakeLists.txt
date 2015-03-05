@@ -15,10 +15,6 @@ add_executable(atlaas2pcd atlaas2pcd.cpp)
 target_link_libraries( atlaas2pcd atlaas )
 install(TARGETS atlaas2pcd DESTINATION bin)
 
-add_executable(atlaas2region atlaas2region.cpp)
-target_link_libraries( atlaas2region atlaas )
-install(TARGETS atlaas2region DESTINATION bin)
-
 add_executable(global_region global_region.cpp)
 target_link_libraries( global_region atlaas )
 install(TARGETS global_region DESTINATION bin)
