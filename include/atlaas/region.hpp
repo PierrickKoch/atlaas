@@ -44,13 +44,24 @@ inline std::vector<std::string> glob(const std::string& pattern) {
  */
 inline void select(std::vector<gdalwrap::gdal>& files,
                    float vt = VARIANCE_THRESHOLD) {
+    // time delta
+    long dt, t_max = 0;
     for (gdalwrap::gdal& file : files) {
+        t_max = std::max(t_max, std::stol(file.get_meta("TIME", "0")));
+    }
+    for (gdalwrap::gdal& file : files) {
+        dt = t_max - std::stol(file.get_meta("TIME", "0"));
+        file.metadata["TIME"] = std::to_string(t_max);
         for (size_t id = 0; id < file.bands[0].size(); id++) {
             if (file.bands[atlaas::N_POINTS][id] < 1) {
                 file.bands[atlaas::Z_MEAN][id] = NO_DATA;
                 file.bands[atlaas::DIST_SQ][id] = NO_DATA;
+                file.bands[atlaas::TIME][id] = NO_DATA;
             } else {
                 file.bands[atlaas::DIST_SQ][id] /= 20; // f(x) = x^2 / 20
+                if (dt) {
+                    file.bands[atlaas::TIME][id] -= dt;
+                }
                 if (file.bands[atlaas::VARIANCE][id] > vt) {
                     file.bands[atlaas::Z_MEAN][id] =
                         file.bands[atlaas::Z_MAX][id];
@@ -59,9 +70,10 @@ inline void select(std::vector<gdalwrap::gdal>& files,
         }
         file.bands = {
             file.bands[atlaas::Z_MEAN],
-            file.bands[atlaas::DIST_SQ]
+            file.bands[atlaas::DIST_SQ],
+            file.bands[atlaas::TIME],
         };
-        file.names = {"DTM", "DIST_SQ"};
+        file.names = {"DTM", "DIST_SQ", "TIME"};
     }
 }
 
@@ -71,17 +83,20 @@ inline void select(std::vector<gdalwrap::gdal>& files,
 inline void decimate(gdalwrap::gdal& region, size_t scale = 5) {
     const size_t sx = region.get_width(), sy = region.get_height();
     auto it_gray = region.bands[0].begin(), begin_gray = it_gray,
-         it_alph = region.bands[1].begin(), begin_alph = it_alph;
+         it_alph = region.bands[1].begin(), begin_alph = it_alph,
+         it_time = region.bands[2].begin(), begin_time = it_time;
     for (size_t i = 0; i < sy; i+=scale) {
-        for (size_t j = 0; j < sx; j+=scale, it_gray++, it_alph++) {
+        for (size_t j = 0; j < sx; j+=scale, it_gray++, it_alph++, it_time++) {
             *it_gray = *(begin_gray + j + i * sx);
             *it_alph = *(begin_alph + j + i * sx);
+            *it_time = *(begin_time + j + i * sx);
             for (size_t u = 0; u < scale; u++) {
                 for (size_t v = 0; v < scale; v++) {
                     size_t p = j + v + (i + u) * sx;
                     if (*(begin_gray + p) > *it_gray) {
                         *it_gray = *(begin_gray + p);
                         *it_alph = *(begin_alph + p);
+                        *it_time = *(begin_time + p);
                     }
                 }
             }
@@ -105,6 +120,18 @@ inline void edge(gdalwrap::gdal& region, float factor = EDGE_FACTOR) {
              std::abs(*it - *it2) +
              std::abs(*it - *it3) )) : 0;
     }
+}
+
+inline std::vector<std::vector<uint8_t>>
+vf32_4vu8(gdalwrap::gdal& region, size_t band) {
+    const size_t sx = region.get_width(), sy = region.get_height();
+    long t_ref = std::stol(region.get_meta("TIME", "0"));
+    std::vector<std::vector<uint8_t>> argb(4);
+    for (auto& layer : argb) {
+        layer.resize(sx * sy);
+    }
+    // for ... a = (char) vf32 & 0xff, b = (char) vf32 & 0xff00 << 2, ...;
+    return argb;
 }
 
 /**
@@ -131,6 +158,12 @@ inline void region(std::vector<gdalwrap::gdal>& tiles,
     std::transform(result.bands[1].begin(), result.bands[1].end(), alph.begin(),
         [](float v) -> uint8_t { return v > 255 ? 0 : v < 0 ? 0 : 255 - v; });
     result.export8u(filepath, {gray, alph}, "PNG");
+    gdalwrap::gdal r2;
+    r2.copy_meta(result);
+    r2.bands = {result.bands[2]};
+    r2.names = {"TIME"};
+    r2.save(filepath+".time.tif");
+    //result.export8u(filepath+".time.png", vf32_4vu8(result, 2), "PNG");
 }
 
 /**
