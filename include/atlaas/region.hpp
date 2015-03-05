@@ -44,13 +44,24 @@ inline std::vector<std::string> glob(const std::string& pattern) {
  */
 inline void select(std::vector<gdalwrap::gdal>& files,
                    float vt = VARIANCE_THRESHOLD) {
+    // time delta
+    long dt, t_max = 0;
     for (gdalwrap::gdal& file : files) {
+        t_max = std::max(t_max, std::stol(file.get_meta("TIME", "0")));
+    }
+    for (gdalwrap::gdal& file : files) {
+        dt = t_max - std::stol(file.get_meta("TIME", "0"));
+        file.metadata["TIME"] = std::to_string(t_max);
         for (size_t id = 0; id < file.bands[0].size(); id++) {
             if (file.bands[atlaas::N_POINTS][id] < 1) {
                 file.bands[atlaas::Z_MEAN][id] = NO_DATA;
                 file.bands[atlaas::DIST_SQ][id] = NO_DATA;
+                file.bands[atlaas::TIME][id] = NO_DATA;
             } else {
                 file.bands[atlaas::DIST_SQ][id] /= 20; // f(x) = x^2 / 20
+                if (dt) {
+                    file.bands[atlaas::TIME][id] -= dt;
+                }
                 if (file.bands[atlaas::VARIANCE][id] > vt) {
                     file.bands[atlaas::Z_MEAN][id] =
                         file.bands[atlaas::Z_MAX][id];
@@ -59,9 +70,10 @@ inline void select(std::vector<gdalwrap::gdal>& files,
         }
         file.bands = {
             file.bands[atlaas::Z_MEAN],
-            file.bands[atlaas::DIST_SQ]
+            file.bands[atlaas::DIST_SQ],
+            file.bands[atlaas::TIME],
         };
-        file.names = {"DTM", "DIST_SQ"};
+        file.names = {"DTM", "DIST_SQ", "TIME"};
     }
 }
 
@@ -71,17 +83,20 @@ inline void select(std::vector<gdalwrap::gdal>& files,
 inline void decimate(gdalwrap::gdal& region, size_t scale = 5) {
     const size_t sx = region.get_width(), sy = region.get_height();
     auto it_gray = region.bands[0].begin(), begin_gray = it_gray,
-         it_alph = region.bands[1].begin(), begin_alph = it_alph;
+         it_alph = region.bands[1].begin(), begin_alph = it_alph,
+         it_time = region.bands[2].begin(), begin_time = it_time;
     for (size_t i = 0; i < sy; i+=scale) {
-        for (size_t j = 0; j < sx; j+=scale, it_gray++, it_alph++) {
+        for (size_t j = 0; j < sx; j+=scale, it_gray++, it_alph++, it_time++) {
             *it_gray = *(begin_gray + j + i * sx);
             *it_alph = *(begin_alph + j + i * sx);
+            *it_time = *(begin_time + j + i * sx);
             for (size_t u = 0; u < scale; u++) {
                 for (size_t v = 0; v < scale; v++) {
                     size_t p = j + v + (i + u) * sx;
                     if (*(begin_gray + p) > *it_gray) {
                         *it_gray = *(begin_gray + p);
                         *it_alph = *(begin_alph + p);
+                        *it_time = *(begin_time + p);
                     }
                 }
             }
@@ -107,6 +122,50 @@ inline void edge(gdalwrap::gdal& region, float factor = EDGE_FACTOR) {
     }
 }
 
+inline uint32_t closest(const std::vector<uint64_t>& v, uint64_t e) {
+    //std::cout<<"c2 ";
+    auto it = std::lower_bound(v.begin(), v.end(), e);
+    // TODO check if it-1 is better
+    return std::distance(v.begin(), it);
+}
+
+inline uint32_t closest0(const std::vector<uint64_t>& v, uint64_t e) {
+    //std::cout<<"c0 ";
+    uint32_t i = 0;
+    for (; i < v.size(); i++) {
+        if (v[i] >= e) {
+            if ((i > 0) && ((e - v[i-1]) < (v[i] - e)))
+                i--;
+            break;
+        }
+    }
+    return i;
+}
+
+inline std::vector<std::vector<uint8_t>>
+vf32_4vu8(gdalwrap::gdal& region, size_t band,
+        const std::vector<uint64_t>& pcd_ts) {
+    const size_t sx = region.get_width(), sy = region.get_height();
+    uint64_t t_ref = std::stoll(region.get_meta("TIME", "0"));
+    std::vector<std::vector<uint8_t>> argb(4);
+    for (auto& layer : argb) {
+        layer.resize(sx * sy);
+    }
+    size_t i = 0;
+    for (auto f : region.bands[band]) {
+        uint64_t ts_ms = (t_ref + f); // milliseconds
+        uint32_t pcd_id = closest(pcd_ts, ts_ms);
+        if (f>0) std::cout<<ts_ms<<":"<<pcd_id<<" ";
+        argb[0][i] = (pcd_id >> 24) & 0xFF;
+        argb[1][i] = (pcd_id >> 16) & 0xFF;
+        argb[2][i] = (pcd_id >> 8) & 0xFF;
+        argb[3][i] = pcd_id & 0xFF;
+        i++;
+    }
+    std::cout<<pcd_ts;
+    return argb;
+}
+
 /**
  * Region converts a list of tiles into a 2 layers PNG file,
  * 1st is 8 bit grayscale representation of traversability:
@@ -116,7 +175,8 @@ inline void edge(gdalwrap::gdal& region, float factor = EDGE_FACTOR) {
  * PNG comes with .aux.xml file containing georeferenced metadata (GDAL).
  */
 inline void region(std::vector<gdalwrap::gdal>& tiles,
-                   const std::string& filepath) {
+                   const std::string& filepath,
+                   const std::vector<uint64_t>& pcd_ts = {}) {
     // select only dtm band
     select(tiles);
     // merge all tiles
@@ -131,6 +191,15 @@ inline void region(std::vector<gdalwrap::gdal>& tiles,
     std::transform(result.bands[1].begin(), result.bands[1].end(), alph.begin(),
         [](float v) -> uint8_t { return v > 255 ? 0 : v < 0 ? 0 : 255 - v; });
     result.export8u(filepath, {gray, alph}, "PNG");
+    //if (pcd_ts.empty()) {
+        gdalwrap::gdal r2;
+        r2.copy_meta(result);
+        r2.bands = {result.bands[2]};
+        r2.names = {"TIME"};
+        r2.save(filepath+".time.tif");
+    //} else {
+        result.export8u(filepath+".time.png", vf32_4vu8(result, 2, pcd_ts), "PNG");
+    //}
 }
 
 /**
@@ -138,14 +207,15 @@ inline void region(std::vector<gdalwrap::gdal>& tiles,
  * See: region() and glob()
  */
 inline void glob_region(const std::string& pattern_in,
-                        const std::string& file_out) {
+                        const std::string& file_out,
+                        const std::vector<uint64_t>& pcd_ts = {}) {
     std::vector<std::string> files = glob(pattern_in);
     std::vector<gdalwrap::gdal> tiles(files.size());
     auto it = tiles.begin();
     for (const std::string& file : files) {
         (*it++).load(file);
     }
-    region(tiles, file_out);
+    region(tiles, file_out, pcd_ts);
 }
 
 } // namespace atlaas
