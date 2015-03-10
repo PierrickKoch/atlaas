@@ -49,7 +49,7 @@ void atlaas::tile_load(int sx, int sy) {
     std::string filepath = tilepath(current[0] + sx, current[1] + sy);
     if ( ! file_exists( filepath ) )
         return; // no file to load
-    gdalwrap::gdal tile;
+    auto& tile = tiles[sx + sy * 3];
     tile.load(filepath);
     assert( tile.bands.size() == MAP_NAMES.size() );
     assert( tile.bands[0].size() == sw * sh );
@@ -76,7 +76,7 @@ void atlaas::tile_load(int sx, int sy) {
 void atlaas::tile_save(int sx, int sy) const {
     // re-init the IO cache in case a load corrupted its meta-data
     // reset meta-data (important for TIME)
-    gdalwrap::gdal tile;
+    auto& tile = tiles[sx + sy * 3];
     tile.copy_meta_only(meta);
     tile.names = MAP_NAMES;
     tile.set_size(N_RASTER, sw, sh);

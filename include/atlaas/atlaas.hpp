@@ -35,6 +35,8 @@ class atlaas {
      * I/O data model
      */
     gdalwrap::gdal meta;
+    mutable std::array<gdalwrap::gdal, 9> tiles;
+
     std::string atlaas_path;
 
     /**
@@ -113,6 +115,12 @@ public:
         // even if the robot is at a different pose.
         sw = width  / 3; // tile-width
         sh = height / 3; // tile-height
+
+        for (auto& tile : tiles) {
+            tile.copy_meta_only(meta);
+            tile.names = MAP_NAMES;
+            tile.set_size(N_RASTER, sw, sh);
+        }
 
         tile_load(0, 0);
         tile_load(0, 1);
