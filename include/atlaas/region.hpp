@@ -17,6 +17,12 @@
 #include <atlaas/common.hpp>
 #include <gdalwrap/gdal.hpp>
 
+#ifdef NDEBUG
+#define LOG(x)
+#else
+#define LOG(x) std::cout << (x) ;
+#endif
+
 namespace atlaas {
 
 static const float VARIANCE_THRESHOLD = 0.01;
