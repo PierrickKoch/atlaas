@@ -7,7 +7,6 @@
  * created: 2014-03-19
  * license: BSD
  */
-#include <thread>
 #include <iostream>         // std::{cout,endl}
 #include <algorithm>        // std::copy{,_backward}
 
@@ -38,25 +37,18 @@ bool atlaas::slide() {
 
     if (dx == -1) {
         // save EAST 1/3 maplets [ 1,-1], [ 1, 0], [ 1, 1]
-        std::thread t1(&atlaas::tile_save, this, 2, 0);
-        std::thread t2(&atlaas::tile_save, this, 2, 1);
-        std::thread t3(&atlaas::tile_save, this, 2, 2);
+        tile_save(2, 0);
+        tile_save(2, 1);
+        tile_save(2, 2);
         if (dy == -1) {
             // save SOUTH
-            std::thread t5(&atlaas::tile_save, this, 0, 2);
-            std::thread t6(&atlaas::tile_save, this, 1, 2);
-            t5.join();
-            t6.join();
+            tile_save(0, 2);
+            tile_save(1, 2);
         } else if (dy == 1) {
             // save NORTH
-            std::thread t5(&atlaas::tile_save, this, 0, 0);
-            std::thread t6(&atlaas::tile_save, this, 1, 0);
-            t5.join();
-            t6.join();
+            tile_save(0, 0);
+            tile_save(1, 0);
         }
-        t1.join();
-        t2.join();
-        t3.join();
         // move the map to the WEST [-1 -> 0; 0 -> 1]
         for (auto it = internal.begin(); it < internal.end(); it += width) {
             std::copy_backward(it, it + 2 * sw, it + width);
@@ -65,25 +57,18 @@ bool atlaas::slide() {
         }
     } else if (dx == 1) {
         // save WEST 1/3 maplets [-1,-1], [-1, 0], [-1, 1]
-        std::thread t1(&atlaas::tile_save, this, 0, 0);
-        std::thread t2(&atlaas::tile_save, this, 0, 1);
-        std::thread t3(&atlaas::tile_save, this, 0, 2);
+        tile_save(0, 0);
+        tile_save(0, 1);
+        tile_save(0, 2);
         if (dy == -1) {
             // save SOUTH
-            std::thread t5(&atlaas::tile_save, this, 1, 2);
-            std::thread t6(&atlaas::tile_save, this, 2, 2);
-            t5.join();
-            t6.join();
+            tile_save(1, 2);
+            tile_save(2, 2);
         } else if (dy == 1) {
             // save NORTH
-            std::thread t5(&atlaas::tile_save, this, 1, 0);
-            std::thread t6(&atlaas::tile_save, this, 2, 0);
-            t5.join();
-            t6.join();
+            tile_save(1, 0);
+            tile_save(2, 0);
         }
-        t1.join();
-        t2.join();
-        t3.join();
         // move the map to the EAST
         for (auto it = internal.begin(); it < internal.end(); it += width) {
             std::copy(it + sw, it + width, it);
@@ -92,20 +77,14 @@ bool atlaas::slide() {
         }
     } else if (dy == -1) {
         // save SOUTH
-        std::thread t1(&atlaas::tile_save, this, 0, 2);
-        std::thread t2(&atlaas::tile_save, this, 1, 2);
-        std::thread t3(&atlaas::tile_save, this, 2, 2);
-        t1.join();
-        t2.join();
-        t3.join();
+        tile_save(0, 2);
+        tile_save(1, 2);
+        tile_save(2, 2);
     } else if (dy == 1) {
         // save NORTH
-        std::thread t1(&atlaas::tile_save, this, 0, 0);
-        std::thread t2(&atlaas::tile_save, this, 1, 0);
-        std::thread t3(&atlaas::tile_save, this, 2, 0);
-        t1.join();
-        t2.join();
-        t3.join();
+        tile_save(0, 0);
+        tile_save(1, 0);
+        tile_save(2, 0);
     }
 
     if (dy == -1) {
@@ -126,62 +105,42 @@ bool atlaas::slide() {
     // load here
     if (dx == -1) {
         // load WEST maplets
-        std::thread t1(&atlaas::tile_load, this, 0, 0);
-        std::thread t2(&atlaas::tile_load, this, 0, 1);
-        std::thread t3(&atlaas::tile_load, this, 0, 2);
-        t1.join();
-        t2.join();
-        t3.join();
+        tile_load(0, 0);
+        tile_load(0, 1);
+        tile_load(0, 2);
         if (dy == -1) {
             // load NORTH
-            std::thread t5(&atlaas::tile_load, this, 1, 0);
-            std::thread t6(&atlaas::tile_load, this, 2, 0);
-            t5.join();
-            t6.join();
+            tile_load(1, 0);
+            tile_load(2, 0);
         } else if (dy == 1) {
             // load SOUTH
-            std::thread t5(&atlaas::tile_load, this, 1, 2);
-            std::thread t6(&atlaas::tile_load, this, 2, 2);
-            t5.join();
-            t6.join();
+            tile_load(1, 2);
+            tile_load(2, 2);
         }
     } else if (dx == 1) {
         // load EAST maplets
-        std::thread t1(&atlaas::tile_load, this, 2, 0);
-        std::thread t2(&atlaas::tile_load, this, 2, 1);
-        std::thread t3(&atlaas::tile_load, this, 2, 2);
-        t1.join();
-        t2.join();
-        t3.join();
+        tile_load(2, 0);
+        tile_load(2, 1);
+        tile_load(2, 2);
         if (dy == -1) {
             // load NORTH
-            std::thread t5(&atlaas::tile_load, this, 0, 0);
-            std::thread t6(&atlaas::tile_load, this, 1, 0);
-            t5.join();
-            t6.join();
+            tile_load(0, 0);
+            tile_load(1, 0);
         } else if (dy == 1) {
             // load SOUTH
-            std::thread t5(&atlaas::tile_load, this, 0, 2);
-            std::thread t6(&atlaas::tile_load, this, 1, 2);
-            t5.join();
-            t6.join();
+            tile_load(0, 2);
+            tile_load(1, 2);
         }
     } else if (dy == -1) {
         // load NORTH
-        std::thread t1(&atlaas::tile_load, this, 0, 0);
-        std::thread t2(&atlaas::tile_load, this, 1, 0);
-        std::thread t3(&atlaas::tile_load, this, 2, 0);
-        t1.join();
-        t2.join();
-        t3.join();
+        tile_load(0, 0);
+        tile_load(1, 0);
+        tile_load(2, 0);
     } else if (dy == 1) {
         // load SOUTH
-        std::thread t1(&atlaas::tile_load, this, 0, 2);
-        std::thread t2(&atlaas::tile_load, this, 1, 2);
-        std::thread t3(&atlaas::tile_load, this, 2, 2);
-        t1.join();
-        t2.join();
-        t3.join();
+        tile_load(0, 2);
+        tile_load(1, 2);
+        tile_load(2, 2);
     }
 
     const auto& utm = meta.point_pix2utm(sw * dx, sh * dy);
