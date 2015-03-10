@@ -42,3 +42,5 @@ finally:
     print("merge min/max/avg = %.3f / %.3f / %.3f ms" % \
         ( 1000*min(profile), 1000*max(profile),
           1000*sum(profile) / len(profile) ) )
+    with open('%s/profile.json'%robot_name, 'w') as f:
+        f.write(str(profile))
