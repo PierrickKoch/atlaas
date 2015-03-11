@@ -22,7 +22,7 @@ tmux att -t multi || tmux \
     send-keys "python multi-goals.py momo" C-m \; \
     new-window \; \
     send-keys "source ~/catkin_ws/devel/setup.bash" C-m \; \
-    send-keys "python multi-ros.py mana" C-m \; \
+    send-keys "valgrind --tool=callgrind python multi-ros.py mana" C-m \; \
     split-window \; \
     send-keys "source ~/catkin_ws/devel/setup.bash" C-m \; \
-    send-keys "python multi-ros.py momo" C-m \; \
+    send-keys "valgrind --tool=callgrind python multi-ros.py momo" C-m \; \

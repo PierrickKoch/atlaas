@@ -11,6 +11,7 @@
 #include <algorithm>        // std::copy{,_backward}
 
 #include <atlaas/atlaas.hpp>
+#include <atlaas/tilesio.hpp>
 
 namespace atlaas {
 
@@ -35,19 +36,24 @@ bool atlaas::slide() {
     // reset state and ground infos used for dynamic merge
     std::fill(gndinter.begin(), gndinter.end(), zeros);
 
+    tiles_io tio;
+    tio.todo(std::bind(&atlaas::tile_save, this,
+        std::placeholders::_1, std::placeholders::_2));
+    tio.launch(5);
+
     if (dx == -1) {
         // save EAST 1/3 maplets [ 1,-1], [ 1, 0], [ 1, 1]
-        tile_save(2, 0);
-        tile_save(2, 1);
-        tile_save(2, 2);
+        tio.process(2, 0);
+        tio.process(2, 1);
+        tio.process(2, 2);
         if (dy == -1) {
             // save SOUTH
-            tile_save(0, 2);
-            tile_save(1, 2);
+            tio.process(0, 2);
+            tio.process(1, 2);
         } else if (dy == 1) {
             // save NORTH
-            tile_save(0, 0);
-            tile_save(1, 0);
+            tio.process(0, 0);
+            tio.process(1, 0);
         }
         // move the map to the WEST [-1 -> 0; 0 -> 1]
         for (auto it = internal.begin(); it < internal.end(); it += width) {
@@ -57,17 +63,17 @@ bool atlaas::slide() {
         }
     } else if (dx == 1) {
         // save WEST 1/3 maplets [-1,-1], [-1, 0], [-1, 1]
-        tile_save(0, 0);
-        tile_save(0, 1);
-        tile_save(0, 2);
+        tio.process(0, 0);
+        tio.process(0, 1);
+        tio.process(0, 2);
         if (dy == -1) {
             // save SOUTH
-            tile_save(1, 2);
-            tile_save(2, 2);
+            tio.process(1, 2);
+            tio.process(2, 2);
         } else if (dy == 1) {
             // save NORTH
-            tile_save(1, 0);
-            tile_save(2, 0);
+            tio.process(1, 0);
+            tio.process(2, 0);
         }
         // move the map to the EAST
         for (auto it = internal.begin(); it < internal.end(); it += width) {
@@ -77,14 +83,14 @@ bool atlaas::slide() {
         }
     } else if (dy == -1) {
         // save SOUTH
-        tile_save(0, 2);
-        tile_save(1, 2);
-        tile_save(2, 2);
+        tio.process(0, 2);
+        tio.process(1, 2);
+        tio.process(2, 2);
     } else if (dy == 1) {
         // save NORTH
-        tile_save(0, 0);
-        tile_save(1, 0);
-        tile_save(2, 0);
+        tio.process(0, 0);
+        tio.process(1, 0);
+        tio.process(2, 0);
     }
 
     if (dy == -1) {
@@ -98,49 +104,54 @@ bool atlaas::slide() {
         std::fill(internal.end() - sh * width, internal.end(), zeros);
     }
 
+    tio.wait();
     // after moving, update our current center
     current[0] += dx;
     current[1] += dy;
 
+    tio.todo(std::bind(&atlaas::tile_load, this,
+        std::placeholders::_1, std::placeholders::_2));
+    tio.launch(5);
+
     // load here
     if (dx == -1) {
         // load WEST maplets
-        tile_load(0, 0);
-        tile_load(0, 1);
-        tile_load(0, 2);
+        tio.process(0, 0);
+        tio.process(0, 1);
+        tio.process(0, 2);
         if (dy == -1) {
             // load NORTH
-            tile_load(1, 0);
-            tile_load(2, 0);
+            tio.process(1, 0);
+            tio.process(2, 0);
         } else if (dy == 1) {
             // load SOUTH
-            tile_load(1, 2);
-            tile_load(2, 2);
+            tio.process(1, 2);
+            tio.process(2, 2);
         }
     } else if (dx == 1) {
         // load EAST maplets
-        tile_load(2, 0);
-        tile_load(2, 1);
-        tile_load(2, 2);
+        tio.process(2, 0);
+        tio.process(2, 1);
+        tio.process(2, 2);
         if (dy == -1) {
             // load NORTH
-            tile_load(0, 0);
-            tile_load(1, 0);
+            tio.process(0, 0);
+            tio.process(1, 0);
         } else if (dy == 1) {
             // load SOUTH
-            tile_load(0, 2);
-            tile_load(1, 2);
+            tio.process(0, 2);
+            tio.process(1, 2);
         }
     } else if (dy == -1) {
         // load NORTH
-        tile_load(0, 0);
-        tile_load(1, 0);
-        tile_load(2, 0);
+        tio.process(0, 0);
+        tio.process(1, 0);
+        tio.process(2, 0);
     } else if (dy == 1) {
         // load SOUTH
-        tile_load(0, 2);
-        tile_load(1, 2);
-        tile_load(2, 2);
+        tio.process(0, 2);
+        tio.process(1, 2);
+        tio.process(2, 2);
     }
 
     const auto& utm = meta.point_pix2utm(sw * dx, sh * dy);
@@ -148,6 +159,7 @@ bool atlaas::slide() {
     meta.set_transform(utm[0], utm[1], meta.get_scale_x(), meta.get_scale_y());
     std::cout << __func__ << " utm " << utm[0] << ", " << utm[1] << std::endl;
 
+    tio.wait();
     return true;
 }
 
