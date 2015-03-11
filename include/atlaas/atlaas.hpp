@@ -11,7 +11,6 @@
 #define ATLAAS_HPP
 
 #include <memory> // unique_ptr C++11
-#include <ctime> // std::time
 #include <string>
 
 #include <gdalwrap/gdal.hpp>
@@ -69,17 +68,17 @@ class atlaas {
     /**
      * time base
      */
-    std::time_t time_base;
+    uint64_t time_base;
 
     /**
-     * Seconds since the base time.
+     * milliseconds since the base time.
      *
      * Since we'll store datas as float32, time since epoch would give
      * something like `1.39109e+09`, we substract a time_base
      * (to be set using `atlaas::set_time_base(time_t)`).
      */
     float get_reference_time() {
-        return std::time(NULL) - time_base;
+        return milliseconds_since_epoch() - time_base;
     }
 
 public:
@@ -106,7 +105,7 @@ public:
         meta.set_transform(custom_x, custom_y, scale, -scale);
         meta.set_utm(utm_zone, utm_north);
         meta.set_custom_origin(custom_x, custom_y, custom_z);
-        set_time_base( std::time(NULL) );
+        set_time_base( milliseconds_since_epoch() );
         // set internal points info structure size to map (gdal) size
         internal.resize( width * height );
         current = {{0,0}};
@@ -155,7 +154,7 @@ public:
         return tilepath(p[0], p[1]);
     }
 
-    void set_time_base(std::time_t base) {
+    void set_time_base(uint64_t base) {
         time_base = base;
         meta.metadata["TIME"] = std::to_string(time_base);
     }
@@ -369,7 +368,11 @@ public:
 
     void region(const std::string& file_out) {
         save_currents();
-        glob_region(atlaas_path + "/atlaas.*x*.tif", file_out);
+        std::vector<uint64_t> pcd_ts64(pcd_time.size());
+        std::transform(pcd_time.begin(), pcd_time.end(), pcd_ts64.begin(),
+            [](const std::pair<uint64_t, map_id_t>& tp) ->
+            uint64_t { return tp.first; });
+        glob_region(atlaas_path + "/atlaas.*x*.tif", file_out, pcd_ts64);
     }
 
     /**
