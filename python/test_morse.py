@@ -12,6 +12,7 @@ robot.append(odom)
 odom.add_stream('ros', method='morse.middleware.ros.pose.TFPublisher')
 odom.add_stream('ros', method='morse.middleware.ros.pose.PoseWithCovarianceStampedPublisher')
 odom.alter(classpath='morse.modifiers.odometry_noise.OdometryNoiseModifier')
+odom.add_service('socket')
 
 camera = Velodyne()
 camera.translate(z = 1)
