@@ -22,7 +22,8 @@ namespace atlaas {
  * @param cloud: point cloud in the sensor frame
  * @param transformation: sensor to world transformation
  */
-void atlaas::merge(points& cloud, const matrix& transformation, bool dump) {
+void atlaas::merge(points& cloud, const matrix& transformation,
+        const covmat& covariance, bool dump) {
     if (cloud.size() < 1)
         return; // pcl writeBinaryCompressed crash with empty cloud
     sensor_xy = matrix_to_point(transformation);

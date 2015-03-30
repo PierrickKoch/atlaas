@@ -29,6 +29,7 @@ enum { N_POINTS,   Z_MIN,   Z_MAX,   Z_MEAN,   VARIANCE,   TIME,   DIST_SQ,   N_
 typedef std::array<double, 2> point_xy_t;   // XY (for UTM frame)
 typedef std::array<float,  4> point_xyzi_t; // XYZI (custom frame)
 typedef std::array<double, 16> matrix;      // transformation matrix
+typedef std::array<double, 36> covmat;      // covariance matrix
 typedef std::array<double, 6> pose6d;       // yaw,pitch,roll,x,y,z
 typedef std::vector<point_xyzi_t> points;   // PointsXYZI
 typedef std::array<float, N_RASTER> cell_info_t;
