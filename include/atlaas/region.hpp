@@ -123,27 +123,16 @@ inline void edge(gdalwrap::gdal& region, float factor = EDGE_FACTOR) {
 }
 
 inline uint32_t closest(const std::vector<uint64_t>& v, uint64_t e) {
-    //std::cout<<"c2 ";
+    // assuming v is sorted
     auto it = std::lower_bound(v.begin(), v.end(), e);
-    // TODO check if it-1 is better
+    // check if it-1 is closer
+    if ((it != v.begin()) && (*it - e > e - *(it-1)))
+        it--;
     return std::distance(v.begin(), it);
 }
 
-inline uint32_t closest0(const std::vector<uint64_t>& v, uint64_t e) {
-    //std::cout<<"c0 ";
-    uint32_t i = 0;
-    for (; i < v.size(); i++) {
-        if (v[i] >= e) {
-            if ((i > 0) && ((e - v[i-1]) < (v[i] - e)))
-                i--;
-            break;
-        }
-    }
-    return i;
-}
-
 inline std::vector<std::vector<uint8_t>>
-vf32_4vu8(gdalwrap::gdal& region, size_t band,
+encode_id_to_rgba(gdalwrap::gdal& region, size_t band,
         const std::vector<uint64_t>& pcd_ts) {
     const size_t sx = region.get_width(), sy = region.get_height();
     uint64_t t_ref = std::stoll(region.get_meta("TIME", "0"));
@@ -153,6 +142,7 @@ vf32_4vu8(gdalwrap::gdal& region, size_t band,
     }
     size_t i = 0;
     for (auto f : region.bands[band]) {
+        if (f < -9999) continue;
         uint64_t ts_ms = (t_ref + f); // milliseconds
         uint32_t pcd_id = closest(pcd_ts, ts_ms);
         if (f>0) std::cout<<ts_ms<<":"<<pcd_id<<" ";
@@ -198,7 +188,8 @@ inline void region(std::vector<gdalwrap::gdal>& tiles,
         r2.names = {"TIME"};
         r2.save(filepath+".time.tif");
     //} else {
-        result.export8u(filepath+".time.png", vf32_4vu8(result, 2, pcd_ts), "PNG");
+        result.export8u(filepath+".time.png",
+            encode_id_to_rgba(result, 2, pcd_ts), "PNG");
     //}
 }
 
