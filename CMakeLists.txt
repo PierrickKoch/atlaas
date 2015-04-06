@@ -15,16 +15,19 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules")
 
 # C++11 GDAL wrapper
 find_package(GdalWrap REQUIRED)
+# least square, see region.hpp, lstsq.cpp
+find_package(GSL REQUIRED)
 
 include_directories(include)
 include_directories(${GDALWRAP_INCLUDE_DIRS})
+include_directories(${GSL_INCLUDE_DIRS})
 
 # Load the 'install_pkg_config_file' macro
 include(InstallPkgConfigFile)
 
 # RPath management http://www.cmake.org/Wiki/CMake_RPATH_handling
 set(CMAKE_SKIP_BUILD_RPATH  FALSE)
-set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE) 
+set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
