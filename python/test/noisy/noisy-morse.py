@@ -11,7 +11,9 @@ odom.level('integrated')
 robot.append(odom)
 odom.add_stream('ros', method='morse.middleware.ros.pose.TFPublisher')
 odom.add_stream('ros', method='morse.middleware.ros.pose.PoseWithCovarianceStampedPublisher')
-odom.alter(classpath='morse.modifiers.odometry_noise.OdometryNoiseModifier')
+odom.alter(classpath='morse.modifiers.odometry_noise.OdometryNoiseModifier',
+    factor = 1, factor_sigma = 0.5)
+#    gyro_drift = 0.001, gyro_drift_sigma = 0.0001)
 odom.add_service('socket')
 
 camera = Velodyne()
