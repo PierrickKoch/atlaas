@@ -6,6 +6,6 @@ compiler:
 before_install:
  - sudo add-apt-repository ppa:cython-dev/master-ppa -y
  - sudo apt-get update -qq
- - sudo apt-get install -qq cmake cython python-numpy libgdal1h libgdal-dev
+ - sudo apt-get install -qq cmake cython python-numpy libgdal1h libgdal-dev libgsl0-dev
 
 script: "time ./.travis.bash"
