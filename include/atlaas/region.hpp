@@ -176,55 +176,6 @@ inline void decimate(gdalwrap::gdal& region, size_t scale = DEFAULT_SCALE) {
 }
 
 /**
- * Gradient will sum absolute differences of next neighbours, in place.
- */
-inline void edge(gdalwrap::gdal& region, float factor = EDGE_FACTOR) {
-    for (auto it = region.bands[0].begin(), it1 = it + 1,
-            it2 = it + region.get_width(), it3 = it2 + 1,
-            end = region.bands[0].end(); it3 < end; it++,
-            it1++, it2++, it3++) {
-        *it = (*it > NO_DATA) ? std::min(255.0f, 1 + factor *
-            (std::abs(*it - *it1) +
-             std::abs(*it - *it2) +
-             std::abs(*it - *it3) )) : 0;
-    }
-}
-
-inline uint32_t closest(const std::vector<uint64_t>& v, uint64_t e) {
-    // assuming v is sorted
-    auto it = std::lower_bound(v.begin(), v.end(), e);
-    // check if it-1 is closer
-    if ((it != v.begin()) && (*it - e > e - *(it-1)))
-        it--;
-    return std::distance(v.begin(), it);
-}
-
-inline std::vector<std::vector<uint8_t>>
-encode_id_to_rgba(gdalwrap::gdal& region, size_t band,
-        const std::vector<uint64_t>& pcd_ts) {
-    const size_t sx = region.get_width(), sy = region.get_height();
-    uint64_t t_ref = std::stoll(region.get_meta("TIME", "0"));
-    std::vector<std::vector<uint8_t>> argb(4);
-    for (auto& layer : argb) {
-        layer.resize(sx * sy);
-    }
-    size_t i = 0;
-    for (auto f : region.bands[band]) {
-        if (f < -9999) continue;
-        uint64_t ts_ms = (t_ref + f); // milliseconds
-        uint32_t pcd_id = closest(pcd_ts, ts_ms);
-        if (f>0) std::cout<<ts_ms<<":"<<pcd_id<<" ";
-        argb[0][i] = (pcd_id >> 24) & 0xFF;
-        argb[1][i] = (pcd_id >> 16) & 0xFF;
-        argb[2][i] = (pcd_id >> 8) & 0xFF;
-        argb[3][i] = pcd_id & 0xFF;
-        i++;
-    }
-    std::cout<<pcd_ts;
-    return argb;
-}
-
-/**
  * Region converts a list of tiles into a 2 layers PNG file,
  * 1st is 8 bit grayscale representation of traversability:
  *  0 = unknown, [1..255] roughness, 1 = flat, 255 = obstacle.
@@ -233,14 +184,11 @@ encode_id_to_rgba(gdalwrap::gdal& region, size_t band,
  * PNG comes with .aux.xml file containing georeferenced metadata (GDAL).
  */
 inline void region(std::vector<gdalwrap::gdal>& tiles,
-                   const std::string& filepath,
-                   const std::vector<uint64_t>& pcd_ts = {}) {
+                   const std::string& filepath) {
     // select only dtm band
     select(tiles);
     // merge all tiles
     gdalwrap::gdal result = gdalwrap::merge(tiles, NO_DATA);
-    // edge detect
-    edge(result);
     // scale down
     decimate(result);
     // convert to grayscale PNG
@@ -249,16 +197,9 @@ inline void region(std::vector<gdalwrap::gdal>& tiles,
     std::transform(result.bands[1].begin(), result.bands[1].end(), alph.begin(),
         [](float v) -> uint8_t { return v > 255 ? 0 : v < 0 ? 0 : 255 - v; });
     result.export8u(filepath, {gray, alph}, "PNG");
-    //if (pcd_ts.empty()) {
-        gdalwrap::gdal r2;
-        r2.copy_meta(result);
-        r2.bands = {result.bands[2]};
-        r2.names = {"TIME"};
-        r2.save(filepath+".time.tif");
-    //} else {
-    //    result.export8u(filepath+".time.png",
-    //        encode_id_to_rgba(result, 2, pcd_ts), "PNG");
-    //}
+    result.bands = {result.bands[2]};
+    result.names = {"TIME"};
+    result.save(filepath+".time.tif");
 }
 
 /**
@@ -266,15 +207,14 @@ inline void region(std::vector<gdalwrap::gdal>& tiles,
  * See: region() and glob()
  */
 inline void glob_region(const std::string& pattern_in,
-                        const std::string& file_out,
-                        const std::vector<uint64_t>& pcd_ts = {}) {
+                        const std::string& file_out) {
     std::vector<std::string> files = glob(pattern_in);
     std::vector<gdalwrap::gdal> tiles(files.size());
     auto it = tiles.begin();
     for (const std::string& file : files) {
         (*it++).load(file);
     }
-    region(tiles, file_out, pcd_ts);
+    region(tiles, file_out);
 }
 
 } // namespace atlaas

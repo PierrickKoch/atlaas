@@ -372,11 +372,7 @@ public:
 
     void region(const std::string& file_out) {
         save_currents();
-        std::vector<uint64_t> pcd_ts64(pcd_time.size());
-        std::transform(pcd_time.begin(), pcd_time.end(), pcd_ts64.begin(),
-            [](const std::pair<uint64_t, map_id_t>& tp) ->
-            uint64_t { return tp.first; });
-        glob_region(atlaas_path + "/atlaas.*x*.tif", file_out, pcd_ts64);
+        glob_region(atlaas_path + "/atlaas.*x*.tif", file_out);
     }
 
     /**
