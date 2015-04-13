@@ -187,7 +187,10 @@ public:
      * transform, merge, slide, save, load tiles
      */
     void merge(points& cloud, const matrix& transformation,
-        const covmat& covariance = {}, bool dump = true);
+        const covmat& covariance, bool dump = true);
+    void merge(points& cloud, const matrix& transformation, bool dump = true) {
+        merge(cloud, transformation, {}, dump);
+    }
 
     std::string cloud_filepath(size_t seq) const {
         std::ostringstream oss;
