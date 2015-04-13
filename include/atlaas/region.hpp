@@ -136,7 +136,7 @@ public:
 };
 
 /**
- * Conservative decimate keeping max "edge" value
+ * Decimate least-sqaure fitting on scale*scale patch of z-mean values
  */
 inline void decimate(gdalwrap::gdal& region, size_t scale = DEFAULT_SCALE) {
     const size_t sx = region.get_width(), sy = region.get_height();
