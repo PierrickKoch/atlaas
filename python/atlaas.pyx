@@ -1,4 +1,5 @@
 cimport numpy as np
+import numpy
 from libcpp cimport bool
 from libcpp.string cimport string
 
@@ -42,7 +43,9 @@ cdef class Atlaas:
     def merge(self,
               np.ndarray[np.float32_t, ndim=2] cloud,
               np.ndarray[np.double_t,  ndim=2] transformation,
-              np.ndarray[np.double_t,  ndim=2] covariance, dump=True):
+              np.ndarray[np.double_t,  ndim=2] covariance=None, dump=True):
+        if not covariance:
+            covariance = numpy.array([0]*36, dtype=numpy.float64).reshape(6, 6)
         if not covariance.size == 36:
             raise TypeError("array size must be 36, covariance: Matrix(6,6)")
         if not transformation.size == 16:
