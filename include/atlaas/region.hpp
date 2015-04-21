@@ -76,6 +76,10 @@ inline void select(std::vector<gdalwrap::gdal>& files,
             file.bands[atlaas::Z_MEAN],
             file.bands[atlaas::DIST_SQ],
             file.bands[atlaas::TIME],
+            file.bands[atlaas::N_POINTS],// XXX
+            file.bands[atlaas::Z_MIN],
+            file.bands[atlaas::Z_MAX],
+            file.bands[atlaas::VARIANCE],
         };
         file.names = {"DTM", "DIST_SQ", "TIME"};
     }
@@ -86,7 +90,7 @@ inline void select(std::vector<gdalwrap::gdal>& files,
  * chisq: sum squared diff between points and plan(a,b,c)
  */
 inline float class_cell(double a, double b, double c, double chisq) {
-    return a * b + chisq; // TODO
+    return 2 * a * b + chisq; // TODO
 }
 
 class lstsq {
@@ -142,14 +146,19 @@ inline void decimate(gdalwrap::gdal& region, size_t scale = DEFAULT_SCALE) {
     const size_t sx = region.get_width(), sy = region.get_height();
     auto it_gray = region.bands[0].begin(), begin_gray = it_gray,
          it_alph = region.bands[1].begin(), begin_alph = it_alph,
-         it_time = region.bands[2].begin(), begin_time = it_time;
+         it_time = region.bands[2].begin(), begin_time = it_time,
+         it_a = region.bands[3].begin(),
+         it_b = region.bands[4].begin(),
+         it_c = region.bands[5].begin(),
+         it_d = region.bands[6].begin();
     float dist, min_dist;
     lstsq planar_fit(scale);
     size_t lstsqid;
     double a,b,c,chisq;
     std::vector<float> lstsqin(scale*scale);
     for (size_t i = 0; i < sy; i+=scale) {
-        for (size_t j = 0; j < sx; j+=scale, it_gray++, it_alph++, it_time++) {
+        for (size_t j = 0; j < sx; j+=scale, it_gray++, it_alph++, it_time++,
+                it_a++, it_b++, it_c++, it_d++) {
             *it_alph = 0;
             lstsqid = 0;
             min_dist = std::numeric_limits<float>::max();
@@ -166,6 +175,10 @@ inline void decimate(gdalwrap::gdal& region, size_t scale = DEFAULT_SCALE) {
                 }
             }
             planar_fit.multifit_linear(lstsqin, &a,&b,&c,&chisq);
+            *it_a = a;
+            *it_b = b;
+            *it_c = c;
+            *it_d = chisq;
             *it_gray = class_cell(a,b,c,chisq);
             *it_alph /= scale*scale;
         }
@@ -197,6 +210,10 @@ inline void region(std::vector<gdalwrap::gdal>& tiles,
     std::transform(result.bands[1].begin(), result.bands[1].end(), alph.begin(),
         [](float v) -> uint8_t { return v > 255 ? 0 : v < 0 ? 0 : 255 - v; });
     result.export8u(filepath, {gray, alph}, "PNG");
+    gdalwrap::gdal copy(result);
+    copy.bands = {copy.bands[3], copy.bands[4], copy.bands[5], copy.bands[6]};
+    copy.names = {"a", "b", "c", "chisq"};
+    copy.save(filepath+".abc_chisq.tif");
     result.bands = {result.bands[2]};
     result.names = {"TIME"};
     result.save(filepath+".time.tif");
