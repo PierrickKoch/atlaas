@@ -109,8 +109,8 @@ public:
         this->_work = gsl_multifit_linear_alloc(sz, 3);
         for (size_t i = 0, id = 0; i < sz_rt; i++) {
             for (size_t j = 0; j < sz_rt; j++, id++) {
-                gsl_matrix_set(this->_X, id, 0, i);
-                gsl_matrix_set(this->_X, id, 1, j);
+                gsl_matrix_set(this->_X, id, 0, j);
+                gsl_matrix_set(this->_X, id, 1, i);
                 gsl_matrix_set(this->_X, id, 2, 1);
             }
         }
@@ -139,6 +139,45 @@ public:
     }
 };
 
+inline void multifit_linear_no_data(size_t sz_rt, size_t no_data,
+const std::vector<float>& input, double* a, double* b, double* c,
+double* chisq) {
+    gsl_matrix *_X;
+    gsl_vector *_y;
+    gsl_vector *_beta;
+    gsl_matrix *_cov;
+    gsl_multifit_linear_workspace *_work;
+    // init
+    size_t sz = (sz_rt * sz_rt) - no_data;
+    _X = gsl_matrix_calloc(sz, 3);
+    _y = gsl_vector_alloc(sz);
+    _beta = gsl_vector_alloc(3);
+    _cov = gsl_matrix_alloc(3, 3);
+    _work = gsl_multifit_linear_alloc(sz, 3);
+    for (size_t i = 0, od = 0, id = 0; i < sz_rt; i++) {
+        for (size_t j = 0; j < sz_rt; j++, id++) {
+            if (input[id] > NO_DATA) {
+                gsl_matrix_set(_X, od, 0, j);
+                gsl_matrix_set(_X, od, 1, i);
+                gsl_matrix_set(_X, od, 2, 1);
+                gsl_vector_set(_y, od, input[id]);
+                od++;
+            }
+        }
+    }
+    // fit
+    gsl_multifit_linear(_X, _y, _beta, _cov, chisq, _work);
+    *a = gsl_vector_get(_beta, 0);
+    *b = gsl_vector_get(_beta, 1);
+    *c = gsl_vector_get(_beta, 2);
+    // free
+    gsl_matrix_free(_X);
+    gsl_vector_free(_y);
+    gsl_matrix_free(_cov);
+    gsl_vector_free(_beta);
+    gsl_multifit_linear_free(_work);
+}
+
 /**
  * Decimate least-sqaure fitting on scale*scale patch of z-mean values
  */
@@ -166,7 +205,8 @@ inline void decimate(gdalwrap::gdal& region, size_t scale = DEFAULT_SCALE) {
                 for (size_t v = 0; v < scale; v++) {
                     size_t p = j + v + (i + u) * sx;
                     dist = *(begin_alph + p);
-                    *it_alph += dist;
+                    if (dist > NO_DATA)
+                        *it_alph += dist;
                     lstsqin[lstsqid++] = *(begin_gray + p);
                     if (dist < min_dist) {
                         min_dist = dist;
@@ -174,7 +214,27 @@ inline void decimate(gdalwrap::gdal& region, size_t scale = DEFAULT_SCALE) {
                     }
                 }
             }
-            planar_fit.multifit_linear(lstsqin, &a,&b,&c,&chisq);
+            size_t no_data = 0;
+            // count no_data
+            for (float v : lstsqin)
+                if (v <= NO_DATA)
+                    no_data++;
+            if (no_data) {
+                if (no_data > (scale*scale/2)) {
+                    *it_gray = 255;
+                    *it_alph = 255;
+                    *it_a = 0;
+                    *it_b = 0;
+                    *it_c = 0;
+                    *it_d = 0;
+                    continue;
+                } else {
+                    multifit_linear_no_data(scale, no_data, lstsqin, &a,&b,&c,
+                        &chisq);
+                }
+            } else {
+                planar_fit.multifit_linear(lstsqin, &a,&b,&c,&chisq);
+            }
             *it_a = a;
             *it_b = b;
             *it_c = c;
