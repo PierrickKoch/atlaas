@@ -13,8 +13,19 @@ test.init(120.0, 120.0, 0.1, 0, 0, 0, 31, True)
 test.set_atlaas_path(robot_name)
 profile = []
 
+# Fix broken TransformListener.waitForTransform
+# Exception: Lookup would require extrapolation into the future.
+# waitForTransform(frame, header.frame_id, header.stamp, rospy.Duration(3))
+def wait(frame, header, duration=3):
+    start_time = time.time()
+    while not tfl.canTransform(frame, header.frame_id, header.stamp) \
+            and (time.time() - start_time) < duration \
+            and not rospy.is_shutdown():
+        rospy.sleep(0.0001) # 100 us
+    # print("Ive been waiting %f"%(time.time() - start_time))
+
 def transformation(frame, header):
-    tfl.waitForTransform(frame, header.frame_id, header.stamp, rospy.Duration(3.0) )
+    wait(frame, header)
     position, quaternion = tfl.lookupTransform(frame, header.frame_id, header.stamp)
     M = transformations.quaternion_matrix(quaternion)
     M[:3, 3] = position[:3]
@@ -26,7 +37,7 @@ def cloud(msg):
 
 def callback(msg):
     start = time.time()
-    test.merge(cloud(msg), transformation("/map", msg.header), False)
+    test.merge(cloud(msg), transformation("/map", msg.header), None, False)
     profile.append(time.time() - start)
     test.export8u('%s/atlaas.jpg'%robot_name)
 
