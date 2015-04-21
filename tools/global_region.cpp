@@ -4,8 +4,8 @@
 #include <gdalwrap/gdal.hpp>
 
 int main(int argc, char * argv[]) {
-    if (argc < 4) {
-        std::cerr << "usage: " << argv[0] << " file1.tif file2.tif ... out.png"
+    if (argc < 3) {
+        std::cerr << "usage: " << argv[0] << " file1.tif ... out.png"
                   << std::endl;
         return 1;
     }
