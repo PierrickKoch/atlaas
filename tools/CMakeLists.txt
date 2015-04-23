@@ -18,3 +18,7 @@ install(TARGETS atlaas2pcd DESTINATION bin)
 add_executable(global_region global_region.cpp)
 target_link_libraries( global_region atlaas )
 install(TARGETS global_region DESTINATION bin)
+
+add_executable(global_heightmap global_heightmap.cpp)
+target_link_libraries( global_heightmap atlaas )
+install(TARGETS global_heightmap DESTINATION bin)
