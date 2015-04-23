@@ -75,3 +75,7 @@ finally:
         f.write(str(profile))
     with open('%s/poses.json'%robot_name, 'w') as f:
         f.write(str(poses))
+    print("repro...")
+    np = test.reprocess(int(poses[0][0]*1000), int(poses[-1][0]*1000), poses[-1][1], poses[-1][2])
+    print("updated %i point clouds"%np)
+    test.export8u('%s/atlaas_repro.jpg'%robot_name)
