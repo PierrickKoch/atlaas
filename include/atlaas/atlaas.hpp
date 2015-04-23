@@ -293,7 +293,7 @@ public:
         // 1. find the pcd id at time `last_good_pose`
         size_t last_good_pcd_id = get_closest_pcd_id(last_good_pose),
                fixed_pcd_id = get_closest_pcd_id(time_of_fix);
-        // 2. build correct path, get path length
+        // 2. build correct path
         if (last_good_pcd_id >= fixed_pcd_id)
             return 0;
         points cloud;
@@ -303,12 +303,14 @@ public:
             load(cloud_filepath( i ), cloud, transformation);
             path[j] = matrix_to_point(transformation) ;
         }
+        // 3. get path length
         float dist = 0;
         std::vector<float> inc_dist(path.size());
         for (size_t i = 0; i < path.size() - 1; i++) {
             dist += distance(path[i], path[i+1]);
             inc_dist[i] = dist;
         }
+        // 4. overwrite correct pcd pose
         double dx = fixed_pose_x - path[path.size()-1][0],
                dy = fixed_pose_y - path[path.size()-1][1];
         for (size_t i = last_good_pcd_id, j = 0; i <= fixed_pcd_id; i++) {
@@ -319,7 +321,7 @@ public:
             transformation[7] += dy * factor; // transformation.y
             save(filepath, cloud, transformation);
         }
-        // 4. move all atlaas.*.tif from map_id related to the fix to old.pcd_id.*.tif
+        // 5. backup all atlaas.*.tif from map_id related to the fix
         for (size_t i = last_good_pcd_id; i <= fixed_pcd_id; i++) {
             for (uint sx=0; sx <= 2; sx++)
             for (uint sy=0; sy <= 2; sy++) {
@@ -332,9 +334,9 @@ public:
                 }
             }
         }
-        // 5. clear internal
+        // 6. clear internal
         clear_all();
-        // 6. process all pcd from pcd id last good to fixed time, correcting their pose
+        // 7. process all pcds from the last good pcd id
         return process(last_good_pcd_id) - last_good_pcd_id;
     }
 
