@@ -5,7 +5,11 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
+        - /Status1
         - /PointCloud21
+        - /TF1
+        - /TF1/Status1
+        - /TF1/Frames1
       Splitter Ratio: 0.5
     Tree Height: 697
   - Class: rviz/Selection
@@ -55,7 +59,7 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.01
       Style: Flat Squares
-      Topic: /robot/camera
+      Topic: /mana/velodyne
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
@@ -82,11 +86,11 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
-        base_link:
+        mana/base_link:
+          Value: true
+        mana/velodyne:
           Value: true
         map:
-          Value: true
-        robot/camera:
           Value: true
       Marker Scale: 1
       Name: TF
@@ -95,15 +99,15 @@ Visualization Manager:
       Show Names: true
       Tree:
         map:
-          base_link:
-            robot/camera:
+          mana/base_link:
+            mana/velodyne:
               {}
       Update Interval: 0
       Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: base_link
+    Fixed Frame: mana/base_link
     Frame Rate: 30
   Name: root
   Tools:
@@ -124,7 +128,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 47.7555
+      Distance: 34.7855
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
@@ -158,4 +162,4 @@ Window Geometry:
     collapsed: false
   Width: 1918
   X: 0
-  Y: 0
+  Y: 24

@@ -1,4 +1,6 @@
 #! /bin/sh
+[ -e mana ] && mv mana mana.`date +%s`
+mkdir mana
 tmux att -t noisy || tmux \
     new-session -s noisy \; \
     send-keys "source /opt/ros/indigo/setup.bash" C-m \; \
@@ -14,4 +16,4 @@ tmux att -t noisy || tmux \
     send-keys "python ghost-ros.py" C-m \; \
     split-window \; \
     send-keys "source /opt/ros/indigo/setup.bash" C-m \; \
-    send-keys "python noisy-ros.py" C-m \; \
+    send-keys "python noisy-ros.py mana" C-m \; \
