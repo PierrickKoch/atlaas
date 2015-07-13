@@ -25,7 +25,7 @@ namespace atlaas {
 static const float VARIANCE_THRESHOLD = 0.01;
 static const float EDGE_FACTOR = 100;
 static const float NO_DATA = -10000;
-static const size_t DEFAULT_SCALE = 5;
+static const size_t DEFAULT_SCALE = 10;
 
 /**
  * C++ version of POSIX glob() function, see `man 3 glob`
@@ -90,7 +90,9 @@ inline void select(std::vector<gdalwrap::gdal>& files,
  * chisq: sum squared diff between points and plan(a,b,c)
  */
 inline float class_cell(double a, double b, double c, double chisq) {
-    return 2 * a * b + chisq; // TODO
+    // Nz = 1 / np.sqrt(a**2 + b**2 + 1) # normal in Z
+    // T = np.arccos(Nz) # normal angle
+    return a*a + b*b + chisq; // TODO
 }
 
 class lstsq {
