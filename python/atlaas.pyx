@@ -7,6 +7,7 @@ cdef extern from "stdint.h":
     ctypedef unsigned long long uint64_t
 
 cdef extern from "atlaas/atlaas.hpp" namespace "atlaas":
+    cdef void tile_to_region_io(const string&, const string&) except +
     cdef cppclass atlaas:
         atlaas()
         void init(double size_x, double size_y, double scale,
@@ -29,6 +30,8 @@ cdef extern from "atlaas/atlaas.hpp" namespace "atlaas":
         string get_atlaas_path()
         void region(const string& filepath) except +
 
+def tile_to_region(fin, fout):
+    tile_to_region_io(fin, fout)
 
 cdef class Atlaas:
     cdef atlaas *thisptr # hold a C++ instance which we're wrapping

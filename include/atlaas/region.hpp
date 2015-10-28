@@ -250,6 +250,36 @@ inline void decimate(gdalwrap::gdal& region, size_t scale = DEFAULT_SCALE) {
     region.set_size(region.bands.size(), sx / scale, sy / scale);
 }
 
+inline void tile_to_region(gdalwrap::gdal& tile, const std::string& filepath,
+        float vt = VARIANCE_THRESHOLD, size_t scale = DEFAULT_SCALE) {
+    // prepare data
+    for (size_t id = 0; id < tile.bands[0].size(); id++) {
+        if (tile.bands[atlaas::N_POINTS][id] < 1) {
+            tile.bands[atlaas::Z_MEAN][id] = NO_DATA;
+            tile.bands[atlaas::DIST_SQ][id] = NO_DATA;
+            tile.bands[atlaas::TIME][id] = NO_DATA;
+        } else {
+            tile.bands[atlaas::DIST_SQ][id] /= 20; // f(x) = x^2 / 20
+            if (tile.bands[atlaas::VARIANCE][id] > vt) {
+                tile.bands[atlaas::Z_MEAN][id] =
+                    tile.bands[atlaas::Z_MAX][id];
+            }
+        }
+    }
+    decimate(tile, scale);
+    // convert to grayscale PNG
+    std::vector<uint8_t> gray(tile.bands[0].begin(), tile.bands[0].end());
+    std::vector<uint8_t> alph(tile.bands[1].size());
+    std::transform(tile.bands[1].begin(), tile.bands[1].end(), alph.begin(),
+        [](float v) -> uint8_t { return v > 255 ? 0 : v < 0 ? 0 : 255 - v; });
+    tile.export8u(filepath, {gray, alph}, "PNG");
+}
+inline void tile_to_region_io(const std::string& in, const std::string& out,
+        float vt = VARIANCE_THRESHOLD, size_t scale = DEFAULT_SCALE) {
+    auto tile = gdalwrap::gdal(in);
+    tile_to_region(tile, out, vt, scale);
+}
+
 /**
  * Region converts a list of tiles into a 2 layers PNG file,
  * 1st is 8 bit grayscale representation of traversability:
