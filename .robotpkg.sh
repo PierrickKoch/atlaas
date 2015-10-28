@@ -2,7 +2,6 @@
 
 NEW_VER=0.1.5
 
-PKGNAME=atlaas
 PKGTYPE=wip
 RPKROOT=$HOME/robotpkg
 
@@ -11,6 +10,7 @@ RPKROOT=$HOME/robotpkg
 
 # do not edit following (supposed to be smart)
 
+PKGNAME=$(basename $(pwd))
 OLD_VER=$(awk -F\" '/PACKAGE_VERSION/ { print $2 }' CMakeLists.txt)
 DIRNAME=$PKGNAME-$NEW_VER
 ARCHIVE=$DIRNAME.tar.gz
@@ -22,6 +22,7 @@ $DIRNAME
 Changes since v$OLD_VER:
 
 EOF
+
 git shortlog v$OLD_VER..HEAD >> $SHORTLG
 
 sed -i.bak -e "s/set(PACKAGE_VERSION \"$OLD_VER\")/set(PACKAGE_VERSION \"$NEW_VER\")/" CMakeLists.txt
