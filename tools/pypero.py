@@ -8,6 +8,11 @@ pypero
 PYPERO_LIST is an environment variable containing ';' separated list of URL:
 protocol://[user[:pass]@]host[:port][/folder]
 
+of an HTTP or FTP server runnning in ATLAAS_PATH.
+
+Assuming all robots (servers) have the same "CUSTOM_ORIGINE",
+ie. the same tiles space frame.
+
 ATLAAS_PATH is the local absolute path to atlaas tiles.
 """
 import os
@@ -47,14 +52,14 @@ def check(filepath):
 
 def get(url):
     xml = etree.parse(url)
-    typ = xml.xpath('/PAMDataset/Metadata/MDI[@key="COVERAGE"]')
-    return float(typ[0].text)
+    elt = xml.xpath('/PAMDataset/Metadata/MDI[@key="COVERAGE"]')
+    return -1 if not elt else float(elt[0].text)
 
 def process(tiles):
     logger.debug("process %s"%str(tiles))
     if not pypero_list:
         logger.error("no host list available. export PYPERO_LIST")
-        return
+        return False
     data = {}
     for host in pypero_list:
         for XxY in tiles:
@@ -62,23 +67,22 @@ def process(tiles):
                 coverage = get(tile(XxY, host)+".aux.xml")
             except IOError as e:
                 if 'failed to load HTTP resource' in e.message:
-                    logger.warning("file does not exist on host [%s,%s]"%(XxY,
-                                                                          host))
+                    logger.info("file doesnt exist on host [%s,%s]"%(XxY, host))
                     continue # try next tile
                 elif 'failed to load external entity' in e.message:
                     logger.warning("host down [%s]"%host)
                     break # dont try to get other tile from it for now
-            if XxY not in data or data[XxY][1] > coverage:
-                data[XxY] = [host, coverage]
+            if coverage > 0.01 and (XxY not in data or data[XxY][1] > coverage):
+                data[XxY] = [host, coverage, False]
 
-    for XxY, [host, coverage] in data.items():
+    for XxY, value in data.items():
         try:
-            filepath, _ = urlretrieve(tile(XxY, host[0]))
-            filemeta, _ = urlretrieve(tile(XxY, host[0])+".aux.xml",
+            filepath, _ = urlretrieve(tile(XxY, value[0]))
+            filemeta, _ = urlretrieve(tile(XxY, value[0])+".aux.xml",
                                       filepath+".aux.xml")
-            logger.info("got %s from %s"%(filepath, host[0]))
-            # make sure the file is OK
-            if abs(check(filepath) - host[1]) < 1e-6:
+            logger.info("got %s from %s"%(filepath, value[0]))
+            # make sure the file is OK (coverage metadata are equal)
+            if abs(check(filepath) - value[1]) < 1e-6:
                 # mv filepath -> tile(XxY)
                 logger.info("tile %s success moving it"%XxY)
                 # os.rename dont work across filesystem
@@ -87,7 +91,9 @@ def process(tiles):
                 shutil.copy(filemeta, tile(XxY)+".aux.xml")
                 os.remove(filepath)
                 os.remove(filemeta)
+                data[XxY][2] = True # mark tile as good
         except Exception as e:
             logger.error(str(e))
+    return data
 
 process(['1x1', '-1x0'])
