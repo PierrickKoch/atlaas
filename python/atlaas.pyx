@@ -8,6 +8,7 @@ cdef extern from "stdint.h":
 
 cdef extern from "atlaas/atlaas.hpp" namespace "atlaas":
     cdef void tile_to_region_io(const string&, const string&) except +
+    cdef void merge_io(const string&, const string&) except +
     cdef cppclass atlaas:
         atlaas()
         void init(double size_x, double size_y, double scale,
@@ -32,6 +33,9 @@ cdef extern from "atlaas/atlaas.hpp" namespace "atlaas":
 
 def tile_to_region(fin, fout):
     tile_to_region_io(fin, fout)
+
+def merge(fglob, fout):
+    merge_io(fglob, fout)
 
 cdef class Atlaas:
     cdef atlaas *thisptr # hold a C++ instance which we're wrapping
