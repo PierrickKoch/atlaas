@@ -10,7 +10,7 @@ RPKROOT=$HOME/robotpkg
 
 # do not edit following (supposed to be smart)
 
-PKGNAME=$(basename $(pwd))
+PKGNAME=$(basename $(dirname $(readlink -f $0)))
 OLD_VER=$(awk -F\" '/PACKAGE_VERSION/ { print $2 }' CMakeLists.txt)
 DIRNAME=$PKGNAME-$NEW_VER
 ARCHIVE=$DIRNAME.tar.gz
