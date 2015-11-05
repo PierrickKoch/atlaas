@@ -14,6 +14,7 @@
 #include <cmath>
 #include <vector>
 #include <string>
+#include <algorithm> // std::count_if
 #include <atlaas/common.hpp>
 #include <gdalwrap/gdal.hpp>
 #include <gsl/gsl_matrix.h>
@@ -272,6 +273,10 @@ inline void tile_to_region(gdalwrap::gdal& tile, const std::string& filepath,
     std::vector<uint8_t> alph(tile.bands[1].size());
     std::transform(tile.bands[1].begin(), tile.bands[1].end(), alph.begin(),
         [](float v) -> uint8_t { return v > 255 ? 0 : v < 0 ? 0 : 255 - v; });
+    // tile set meta COVERAGE = band(alpha=confidence=id2 where > 1) / size
+    float coverage = std::count_if(tile.bands[1].begin(), tile.bands[1].end(),
+        [](float f) { return f > 1; }) / tile.bands[1].size();
+    tile.metadata["COVERAGE"] = std::to_string(coverage);
     tile.export8u(filepath, {gray, alph}, "PNG");
 }
 inline void tile_to_region_io(const std::string& in, const std::string& out,
@@ -324,6 +329,28 @@ inline void glob_region(const std::string& pattern_in,
         (*it++).load(file);
     }
     region(tiles, file_out);
+}
+
+inline void merge_io(const std::string& pattern_in,
+                     const std::string& file_out) {
+    std::vector<std::string> files = glob(pattern_in);
+    std::vector<gdalwrap::gdal> tiles(files.size());
+    auto it = tiles.begin();
+    for (const std::string& file : files) {
+        (*it++).load(file);
+    }
+    gdalwrap::gdal result = gdalwrap::merge(tiles, 0);
+    // result set meta COVERAGE = band(alpha=confidence=id2 where > 1) / size
+    float coverage = std::count_if(result.bands[1].begin(), result.bands[1].end(),
+        [](float f) { return f > 1; }) / result.bands[1].size();
+    result.metadata["COVERAGE"] = std::to_string(coverage);
+    std::string ext = gdalwrap::toupper( file_out.substr( file_out.rfind(".") + 1 ) );
+    if (!ext.compare("PNG")) {
+        result.export8u(file_out, { gdalwrap::raster2bytes(result.bands[0]),
+                gdalwrap::raster2bytes(result.bands[1]) }, "PNG");
+    } else {
+        result.save(file_out);
+    }
 }
 
 } // namespace atlaas
