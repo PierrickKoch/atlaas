@@ -48,7 +48,7 @@ def tile(XxY, base=atlaas_path):
 def check(filepath):
     geotiff = gdal.Open(filepath)
     npoints = geotiff.GetRasterBand(1).ReadAsArray()
-    return npoints[npoints>2].size / float(npoints.size)
+    return npoints[npoints>1].size / float(npoints.size)
 
 def get(url):
     xml = etree.parse(url)
@@ -72,6 +72,7 @@ def process(tiles):
                 elif 'failed to load external entity' in e.message:
                     logger.warning("host down [%s]"%host)
                     break # dont try to get other tile from it for now
+            logger.debug("tile %s on %s coverage is %f"%(XxY, host, coverage))
             if coverage > 0.01 and (XxY not in data or data[XxY][1] > coverage):
                 data[XxY] = [host, coverage, False]
 
@@ -80,18 +81,20 @@ def process(tiles):
             filepath, _ = urlretrieve(tile(XxY, value[0]))
             filemeta, _ = urlretrieve(tile(XxY, value[0])+".aux.xml",
                                       filepath+".aux.xml")
-            logger.info("got %s from %s"%(filepath, value[0]))
+            logger.info("got %s [%s] from %s"%(XxY, filepath, value[0]))
             # make sure the file is OK (coverage metadata are equal)
             if abs(check(filepath) - value[1]) < 1e-6:
                 # mv filepath -> tile(XxY)
-                logger.info("tile %s success moving it"%XxY)
+                logger.info("tile %s success moving it [%s]"%(filepath, XxY))
                 # os.rename dont work across filesystem
                 #   [Errno 18] Invalid cross-device link
                 shutil.copy(filepath, tile(XxY))
                 shutil.copy(filemeta, tile(XxY)+".aux.xml")
-                os.remove(filepath)
-                os.remove(filemeta)
                 data[XxY][2] = True # mark tile as good
+            else:
+                logger.warning("coverage missmatch, discard tile [%s]"%XxY)
+            os.remove(filepath)
+            os.remove(filemeta)
         except Exception as e:
             logger.error(str(e))
     return data

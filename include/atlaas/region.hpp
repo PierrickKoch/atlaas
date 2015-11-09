@@ -274,8 +274,9 @@ inline void tile_to_region(gdalwrap::gdal& tile, const std::string& filepath,
     std::transform(tile.bands[1].begin(), tile.bands[1].end(), alph.begin(),
         [](float v) -> uint8_t { return v > 255 ? 0 : v < 0 ? 0 : 255 - v; });
     // tile set meta COVERAGE = band(alpha=confidence=id2 where > 1) / size
-    float coverage = std::count_if(tile.bands[1].begin(), tile.bands[1].end(),
-        [](float f) { return f > 1; }) / (float) tile.bands[1].size();
+    float coverage = std::count_if(gray.begin(), gray.end(),
+        [](float f) { return f > 1; });
+    coverage /= (float) tile.bands[1].size();
     tile.metadata["COVERAGE"] = std::to_string(coverage);
     tile.export8u(filepath, {gray, alph}, "PNG");
 }
