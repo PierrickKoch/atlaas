@@ -274,8 +274,8 @@ inline void tile_to_region(gdalwrap::gdal& tile, const std::string& filepath,
     std::transform(tile.bands[1].begin(), tile.bands[1].end(), alph.begin(),
         [](float v) -> uint8_t { return v > 255 ? 0 : v < 0 ? 0 : 255 - v; });
     // tile set meta COVERAGE = band(alpha=confidence=id2 where > 1) / size
-    float coverage = std::count_if(gray.begin(), gray.end(),
-        [](float f) { return f > 1; });
+    float coverage = std::count_if(alph.begin(), alph.end(),
+        [](float f) { return f > 0; });
     coverage /= (float) tile.bands[1].size();
     tile.metadata["COVERAGE"] = std::to_string(coverage);
     tile.export8u(filepath, {gray, alph}, "PNG");
@@ -343,7 +343,7 @@ inline void merge_io(const std::string& pattern_in,
     gdalwrap::gdal result = gdalwrap::merge(tiles, 0);
     // result set meta COVERAGE = band(alpha=confidence=id2 where > 1) / size
     float coverage = std::count_if(result.bands[1].begin(), result.bands[1].end(),
-        [](float f) { return f > 1; }) / (float) result.bands[1].size();
+        [](float f) { return f > 0; }) / (float) result.bands[1].size();
     result.metadata["COVERAGE"] = std::to_string(coverage);
     std::string ext = gdalwrap::toupper( file_out.substr( file_out.rfind(".") + 1 ) );
     if (!ext.compare("PNG")) {

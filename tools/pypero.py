@@ -47,8 +47,8 @@ def tile(XxY, base=atlaas_path):
 
 def check(filepath):
     geotiff = gdal.Open(filepath)
-    npoints = geotiff.GetRasterBand(1).ReadAsArray()
-    return npoints[npoints>1].size / float(npoints.size)
+    npoints = geotiff.GetRasterBand(2).ReadAsArray()
+    return npoints[npoints>0].size / float(npoints.size)
 
 def get(url):
     xml = etree.parse(url)
@@ -96,7 +96,7 @@ def process(tiles):
             os.remove(filepath)
             os.remove(filemeta)
         except Exception as e:
-            logger.error(str(e))
+            logger.error("tile %s error: %s"%(XxY, str(e)))
     return data
 
 process(['1x1', '-1x0'])
