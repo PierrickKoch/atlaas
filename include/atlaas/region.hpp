@@ -267,6 +267,16 @@ inline void tile_to_region(gdalwrap::gdal& tile, const std::string& filepath,
             }
         }
     }
+    tile.bands = {
+        tile.bands[atlaas::Z_MEAN],
+        tile.bands[atlaas::DIST_SQ],
+        tile.bands[atlaas::TIME],
+        tile.bands[atlaas::N_POINTS],// XXX
+        tile.bands[atlaas::Z_MIN],
+        tile.bands[atlaas::Z_MAX],
+        tile.bands[atlaas::VARIANCE],
+    };
+    tile.names = {"DTM", "DIST_SQ", "TIME"};
     decimate(tile, scale);
     // convert to grayscale PNG
     std::vector<uint8_t> gray(tile.bands[0].begin(), tile.bands[0].end());
