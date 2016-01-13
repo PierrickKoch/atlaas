@@ -15,7 +15,6 @@ need_merge = False
 atlaas_tiles = glob.glob("atlaas.*x*.tif")
 for fatlaas in atlaas_tiles:
     fregion = "region.%s.png"%fatlaas.split('.')[1]
-    print(fregion)
     need_convert = True
     if os.path.isfile(fregion):
         satlaas = os.stat(fatlaas)
@@ -23,6 +22,7 @@ for fatlaas in atlaas_tiles:
         if satlaas.st_mtime <= sregion.st_mtime:
             need_convert = False
     if need_convert:
+        print(fregion)
         atlaas.tile_to_region(fatlaas, fregion)
         need_merge = True
 
