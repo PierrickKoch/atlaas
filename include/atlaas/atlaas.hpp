@@ -28,7 +28,9 @@ class atlaas {
      * keep track of time at which we receive each cloud
      * to be able to correct them if needed in the future
      */
-    std::vector<std::pair<uint64_t, map_id_t>> pcd_time;
+    std::vector<uint64_t> pcd_time;
+    std::vector<map_id_t> pcd_map;
+    std::vector<point_xy_t> pcd_xy;
 
     /**
      * I/O data model
@@ -202,7 +204,9 @@ public:
      * write pcd file
      */
     void save_inc(const points& cloud, const matrix& transformation) {
-        pcd_time.push_back({ milliseconds_since_epoch(), current });
+        pcd_time.push_back(milliseconds_since_epoch());
+        pcd_map.push_back(current);
+        pcd_xy.push_back(matrix_to_point(transformation));
         save(cloud_filepath( pcd_time.size() - 1 ), cloud, transformation);
     }
 
@@ -267,9 +271,9 @@ public:
     size_t get_closest_pcd_id(uint64_t miliseconds) const {
         size_t i = 0;
         for (; i < pcd_time.size(); i++) {
-            if (pcd_time[i].first >= miliseconds) {
-                if ((i > 0) && ((miliseconds - pcd_time[i-1].first) <
-                                (pcd_time[i].first - miliseconds)))
+            if (pcd_time[i] >= miliseconds) {
+                if ((i > 0) && ((miliseconds - pcd_time[i-1]) <
+                                (pcd_time[i] - miliseconds)))
                     i--;
                 break;
             }
@@ -325,8 +329,8 @@ public:
         for (size_t i = last_good_pcd_id; i <= fixed_pcd_id; i++) {
             for (uint sx=0; sx <= 2; sx++)
             for (uint sy=0; sy <= 2; sy++) {
-                std::string tile_path = tilepath(pcd_time[i].second[0]+sx,
-                                                 pcd_time[i].second[1]+sy);
+                std::string tile_path = tilepath(pcd_map[i][0]+sx,
+                                                 pcd_map[i][1]+sy);
                 if ( file_exists(tile_path) ) {
                     std::ostringstream oss;
                     oss << tile_path << "." << fixed_pcd_id << ".bak";
