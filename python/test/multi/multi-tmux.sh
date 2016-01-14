@@ -24,6 +24,11 @@ tmux att -t multi || tmux \
     split-window \; \
     send-keys "cd momo; while true; do python ~/work/atlaas/python/tile_to_region.py; sleep 1; done" C-m \; \
     new-window \; \
+    send-keys "cd mana; ln -s \$(pwd)/atlaas.jpg /tmp" C-m \; \
+    send-keys "cd ~/work/threeviz" C-m \; \
+    send-keys "open http://localhost:8044" C-m \; \
+    send-keys "python -m SimpleHTTPServer 8044" C-m \; \
+    new-window \; \
     send-keys "source /opt/ros/indigo/setup.bash" C-m \; \
     send-keys "python multi-ros.py mana" C-m \; \
     split-window \; \
