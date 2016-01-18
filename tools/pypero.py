@@ -58,9 +58,17 @@ def check(filepath):
     return npoints[npoints>0].size / float(npoints.size)
 
 def get(url):
-    xml = etree.parse(urlopen(url)) # urlopen can deal with SSL
+    try:
+        urlobj = urlopen(url)
+    except IOError as err:
+        logger.warning("io error [%s] %s"%(url, str(err)))
+        return -521
+    if urlobj.code != 200:
+        logger.warning("http error [%s] %i"%(url, urlobj.code))
+        return -urlobj.code
+    xml = etree.parse(urlobj)
     elt = xml.xpath('/PAMDataset/Metadata/MDI[@key="COVERAGE"]')
-    return -1 if not elt else float(elt[0].text)
+    return 0 if not elt else float(elt[0].text)
 
 def merge(filetmp, filedst):
     if os.path.isfile(filedst):
@@ -95,23 +103,11 @@ def process(tiles):
     data = {}
     for host in pypero_list:
         for XxY in tiles:
-            try:
-                coverage = get(tile(XxY, host)+".aux.xml")
-            except etree.XMLSyntaxError: # probably a 404 html
-                logger.info("file doesnt exist on host [%s,%s]"%(XxY, host))
-                continue # try next tile
-            except IOError as e:
-                if 'failed to load HTTP resource' in e.message or \
-                   'No such file or directory' in e.message:
-                    logger.info("file doesnt exist on host [%s,%s]"%(XxY, host))
-                    continue # try next tile
-                elif 'failed to load external entity' in e.message or \
-                     'Connection refused' in str(e):
-                    logger.warning("host down [%s]"%host)
-                else:
-                    logger.warning("%s : %s"%(str(e), host)) # TODO handle this
-                    logger.debug({name: getattr(e, name) for name in dir(e)}) # XXX TMP
-                break # dont try to get other tile from it for now
+            coverage = get(tile(XxY, host)+".aux.xml")
+            if coverage == -404:
+                continue # does not exists, try next tile
+            elif coverage < 0:
+                break # server down, dont try to get other tile from it for now
             logger.debug("tile %s on %s coverage is %f"%(XxY, host, coverage))
             if coverage > 0.01 and (XxY not in data or data[XxY][1] > coverage):
                 data[XxY] = [host, coverage, False]
@@ -127,7 +123,7 @@ def process(tiles):
                 # mv filepath -> tile(XxY)
                 logger.info("tile %s success moving it [%s]"%(filepath, XxY))
                 merge(filepath, tile(XxY))
-                data[XxY][2] = True # mark tile as good
+                data[XxY][2] = True # mark tile as merged
             else:
                 logger.warning("coverage missmatch, discard tile [%s]"%XxY)
             os.remove(filepath)
@@ -197,10 +193,7 @@ def main(argv=[]):
     if len(argv) < 4:
         print(__doc__)
         return 1
-    x0 = float(argv[1])
-    y0 = float(argv[2])
-    x1 = float(argv[3])
-    y1 = float(argv[4])
+    x0, x1, y0, y1 = [float(arg) for arg in argv[1:5]]
     cost, tiles = tiles_for_path((x0,y0), (x1, y1), graph)
     data = process(tiles)
     print(data)
