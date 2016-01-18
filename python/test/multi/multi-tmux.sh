@@ -37,8 +37,16 @@ tmux att -t multi || tmux \
     new-window \; \
     send-keys "cd mana" C-m \; \
     send-keys "export PYPERO_LIST=http://localhost:8043" C-m \; \
-    send-keys "python ~/work/atlaas/tools/pypero.py 123.4 567.8 -98.7 -65.4" C-m \; \
+    send-keys "python ~/work/atlaas/tools/pypero.py 80 -105 236 65" C-m \; \
     split-window \; \
     send-keys "cd momo" C-m \; \
     send-keys "export PYPERO_LIST=http://localhost:8042" C-m \; \
-    send-keys "python ~/work/atlaas/tools/pypero.py 123.4 567.8 -98.7 -65.4" C-m \; \
+    send-keys "python ~/work/atlaas/tools/pypero.py 80 -105 236 65" C-m \; \
+
+# goals=[[175, 65, -3], [162, 60, -2.5], [120, 25, -3], [80, 14, -1], [84, 0, -1], [115, -40, -1], [125, -50, -0.8], [140, -72, -1], [160, -105, 0.8], [190, -70, 0.8], [236, -16, 0.5]]
+# x=[x for x,_,_ in goals]
+# y=[y for _,y,_ in goals]
+# min(x), min(y)
+# (80, -105)
+# max(x), max(y)
+# (236, 65)

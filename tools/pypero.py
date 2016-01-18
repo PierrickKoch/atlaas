@@ -188,9 +188,9 @@ def tiles_for_path(a, b, graph=None, tra=[], cost=0):
         tra = ['%ix%i'%(p2t(x), p2t(y)) for x,y in res]
         # Bresenham res[-1] -> b
         lin = list(line(p2t(res[-1][0]), p2t(res[-1][1]), *tb))
-        tra += ['%ix%i'%(p2t(x), p2t(y)) for x,y in lin]
+        tra += ['%ix%i'%(x, y) for x,y in lin]
     lin = list(line(*ta+tb)) # Bresenham a -> b
-    bre = ['%ix%i'%(p2t(x), p2t(y)) for x,y in lin]
+    bre = ['%ix%i'%(x, y) for x,y in lin]
     return cost, set(tra+bre)
 
 def main(argv=[]):
