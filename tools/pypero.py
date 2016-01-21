@@ -193,7 +193,7 @@ def main(argv=[]):
     if len(argv) < 4:
         print(__doc__)
         return 1
-    x0, x1, y0, y1 = [float(arg) for arg in argv[1:5]]
+    x0, y0, x1, y1 = [float(arg) for arg in argv[1:5]]
     cost, tiles = tiles_for_path((x0,y0), (x1, y1), graph)
     data = process(tiles)
     print(data)
