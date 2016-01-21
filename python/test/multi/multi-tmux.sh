@@ -5,6 +5,7 @@
 mkdir mana
 mkdir momo
 export MORSE_SILENT_PYTHON_CHECK=1
+export PYTHONPATH=$PYTHONPATH:$DEVEL_BASE/lib/python2.7/dist-packages
 tmux att -t multi || tmux \
     new-session -s multi \; \
     send-keys "source /opt/ros/indigo/setup.bash" C-m \; \
@@ -35,13 +36,11 @@ tmux att -t multi || tmux \
     send-keys "source /opt/ros/indigo/setup.bash" C-m \; \
     send-keys "python multi-ros.py momo" C-m \; \
     new-window \; \
-    send-keys "cd mana" C-m \; \
-    send-keys "export PYPERO_LIST=http://localhost:8043" C-m \; \
+    send-keys "mkdir minnie; cd minnie" C-m \; \
+    send-keys "export PYPERO_LIST=\"http://localhost:8042;http://localhost:8043\"" C-m \; \
+    send-keys "sleep 10" C-m \; \
     send-keys "python ~/work/atlaas/tools/pypero.py 80 -105 236 65" C-m \; \
-    split-window \; \
-    send-keys "cd momo" C-m \; \
-    send-keys "export PYPERO_LIST=http://localhost:8042" C-m \; \
-    send-keys "python ~/work/atlaas/tools/pypero.py 80 -105 236 65" C-m \; \
+    send-keys "open region.png" C-m \; \
 
 # goals=[[175, 65, -3], [162, 60, -2.5], [120, 25, -3], [80, 14, -1], [84, 0, -1], [115, -40, -1], [125, -50, -0.8], [140, -72, -1], [160, -105, 0.8], [190, -70, 0.8], [236, -16, 0.5]]
 # x=[x for x,_,_ in goals]
