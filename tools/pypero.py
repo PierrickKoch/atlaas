@@ -35,6 +35,7 @@ import gdal
 import numpy
 import Image # aka PIL, because gdal PNG driver does not support WriteBlock
 from math import floor
+socket.setdefaulttimeout(3)
 
 atlaas_path = os.environ.get('ATLAAS_PATH', '.')
 pypero_list = os.environ.get('PYPERO_LIST', '')
@@ -197,6 +198,9 @@ def main(argv=[]):
     cost, tiles = tiles_for_path((x0,y0), (x1, y1), graph)
     data = process(tiles)
     print(data)
+    if data:
+        import atlaas
+        atlaas.merge("region.*x*.png", "region.png")
     return 0
 
 if __name__ == "__main__":
