@@ -8,8 +8,9 @@ tile_to_region
 usage: python tile_to_region.py
 """
 import os
+import sys
+import time
 import glob
-import shutil
 import atlaas
 import gdal
 import numpy
@@ -23,30 +24,27 @@ handler.setFormatter( logging.Formatter('[%(asctime)s][%(name)s][%(levelname)s] 
 logger.addHandler( handler )
 logger.setLevel(logging.DEBUG)
 
+devnull = open(os.devnull, 'w')
+stdout = sys.stdout
+
 def merge(filetmp, filedst):
-    if os.path.isfile(filedst):
-        gtmp = gdal.Open(filetmp)
-        gdst = gdal.Open(filedst)
-        r1 = gtmp.ReadAsArray()
-        r2 = gdst.ReadAsArray()
-        # compute cost from r1 and r2 ([0]: cost, [1]: precision)
-        # cost is cost_r1 where precision_r1 > precision_r2 else cost_r2
-        cost = numpy.where(r1[1] > r2[1], r1[0], r2[0])
-        alph = numpy.where(r1[1] > r2[1], r1[1], r2[1])
-        image = Image.fromarray(cost)
-        ialph = Image.fromarray(alph)
-        image.putalpha(ialph)
-        image.save(filedst)
-        # update COVERAGE metadata
-        coverage = alph[alph > 0].size / float(alph.size)
-        logger.debug("merge coverage gain: %.3f" %
-            (coverage - float(gdst.GetMetadata().get('COVERAGE', '0'))))
-        gdst.SetMetadataItem('COVERAGE', str(coverage))
-    else: # copy temp to dest
-        # os.rename dont work across filesystem
-        #   [Errno 18] Invalid cross-device link
-        shutil.copy(filetmp, filedst)
-        shutil.copy(filetmp+".aux.xml", filedst+".aux.xml")
+    gtmp = gdal.Open(filetmp)
+    gdst = gdal.Open(filedst)
+    r1 = gtmp.ReadAsArray()
+    r2 = gdst.ReadAsArray()
+    # compute cost from r1 and r2 ([0]: cost, [1]: precision)
+    # cost is cost_r1 where precision_r1 > precision_r2 else cost_r2
+    cost = numpy.where(r1[1] > r2[1], r1[0], r2[0])
+    alph = numpy.where(r1[1] > r2[1], r1[1], r2[1])
+    image = Image.fromarray(cost)
+    ialph = Image.fromarray(alph)
+    image.putalpha(ialph)
+    image.save(filedst)
+    # update COVERAGE metadata
+    coverage = alph[alph > 0].size / float(alph.size)
+    logger.debug("merge coverage gain: %.3f" %
+        (coverage - float(gdst.GetMetadata().get('COVERAGE', '0'))))
+    gdst.SetMetadataItem('COVERAGE', str(coverage))
 
 def run():
     need_merge = False
@@ -63,15 +61,19 @@ def run():
                 need_convert = False
         if need_convert:
             logger.debug(fregion)
-            atlaas.tile_to_region(fatlaas, fregion+".tmp")
-            merge(fregion+".tmp", fregion)
+            if file_exists:
+                atlaas.tile_to_region(fatlaas, fregion+".tmp")
+                merge(fregion+".tmp", fregion)
+                os.unlink(fregion+".tmp")
+            else:
+                atlaas.tile_to_region(fatlaas, fregion)
             need_merge = True
     if need_merge:
+        sys.stdout = devnull
         atlaas.merge("region.*x*.png", "region.png")
+        sys.stdout = stdout
 
 if __name__ == '__main__':
-    import sys
-    import time
     tick = 1 if len(sys.argv) < 2 else float(sys.argv[1])
     while 1:
         run()
