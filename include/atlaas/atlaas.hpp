@@ -280,6 +280,23 @@ public:
         }
         return i;
     }
+    size_t get_closest_pcd_id_pose(point_xy_t pose, uint64_t tmax) const {
+        size_t i = 0, best = 0;
+        double dcur, dmin = std::numeric_limits<double>::max();
+        for (; i < pcd_xy.size(); i++) {
+            if (pcd_time[i] >= tmax)
+                break;
+            dcur = distance_sq(pose, pcd_xy[i]);
+            if (dcur < dmin) {
+                dmin = dcur;
+                best = i;
+            }
+        }
+        return best;
+    }
+    size_t c_closest_pcd(double x, double y, uint64_t tmax) const {
+        return get_closest_pcd_id_pose({x,y}, tmax);
+    }
     void clear_all() {
         // clear the dynamic map (zeros)
         cell_info_t zeros{}; // value-initialization w/empty initializer
