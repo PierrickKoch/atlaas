@@ -295,7 +295,7 @@ public:
         return best;
     }
     size_t c_closest_pcd(double x, double y, uint64_t tmax) const {
-        return get_closest_pcd_id_pose({x,y}, tmax);
+        return get_closest_pcd_id_pose({{x,y}}, tmax);
     }
     void clear_all() {
         // clear the dynamic map (zeros)
