@@ -30,6 +30,7 @@ cdef extern from "atlaas/atlaas.hpp" namespace "atlaas":
         void set_atlaas_path(const string& path)
         string get_atlaas_path()
         void region(const string& filepath) except +
+        size_t c_closest_pcd(double x, double y, uint64_t tmax)
 
 def tile_to_region(fin, fout):
     tile_to_region_io(fin, fout)
@@ -92,3 +93,9 @@ cdef class Atlaas:
         return self.thisptr.get_atlaas_path()
     def region(self, filepath):
         self.thisptr.region(filepath)
+    def closest_pcd(self, x, y, tmax):
+        """
+        tmax most recent PCD bound in milliseconds,
+             should be (time.time()*1000 - T)
+        """
+        return self.thisptr.c_closest_pcd(x, y, tmax)
