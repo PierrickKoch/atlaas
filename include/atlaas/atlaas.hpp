@@ -268,12 +268,12 @@ public:
     /**
      * 1.
      */
-    size_t get_closest_pcd_id(uint64_t miliseconds) const {
+    size_t get_closest_pcd_id(uint64_t milliseconds) const {
         size_t i = 0;
         for (; i < pcd_time.size(); i++) {
-            if (pcd_time[i] >= miliseconds) {
-                if ((i > 0) && ((miliseconds - pcd_time[i-1]) <
-                                (pcd_time[i] - miliseconds)))
+            if (pcd_time[i] >= milliseconds) {
+                if ((i > 0) && ((milliseconds - pcd_time[i-1]) <
+                                (pcd_time[i] - milliseconds)))
                     i--;
                 break;
             }
@@ -289,8 +289,8 @@ public:
     }
 
     /**
-     * last_good_pose:  miliseconds since epoch
-     * time_of_fix:     miliseconds since epoch
+     * last_good_pose:  milliseconds since epoch
+     * time_of_fix:     milliseconds since epoch
      * point_xy_t:      2D point {x,y}
      */
     size_t reprocess(uint64_t last_good_pose, uint64_t time_of_fix, double fixed_pose_x, double fixed_pose_y) {
