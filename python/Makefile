@@ -10,3 +10,6 @@ test: atlaas*.so
 
 install:
 	@python setup.py install --user
+
+colormaps.py:
+	wget https://raw.githubusercontent.com/BIDS/colormap/master/colormaps.py

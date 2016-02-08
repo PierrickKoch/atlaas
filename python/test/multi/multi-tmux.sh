@@ -4,6 +4,8 @@
 [ -e momo ] && mv momo momo.`date +%s`
 mkdir mana
 mkdir momo
+ln -s $(pwd)/display.html mana/
+ln -s $(pwd)/display.html momo/
 export MORSE_SILENT_PYTHON_CHECK=1
 export PYTHONPATH=$PYTHONPATH:$DEVEL_BASE/lib/python2.7/dist-packages
 tmux att -t multi || tmux \
