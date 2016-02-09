@@ -14,11 +14,9 @@ import glob
 import atlaas
 import gdal
 import numpy
-import Image # aka PIL, because gdal PNG driver does not support WriteBlock
-
+import Image # aka PIL
 # https://raw.githubusercontent.com/BIDS/colormap/master/colormaps.py
 import colormaps
-
 # initialize the logger
 import logging
 logger = logging.getLogger(__name__) # or __file__
@@ -28,11 +26,13 @@ logger.addHandler( handler )
 logger.setLevel(logging.DEBUG)
 
 def save(path, data):
+    # in case of JPEG or WebP, set quality to 90%, else this option is ignored
     Image.fromarray(numpy.uint8(colormaps.viridis(data)*255)).save(path, quality=90)
 
 def load(path):
     img = Image.open(path)
-    return numpy.array(img.getdata(), numpy.uint8).reshape(img.size[1], img.size[0], 2)
+    arr = numpy.array(img.getdata(), numpy.uint8)
+    return arr.reshape(img.size[1], img.size[0], arr.shape[1])
 
 def run():
     mtime = {}

@@ -1,11 +1,12 @@
 <!doctype html>
 <html lang="en">
 <head>
-<title>test</title>
+<title>display</title>
 <meta charset="utf-8">
 <style>
-* { margin:0; padding:0; }
+* { margin: 0; padding: 0; border-spacing: 0; }
 img { display: block; }
+table { border-spacing: 0; }
 </style>
 </head>
 
@@ -23,7 +24,7 @@ function table(pre, ext) {
         }
         html += "</tr>";
     }
-    container.innerHTML += html + "</table>"
+    container.innerHTML += html + "</table><hr/>"
 }
 
 table("region.", ".png");
@@ -31,29 +32,11 @@ table("display.", ".mtime.png");
 table("display.", ".precis.png");
 
 list = document.getElementsByTagName('img');
-for (i=0; i<list.length; i++)
+for (i=0; i<list.length; i++) {
     list[i].onerror = function(evt) {
-        // evt.target.hidden=true;
-        evt.target.style.display='none';
+        evt.target.style.display = 'none';
     };
-
-/**
-var table = document.createElement("table");
-for (i=-20; i<20; i++) {
-    var tr = document.createElement("tr");
-    for (j=-20; j<20; j++) {
-        var td = document.createElement("tr");
-        var img = document.createElement("img");
-        img.src = "region."+i+"x"+j+".png";
-        img.onerror = function(evt) {
-            evt.target.hidden=true;
-        };
-        td.appendChild(img);
-        tr.appendChild(td);
-    }
-    table.appendChild(tr);
 }
-document.appendChild(table);
 //*/
 </script>
 </body>
