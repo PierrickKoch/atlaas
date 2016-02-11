@@ -1,0 +1,7 @@
+before_script:
+ - apt-get update -qy
+ - apt-get install -qy cmake cython python-numpy libgdal1h libgdal-dev libgsl0-dev
+
+test:
+  script:
+  - "time ./.travis.bash"
