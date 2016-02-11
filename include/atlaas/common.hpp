@@ -236,6 +236,14 @@ double average(const Container& c) {
     return std::accumulate(c.begin(), c.end(), 0) / c.size();
 }
 
+/**
+ * Compute the sum
+ */
+template <typename Container>
+double sum(const Container& c) {
+    return std::accumulate(c.begin(), c.end(), 0);
+}
+
 } // namespace atlaas
 
 #endif // ATLAAS_COMMON_HPP
