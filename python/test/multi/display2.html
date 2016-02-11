@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>display</title>
+<meta charset="utf-8">
+<style>
+* { margin: 0; padding: 0; }
+img { display: none; }
+table { border-collapse: collapse; border-spacing: 0; }
+</style>
+<script src="viridis.js"></script>
+</head>
+
+<body>
+<div id="container"><hr/></div>
+<script>
+//*
+// Apply colormap using HTML5 canvas
+// see "Pixel manipulation with canvas" tutorial on developer.mozilla.org
+
+var container = document.getElementById("container");
+function table(pre, ext) {
+    var html = "<table>";
+    for (i=-10; i<10; i++) {
+        html += "<tr>";
+        for (j=-10; j<10; j++) {
+            html += "<td><img src=\""+pre+j+"x"+i+ext+"\"></td>";
+        }
+        html += "</tr>";
+    }
+    container.innerHTML += html + "</table><hr/>"
+}
+
+table("region.", ".png");
+table("display.", ".mtime.png");
+table("display.", ".precis.png");
+
+var canvas = document.createElement("canvas"),
+    context = canvas.getContext("2d");
+function draw(img) {
+    canvas.width = img.width;
+    canvas.height = img.height;
+    context.drawImage(img, 0, 0);
+    var imageData = context.getImageData(0, 0, canvas.width, canvas.height),
+        pixels = imageData.data; // 1D array RGBA order, 0-255 values
+
+    for (var i = 0, l = pixels.length; i < l; i += 4) {
+        color = _viridis_data[pixels[i]];
+        pixels[i]     = color[0];
+        pixels[i + 1] = color[1];
+        pixels[i + 2] = color[2];
+        pixels[i + 3] = 255;
+    }
+
+    context.putImageData(imageData, 0, 0);
+    img.onload = null; // avoid loop
+    img.src = canvas.toDataURL("image/png");
+    img.style.display = 'block';
+}
+
+HTMLCollection.prototype.forEach = Array.prototype.forEach;
+document.getElementsByTagName('img').forEach(function(elt) {
+    elt.onload = function(evt) {
+        draw(evt.target);
+    };
+});
+//*/
+</script>
+</body>
+</html>
