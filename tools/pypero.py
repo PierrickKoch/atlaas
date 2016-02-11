@@ -63,13 +63,16 @@ def get(url):
         urlobj = urlopen(url)
     except IOError as err:
         logger.warning("io error [%s] %s"%(url, str(err)))
-        return -521
+        return -521, 0
     if urlobj.code != 200:
         logger.warning("http error [%s] %i"%(url, urlobj.code))
-        return -urlobj.code
+        return -urlobj.code, 0
     xml = etree.parse(urlobj)
     elt = xml.xpath('/PAMDataset/Metadata/MDI[@key="COVERAGE"]')
-    return 0 if not elt else float(elt[0].text)
+    cov = 0 if not elt else float(elt[0].text)
+    elt = xml.xpath('/PAMDataset/Metadata/MDI[@key="AVGALPHA"]')
+    avg = 0 if not elt else float(elt[0].text)
+    return cov, avg
 
 def merge(filetmp, filedst):
     if os.path.isfile(filedst):
@@ -87,9 +90,11 @@ def merge(filetmp, filedst):
         image.save(filedst)
         # update COVERAGE metadata
         coverage = alph[alph > 0].size / float(alph.size)
+        avgalpha = numpy.average(alph)
         logger.debug("merge coverage gain: %.3f" %
             (coverage - float(gdst.GetMetadata().get('COVERAGE', '0'))))
         gdst.SetMetadataItem('COVERAGE', str(coverage))
+        gdst.SetMetadataItem('AVGALPHA', str(avgalpha))
     else: # copy temp to dest
         # os.rename dont work across filesystem
         #   [Errno 18] Invalid cross-device link
@@ -104,7 +109,7 @@ def process(tiles):
     data = {}
     for host in pypero_list:
         for XxY in tiles:
-            coverage = get(tile(XxY, host)+".aux.xml")
+            coverage, avgalpha = get(tile(XxY, host)+".aux.xml")
             if coverage == -404:
                 continue # does not exists, try next tile
             elif coverage < 0:

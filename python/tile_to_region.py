@@ -42,9 +42,11 @@ def merge(filetmp, filedst):
     image.save(filedst)
     # update COVERAGE metadata
     coverage = alph[alph > 0].size / float(alph.size)
+    avgalpha = numpy.average(alph)
     logger.debug("merge coverage gain: %.3f" %
         (coverage - float(gdst.GetMetadata().get('COVERAGE', '0'))))
     gdst.SetMetadataItem('COVERAGE', str(coverage))
+    gdst.SetMetadataItem('AVGALPHA', str(avgalpha))
 
 def run():
     need_merge = False

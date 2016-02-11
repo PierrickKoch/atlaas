@@ -15,6 +15,7 @@
 #include <cmath> // std::sqrt
 #include <vector>
 #include <string>
+#include <numeric> // accumulate
 #include <sstream> // ostringstream
 #include <iomanip> // setfill,setw
 #include <sys/stat.h> // stat, file_exists
@@ -225,6 +226,14 @@ inline float distance(const Point& pA, const Point& pB) {
 template <class Point>
 inline float length_sq(const Point& p) {
     return p[0]*p[0] + p[1]*p[1] + p[2]*p[2];
+}
+
+/**
+ * Compute the average
+ */
+template <typename Container>
+double average(const Container& c) {
+    return std::accumulate(c.begin(), c.end(), 0) / c.size();
 }
 
 } // namespace atlaas
