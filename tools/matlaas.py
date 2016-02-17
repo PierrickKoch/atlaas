@@ -1,14 +1,14 @@
 #! /usr/bin/env python
 """
-pypero
-======
+matlaas
+=======
 
-*a robot communication framework*
+*multi-atlaas, a robots communication framework*
 
-usage:   pypero.py x0 y0 x1 y1
-example: pypero.py 123.4 567.8 -98.7 -65.4
+usage:   matlaas.py x0 y0 x1 y1
+example: matlaas.py 123.4 567.8 -98.7 -65.4
 
-PYPERO_LIST is an environment variable containing ';' separated list of URL:
+MATLAAS_LIST is an environment variable containing ';' separated list of URL:
 protocol://[user[:pass]@]host[:port][/folder]
 
 of an HTTP or FTP server runnning in ATLAAS_PATH.
@@ -38,10 +38,10 @@ from math import floor
 socket.setdefaulttimeout(3)
 
 atlaas_path = os.environ.get('ATLAAS_PATH', '.')
-pypero_list = os.environ.get('PYPERO_LIST', '')
+matlaas_list = os.environ.get('MATLAAS_LIST', '')
 
-pypero_list = pypero_list.split(';')
-while '' in pypero_list: pypero_list.remove('')
+matlaas_list = matlaas_list.split(';')
+while '' in matlaas_list: matlaas_list.remove('')
 
 # initialize the logger
 logger = logging.getLogger(__name__) # or __file__
@@ -103,11 +103,11 @@ def merge(filetmp, filedst):
 
 def process(tiles):
     logger.debug("process %s"%str(tiles))
-    if not pypero_list:
-        logger.error("no host list available. export PYPERO_LIST")
+    if not matlaas_list:
+        logger.error("no host list available. export MATLAAS_LIST")
         return False
     data = {}
-    for host in pypero_list:
+    for host in matlaas_list:
         for XxY in tiles:
             coverage, avgalpha = get(tile(XxY, host)+".aux.xml")
             if coverage == -404:
