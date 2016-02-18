@@ -115,7 +115,7 @@ def process(tiles):
             elif coverage < 0:
                 break # server down, dont try to get other tile from it for now
             logger.debug("tile %s on %s coverage is %f"%(XxY, host, coverage))
-            if coverage > 0.01 and (XxY not in data or data[XxY][1] > coverage):
+            if coverage > 0.01 and (XxY not in data or data[XxY][1] < coverage):
                 data[XxY] = [host, coverage, False]
 
     for XxY, value in data.items():
@@ -145,6 +145,9 @@ try:
         ctmap = gladys.costmap("%s/region.png"%atlaas_path,
                                "%s/robot.json"%atlaas_path)
         graph = gladys.nav_graph(ctmap)
+        gdmap = ctmap.get_map()
+        c2u = lambda x, y: gladys.point_custom2utm(gdmap, x, y)
+        u2c = lambda x, y: gladys.point_utm2custom(gdmap, x, y)
     except RuntimeError as err:
         logger.error(err)
 except ImportError:
@@ -153,7 +156,7 @@ except ImportError:
 tile_size = 400 # tile.width = tile.height
 tile_scale = 0.1 # scale_x = scale_y
 size = tile_size * tile_scale # tile size in meters
-p2t = lambda val: int(floor(val/size))
+p2t = lambda val: int(val/size)
 
 # need to get tile on straight line as well (Bresenham)
 # since gladys does not give points outside region
@@ -182,18 +185,22 @@ def line(x0, y0, x1, y1):
             y += ystep
             error += deltax
 
-def tiles_for_path(a, b, graph=None, tra=[], cost=0):
-    ta = [p2t(v) for v in a]
-    tb = [p2t(v) for v in b]
+def get_path(a, b, graph=None, res=[], cost=0):
     if graph: # A* a,b
-        res, cost = graph.search_with_cost(a, b)
-        tra = ['%ix%i'%(p2t(x), p2t(y)) for x,y in res]
+        res_utm, cost = graph.search_with_cost(c2u(*a), c2u(*b))
+        res = [u2c(x,y) for x,y in res_utm]
+    return cost, res
+
+def tiles_for_path(a, b, graph=None, res=[], cost=0):
+    ta, tb = (p2t(b[0]), p2t(b[1])), (p2t(a[0]), p2t(a[1]))
+    cost, path = get_path(a, b, graph, res, cost)
+    l2i = lambda l: [int(v) for v in l]
+    if path:
         # Bresenham res[-1] -> b
-        lin = list(line(p2t(res[-1][0]), p2t(res[-1][1]), *tb))
-        tra += ['%ix%i'%(x, y) for x,y in lin]
-    lin = list(line(*ta+tb)) # Bresenham a -> b
-    bre = ['%ix%i'%(x, y) for x,y in lin]
-    return cost, set(tra+bre)
+        res += path + list(line(*l2i(path[-1]+b)))
+    res += list(line(*l2i(a+b))) # Bresenham a -> b
+    logger.debug(res)
+    return cost, set(['%ix%i'%(p2t(x),-p2t(y)) for x,y in res])
 
 def main(argv=[]):
     if len(argv) < 4:
