@@ -76,6 +76,9 @@ def run():
         sys.stdout = stdout
 
 if __name__ == '__main__':
+    if 'once' in sys.argv:
+        run()
+        sys.exit(0)
     tick = 1 if len(sys.argv) < 2 else float(sys.argv[1])
     while 1:
         run()
