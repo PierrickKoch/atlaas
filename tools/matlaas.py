@@ -26,6 +26,7 @@ A basic webserver is provided by the command: python -m SimpleHTTPServer
 import os
 import sys
 import json
+import math
 import shutil
 import socket
 import logging
@@ -34,7 +35,6 @@ from lxml import etree
 import gdal
 import numpy
 import Image # aka PIL, because gdal PNG driver does not support WriteBlock
-from math import floor
 socket.setdefaulttimeout(3)
 
 atlaas_path = os.environ.get('ATLAAS_PATH', '.')
@@ -153,10 +153,10 @@ try:
 except ImportError:
     logger.error("could not import gladys, install or fix PYTHONPATH")
 
-tile_size = 400 # tile.width = tile.height
+tile_size = int(os.getenv('ATLAAS_TILE_SIZE', 400)) # tile.width = tile.height
 tile_scale = 0.1 # scale_x = scale_y
 size = tile_size * tile_scale # tile size in meters
-p2t = lambda val: int(val/size)
+p2t = lambda val: int(math.floor(val/size))
 
 # need to get tile on straight line as well (Bresenham)
 # since gladys does not give points outside region
@@ -200,7 +200,7 @@ def tiles_for_path(a, b, graph=None, res=[], cost=0):
         res += path + list(line(*l2i(path[-1]+b)))
     res += list(line(*l2i(a+b))) # Bresenham a -> b
     logger.debug(res)
-    return cost, set(['%ix%i'%(p2t(x),-p2t(y)) for x,y in res])
+    return cost, set(['%ix%i'%(p2t(x), p2t(-y)) for x,y in res])
 
 def main(argv=[]):
     if len(argv) < 4:
