@@ -307,6 +307,7 @@ inline void tile_to_region_io(const std::string& in, const std::string& out,
  */
 inline void region(std::vector<gdalwrap::gdal>& tiles,
                    const std::string& filepath) {
+    if (tiles.size() < 1) return;
     // select only dtm band
     select(tiles);
     // merge all tiles
@@ -335,6 +336,7 @@ inline void region(std::vector<gdalwrap::gdal>& tiles,
 inline void glob_region(const std::string& pattern_in,
                         const std::string& file_out) {
     std::vector<std::string> files = glob(pattern_in);
+    if (files.size() < 1) return;
     std::vector<gdalwrap::gdal> tiles(files.size());
     auto it = tiles.begin();
     for (const std::string& file : files) {
@@ -346,6 +348,7 @@ inline void glob_region(const std::string& pattern_in,
 inline void merge_io(const std::string& pattern_in,
                      const std::string& file_out) {
     std::vector<std::string> files = glob(pattern_in);
+    if (files.size() < 1) return;
     std::vector<gdalwrap::gdal> tiles(files.size());
     auto it = tiles.begin();
     for (const std::string& file : files) {
