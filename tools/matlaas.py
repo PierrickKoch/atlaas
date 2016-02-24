@@ -203,11 +203,16 @@ def tiles_for_path(a, b, graph=None, res=[], cost=0):
     return cost, set(['%ix%i'%(p2t(x), p2t(-y)) for x,y in res])
 
 def main(argv=[]):
-    if len(argv) < 4:
-        print(__doc__)
-        return 1
-    x0, y0, x1, y1 = [float(arg) for arg in argv[1:5]]
-    cost, tiles = tiles_for_path((x0,y0), (x1, y1), graph)
+    if len(argv) == 2:
+        bounds = int(argv[1])
+        tilesrange = range(-bounds, bounds)
+        tiles = ['%ix%i'%(x,y) for x in tilesrange for y in tilesrange]
+    else:
+        if len(argv) < 4:
+            print(__doc__)
+            return 1
+        x0, y0, x1, y1 = [float(arg) for arg in argv[1:5]]
+        cost, tiles = tiles_for_path((x0,y0), (x1, y1), graph)
     data = process(tiles)
     print(data)
     if data:
