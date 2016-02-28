@@ -37,7 +37,8 @@ def transformation(frame, header):
 
 def cloud(msg):
     assert(msg.height == 1)
-    return np.ndarray(shape=(msg.width, 3), dtype=np.float32, buffer=msg.data)
+    assert(msg.point_step % 4 == 0) # make sure we wont truncate data
+    return np.ndarray(shape=(msg.width, msg.point_step / 4), dtype=np.float32, buffer=msg.data)
 
 def callback(msg):
     start = time.time()
