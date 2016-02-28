@@ -31,6 +31,7 @@ cdef extern from "atlaas/atlaas.hpp" namespace "atlaas":
         string get_atlaas_path()
         void region(const string& filepath) except +
         size_t c_closest_pcd(double x, double y, uint64_t tmax)
+        string cloud_filepath(size_t seq)
 
 def tile_to_region(fin, fout):
     tile_to_region_io(fin, fout)
@@ -99,3 +100,5 @@ cdef class Atlaas:
              should be (time.time()*1000 - T)
         """
         return self.thisptr.c_closest_pcd(x, y, tmax)
+    def cloud_filepath(self,seq):
+        return self.thisptr.cloud_filepath(seq)
