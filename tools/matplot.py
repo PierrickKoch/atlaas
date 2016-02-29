@@ -9,21 +9,20 @@ import matplotlib.pyplot as plt
 
 class gdal2:
     def __init__(self, filepath):
-        self.filepath = filepath
         self.geodata = gdal.Open( filepath )
-        self.bands = self.geodata.ReadAsArray()
         bn = [self.geodata.GetRasterBand(i).GetMetadata().get('NAME', str(i)) \
               for i in range(1, self.geodata.RasterCount+1)]
-        self.names = {v:k for k,v in enumerate(bn)}
-        self.transform = geodata.GetGeoTransform()
-        self.meta      = geodata.GetMetadata()
-        self.scale_x = self.transform[1]
-        self.scale_y = self.transform[5]
-        self.utm_x   = self.transform[0]
-        self.utm_y   = self.transform[3]
-        self.custom_x_origin = float(self.meta['CUSTOM_X_ORIGIN'])
-        self.custom_y_origin = float(self.meta['CUSTOM_Y_ORIGIN'])
-
+        self.filepath  = filepath
+        self.bands     = self.geodata.ReadAsArray()
+        self.names     = {v:k for k,v in enumerate(bn)}
+        self.transform = self.geodata.GetGeoTransform()
+        self.scale_x   = self.transform[1]
+        self.scale_y   = self.transform[5]
+        self.utm_x     = self.transform[0]
+        self.utm_y     = self.transform[3]
+        self.meta      = self.geodata.GetMetadata()
+        self.custom_x_origin = float(self.meta.get('CUSTOM_X_ORIGIN', 0))
+        self.custom_y_origin = float(self.meta.get('CUSTOM_Y_ORIGIN', 0))
     def u2p(self, x, y):
         return ((x - self.utm_x) / self.scale_x,
                 (y - self.utm_y) / self.scale_y)
@@ -31,9 +30,9 @@ class gdal2:
         return (x * self.scale_x + self.utm_x,
                 y * self.scale_y + self.utm_y)
     def c2p(self, x, y):
-        return u2p(*self.c2u(x, y))
+        return self.u2p(*self.c2u(x, y))
     def p2c(gdal, x, y):
-        return u2c(*self.p2u(x, y))
+        return self.u2c(*self.p2u(x, y))
     def c2u(self, x, y):
         return (x + self.custom_x_origin,
                 y + self.custom_y_origin)
@@ -55,45 +54,52 @@ def show(data, cmin=0, cmax=1, cmap='viridis', fsize=(14, 12), x=[], y=[]):
         plt.plot(x, y, 'r', scalex=False, scaley=False)
     plt.tight_layout(pad=0)
 
-# <codecell>
-
-show_hist('N_POINTS')
+g = gdal2(filename)
 
 # <codecell>
 
-show_band('N_POINTS', 0, 100)
+band = g.bands[g.names['N_POINTS']]
+hist(band)
 
 # <codecell>
 
-show_hist('VARIANCE')
+show(band, 0, 100)
 
 # <codecell>
 
-show_band('VARIANCE', 0, 0.2)
+band = g.bands[g.names['VARIANCE']]
+hist(band)
 
 # <codecell>
 
-show_hist('Z_MEAN')
+show(band, 0, 0.2)
 
 # <codecell>
 
-show_band('Z_MEAN', 0, 10.0)
+band = g.bands[g.names['Z_MEAN']]
+hist(band)
 
 # <codecell>
 
-show_hist('TIME')
+show(band, 0, 10.0)
 
 # <codecell>
 
-show_band('TIME', 0, 200)
+band = g.bands[g.names['TIME']]
+hist(band)
 
 # <codecell>
 
-show_hist('DIST_SQ')
+show(band, 0, 200)
 
 # <codecell>
 
-show_band('DIST_SQ', 0, 550)
+band = g.bands[g.names['DIST_SQ']]
+hist(band)
+
+# <codecell>
+
+show(band, 0, 550)
 
 # <markdowncell>
 
