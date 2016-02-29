@@ -45,6 +45,10 @@ def merge(fglob, fout):
 def save(filepath,
     np.ndarray[np.float32_t, ndim=2] cloud,
     np.ndarray[np.double_t,  ndim=2] transformation):
+    """ Use for test only (inefficient)
+    since the point-cloud is copied 2 times:
+    (float*) numpy.array -> atlaas::points -> pcl::PointCloud
+    """
     if not transformation.size == 16:
         raise TypeError("array size must be 16, transformation: Matrix(4,4)")
     if not 3 <= cloud.shape[1] <= 4:
@@ -54,6 +58,10 @@ def save(filepath,
                      <const double*> transformation.data)
 
 def load(filepath):
+    """ Use for test only (inefficient)
+    since the point-cloud is copied 3 times:
+    pcl::PointCloud -> atlaas::points -> float* -> numpy.array
+    """
     cdef size_t length = 0
     cdef double[16] transformation
     cdef float* cloud = c_load(filepath, length, transformation)
