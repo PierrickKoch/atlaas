@@ -2,6 +2,7 @@ cimport numpy as np
 import numpy
 from libcpp cimport bool
 from libcpp.string cimport string
+from libc.stdlib cimport free
 
 cdef extern from "stdint.h":
     ctypedef unsigned long long uint64_t
@@ -9,6 +10,11 @@ cdef extern from "stdint.h":
 cdef extern from "atlaas/atlaas.hpp" namespace "atlaas":
     cdef void tile_to_region_io(const string&, const string&) except +
     cdef void merge_io(const string&, const string&) except +
+    cdef void c_save(const string& filepath, const float* cloud,
+                     size_t cloud_len1, size_t cloud_len2,
+                     const double* transformation) except +
+    cdef float* c_load(const string& filepath, size_t& length,
+                       double* transformation) except +
     cdef cppclass atlaas:
         atlaas()
         void init(double size_x, double size_y, double scale,
@@ -17,9 +23,6 @@ cdef extern from "atlaas/atlaas.hpp" namespace "atlaas":
         void c_merge(const float* cloud, size_t cloud_len1, size_t cloud_len2,
                      const double* transformation, const double* covariance,
                      bool dump) except +
-        void c_save(const string& filepath, const float* cloud,
-                    size_t cloud_len1, size_t cloud_len2,
-                    const double* transformation) except +
         void merge(const string& filepath, bool dump)
         void save_currents()
         void export8u(const string& filepath) except +
@@ -38,6 +41,27 @@ def tile_to_region(fin, fout):
 
 def merge(fglob, fout):
     merge_io(fglob, fout)
+
+def save(filepath,
+    np.ndarray[np.float32_t, ndim=2] cloud,
+    np.ndarray[np.double_t,  ndim=2] transformation):
+    if not transformation.size == 16:
+        raise TypeError("array size must be 16, transformation: Matrix(4,4)")
+    if not 3 <= cloud.shape[1] <= 4:
+        raise TypeError("array shape[1] must be 3 or 4, cloud: XYZ[I]")
+    c_save(filepath, <const float*> cloud.data,
+                     cloud.shape[0], cloud.shape[1],
+                     <const double*> transformation.data)
+
+def load(filepath):
+    cdef size_t length = 0
+    cdef double[16] transformation
+    cdef float* cloud = c_load(filepath, length, transformation)
+    cdef float[:,:] view_cd = <float[:length, :4]> cloud
+    np_cd = numpy.asarray(view_cd).copy()
+    free(cloud) # free cloud from malloc
+    np_tr = numpy.array([transformation[i] for i in range(16)]).reshape(4, 4)
+    return (np_tr, np_cd)
 
 cdef class Atlaas:
     cdef atlaas *thisptr # hold a C++ instance which we're wrapping
@@ -65,16 +89,6 @@ cdef class Atlaas:
                              cloud.shape[0], cloud.shape[1],
                              <const double*> transformation.data,
                              <const double*> covariance.data, dump)
-    def save(self, filepath,
-        np.ndarray[np.float32_t, ndim=2] cloud,
-        np.ndarray[np.double_t,  ndim=2] transformation):
-        if not transformation.size == 16:
-            raise TypeError("array size must be 16, transformation: Matrix(4,4)")
-        if not 3 <= cloud.shape[1] <= 4:
-            raise TypeError("array shape[1] must be 3 or 4, cloud: XYZ[I]")
-        self.thisptr.c_save(filepath, <const float*> cloud.data,
-                            cloud.shape[0], cloud.shape[1],
-                            <const double*> transformation.data)
     def merge_file(self, filepath, dump=False):
         self.thisptr.merge(filepath, dump)
     def save_currents(self):

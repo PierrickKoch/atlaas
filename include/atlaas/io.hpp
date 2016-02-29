@@ -72,6 +72,36 @@ void load(const std::string& filepath,
     points& cloud, matrix& transformation);
 std::string cloud_filename(size_t seq);
 
+/**
+* save from raw C array (using std::copy !)
+* used for numpy -> C++ interface
+* transformation must be double[16] : row-major Matrix(4,4)
+* cloud must be float[cloud_len1][cloud_len2]
+* cloud_len2 must be either 3 (XYZ) or 4 (XYZI)
+*/
+inline void c_save(const std::string& filepath, const float* cloud,
+        size_t cloud_len1, size_t cloud_len2, const double* transformation) {
+    matrix tr;
+    points cd( cloud_len1 );
+    std::copy(transformation, transformation + 16, tr.begin());
+    for (size_t i = 0; i < cloud_len1; i++)
+        std::copy(cloud+i*cloud_len2, cloud+(i+1)*cloud_len2, cd[i].begin());
+    save(filepath, cd, tr);
+}
+
+inline float* c_load(const std::string& filepath, size_t& length,
+        double* transformation) {
+    matrix tr;
+    points cd;
+    load(filepath, cd, tr);
+    length = cd.size();
+    float* cloud = (float*) malloc(length*4*sizeof(float));
+    for (size_t i = 0; i < length; i++)
+        std::copy(cd[i].begin(), cd[i].end(), &cloud[i*4]);
+    std::copy(tr.begin(), tr.end(), transformation);
+    return cloud;
+}
+
 } // namespace atlaas
 
 #endif // ATLAAS_IO_HPP
