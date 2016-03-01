@@ -1,12 +1,15 @@
 """
 Usage example:
 
+    import rospy
     import atlaas
+    from atlaas.helpers.ros import wait, cloud, transformation
     from sensor_msgs.msg import PointCloud2
-    from tf import TransformListener, transformations
-    tfl = TransformListener()
+    from tf import TransformListener
     test = atlaas.Atlaas()
     test.init(120.0, 120.0, 0.1, 0, 0, 0, 31, True)
+    rospy.init_node("atlaas")
+    tfl = TransformListener()
     def callback(msg):
         test.merge(cloud(msg), transformation(tfl, "/map", msg.header))
         test.export8u('atlaas.jpg')
@@ -15,6 +18,7 @@ Usage example:
 """
 import rospy
 import numpy
+from tf import transformations
 
 # Fix broken TransformListener.waitForTransform
 # Exception: Lookup would require extrapolation into the future.
