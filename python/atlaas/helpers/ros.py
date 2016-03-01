@@ -1,11 +1,20 @@
 """
 Usage example:
 
+    import atlaas
+    from sensor_msgs.msg import PointCloud2
+    from tf import TransformListener, transformations
+    tfl = TransformListener()
+    test = atlaas.Atlaas()
+    test.init(120.0, 120.0, 0.1, 0, 0, 0, 31, True)
     def callback(msg):
         test.merge(cloud(msg), transformation(tfl, "/map", msg.header))
         test.export8u('atlaas.jpg')
+
+    rospy.Subscriber("/velodyne", PointCloud2, callback)
 """
 import rospy
+import numpy
 
 # Fix broken TransformListener.waitForTransform
 # Exception: Lookup would require extrapolation into the future.
@@ -29,5 +38,5 @@ def transformation(tfl, frame, header):
 def cloud(msg):
     assert(msg.height == 1)
     assert(msg.point_step % 4 == 0) # make sure we wont truncate data
-    return np.ndarray(shape=(msg.width, msg.point_step / 4),
-                      dtype=np.float32, buffer=msg.data)
+    return numpy.ndarray(shape=(msg.width, msg.point_step / 4),
+                         dtype='float32', buffer=msg.data)

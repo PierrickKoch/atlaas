@@ -24,7 +24,7 @@ class gdal2:
                 y * self.scale_y + self.utm_y)
     def c2p(self, x, y):
         return self.u2p(*self.c2u(x, y))
-    def p2c(gdal, x, y):
+    def p2c(self, x, y):
         return self.u2c(*self.p2u(x, y))
     def c2u(self, x, y):
         return (x + self.custom_x_origin,
