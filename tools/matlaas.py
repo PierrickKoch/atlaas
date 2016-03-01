@@ -27,14 +27,14 @@ import os
 import sys
 import json
 import math
-import shutil
 import socket
 import logging
 from urllib import urlopen, urlretrieve # urllib.request in Python 3
 from lxml import etree
 import gdal
-import numpy
-import Image # aka PIL, because gdal PNG driver does not support WriteBlock
+import atlaas
+from atlaas.region import merge_or_copy
+from atlaas.helpers.bresenham import line
 socket.setdefaulttimeout(3)
 
 atlaas_path = os.environ.get('ATLAAS_PATH', '.')
@@ -74,33 +74,6 @@ def get(url):
     avg = 0 if not elt else float(elt[0].text)
     return cov, avg
 
-def merge(filetmp, filedst):
-    if os.path.isfile(filedst):
-        gtmp = gdal.Open(filetmp)
-        gdst = gdal.Open(filedst)
-        r1 = gtmp.ReadAsArray()
-        r2 = gdst.ReadAsArray()
-        # compute cost from r1 and r2 ([0]: cost, [1]: precision)
-        # cost is cost_r1 where precision_r1 > precision_r2 else cost_r2
-        cost = numpy.where(r1[1] > r2[1], r1[0], r2[0])
-        alph = numpy.where(r1[1] > r2[1], r1[1], r2[1])
-        image = Image.fromarray(cost)
-        ialph = Image.fromarray(alph)
-        image.putalpha(ialph)
-        image.save(filedst)
-        # update COVERAGE metadata
-        coverage = alph[alph > 0].size / float(alph.size)
-        avgalpha = numpy.average(alph)
-        logger.debug("merge coverage gain: %.3f" %
-            (coverage - float(gdst.GetMetadata().get('COVERAGE', '0'))))
-        gdst.SetMetadataItem('COVERAGE', str(coverage))
-        gdst.SetMetadataItem('AVGALPHA', str(avgalpha))
-    else: # copy temp to dest
-        # os.rename dont work across filesystem
-        #   [Errno 18] Invalid cross-device link
-        shutil.copy(filetmp, filedst)
-        shutil.copy(filetmp+".aux.xml", filedst+".aux.xml")
-
 def process(tiles):
     logger.debug("process %s"%str(tiles))
     if not matlaas_list:
@@ -128,7 +101,7 @@ def process(tiles):
             if abs(check(filepath) - value[1]) < 1e-6:
                 # mv filepath -> tile(XxY)
                 logger.info("tile %s success moving it [%s]"%(filepath, XxY))
-                merge(filepath, tile(XxY))
+                merge_or_copy(filepath, tile(XxY))
                 data[XxY][2] = True # mark tile as merged
             else:
                 logger.warning("coverage missmatch, discard tile [%s]"%XxY)
@@ -140,14 +113,10 @@ def process(tiles):
 
 graph = None
 try:
-    import gladys
+    from atlaas.helpers.gladys import gladys2
     try:
-        ctmap = gladys.costmap("%s/region.png"%atlaas_path,
-                               "%s/robot.json"%atlaas_path)
-        graph = gladys.nav_graph(ctmap)
-        gdmap = ctmap.get_map()
-        c2u = lambda x, y: gladys.point_custom2utm(gdmap, x, y)
-        u2c = lambda x, y: gladys.point_utm2custom(gdmap, x, y)
+        graph = gladys2("%s/region.png"%atlaas_path,
+                        "%s/robot.json"%atlaas_path)
     except RuntimeError as err:
         logger.error(err)
 except ImportError:
@@ -158,46 +127,13 @@ tile_scale = 0.1 # scale_x = scale_y
 size = tile_size * tile_scale # tile size in meters
 p2t = lambda val: int(math.floor(val/size))
 
-# need to get tile on straight line as well (Bresenham)
-# since gladys does not give points outside region
-def line(x0, y0, x1, y1):
-    """ Bresenham line from (x0,y0) -> (x1,y1)
-
-    list(line(1,2,3,4))
-    >>> [(1, 2), (2, 3), (3, 4)]
-    list(line(-1,-2,-3,-4))
-    >>> [(-1, -2), (-2, -3), (-3, -4)]
-    """
-    steep = abs(y1 - y0) > abs(x1 - x0)
-    if steep: # swap
-        x0, y0 = y0, x0
-        x1, y1 = y1, x1
-    deltax = abs(x1 - x0)
-    deltay = abs(y1 - y0)
-    error = deltax / 2
-    y = y0
-    xstep = 1 if x0 < x1 else -1
-    ystep = 1 if y0 < y1 else -1
-    for x in range(x0, x1+xstep, xstep):
-        yield (y,x) if steep else (x,y)
-        error -= deltay
-        if error < 0:
-            y += ystep
-            error += deltax
-
-def get_path(a, b, graph=None, res=[], cost=0):
-    if graph: # A* a,b
-        res_utm, cost = graph.search_with_cost(c2u(*a), c2u(*b))
-        res = [u2c(x,y) for x,y in res_utm]
-    return cost, res
-
-def tiles_for_path(a, b, graph=None, res=[], cost=0):
-    ta, tb = (p2t(b[0]), p2t(b[1])), (p2t(a[0]), p2t(a[1]))
-    cost, path = get_path(a, b, graph, res, cost)
+def tiles_for_path(a, b, res=[], cost=0):
     l2i = lambda l: [int(v) for v in l]
-    if path:
-        # Bresenham res[-1] -> b
-        res += path + list(line(*l2i(path[-1]+b)))
+    if graph:
+        cost, path = graph.path(a, b)
+        if path:
+            # Bresenham res[-1] -> b
+            res += path + list(line(*l2i(path[-1]+b)))
     res += list(line(*l2i(a+b))) # Bresenham a -> b
     logger.debug(res)
     return cost, set(['%ix%i'%(p2t(x), p2t(-y)) for x,y in res])
@@ -212,11 +148,10 @@ def main(argv=[]):
             print(__doc__)
             return 1
         x0, y0, x1, y1 = [float(arg) for arg in argv[1:5]]
-        cost, tiles = tiles_for_path((x0,y0), (x1, y1), graph)
+        cost, tiles = tiles_for_path((x0,y0), (x1, y1))
     data = process(tiles)
     print(data)
     if data:
-        import atlaas
         atlaas.merge("region.*x*.png", "region.png")
     return 0
 
