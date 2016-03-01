@@ -15,8 +15,8 @@ pkg_config_dict.pop(None, None) # in case of unwanted result, eg. -Wl,-rpath,
 
 extensions = [
     Extension(
-        name = "atlaas",
-        sources = ["atlaas.pyx"],
+        name = "atlaas._atlaas",
+        sources = ["atlaas/_atlaas.pyx"],
         language = "c++",
         extra_compile_args = ["-std=c++0x", "-Wno-unused-function"],
         # configure rpath
@@ -26,7 +26,7 @@ extensions = [
 ]
 
 setup(name='atlaas',
-      version='0.1',
+      version='0.2',
       description='Python bindings for Atlaas (using Cython)',
       author='Pierrick Koch',
       author_email='pierrick.koch@laas.fr',
@@ -38,6 +38,8 @@ setup(name='atlaas',
         'Programming Language :: Python',
         'Topic :: Scientific/Engineering',
       ],
+      license='BSD',
+      packages=['atlaas', 'atlaas.helpers'],
       requires=['numpy'],
       ext_modules=cythonize(extensions),
 )

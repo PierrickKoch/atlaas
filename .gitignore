@@ -6,8 +6,8 @@ build/
 # other files
 *~
 # atlaas
-python/atlaas.cpp
-atlaas.so
+_atlaas.cpp
+_atlaas.so
 atlaas.*.tif
 atlaas.jpg*
 cloud.*.*
