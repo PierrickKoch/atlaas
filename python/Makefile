@@ -3,7 +3,7 @@ atlaas/_atlaas*.so:
 	@python setup.py build_ext --inplace
 
 clean:
-	@rm -rf atlaas/*.so atlaas/*.cpp build atlaas.*.tif out.* __pycache__
+	@rm -rf atlaas/*.so atlaas/*.cpp build atlaas.*.tif out.* cloud.* __pycache__
 
 test: atlaas/_atlaas*.so
 	@python test.py

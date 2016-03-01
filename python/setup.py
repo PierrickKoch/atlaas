@@ -25,8 +25,11 @@ extensions = [
     ),
 ]
 
+with open('atlaas/version.py') as f:
+    exec(f.read()) # get __version__
+
 setup(name='atlaas',
-      version='0.2',
+      version=__version__,
       description='Python bindings for Atlaas (using Cython)',
       author='Pierrick Koch',
       author_email='pierrick.koch@laas.fr',
