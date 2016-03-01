@@ -3,9 +3,10 @@ import time
 import rospy
 from sensor_msgs.msg import PointCloud2
 from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
-from tf import TransformListener, transformations
+from tf import TransformListener
 import numpy as np
 import atlaas
+from atlaas.helpers.ros import wait, cloud, transformation
 
 robot_name = sys.argv[1]
 
@@ -17,33 +18,10 @@ covariance = [0]*36
 pose_stamped = None
 poses = []
 
-# Fix broken TransformListener.waitForTransform
-# Exception: Lookup would require extrapolation into the future.
-# waitForTransform(frame, header.frame_id, header.stamp, rospy.Duration(3))
-def wait(frame, header, duration=3):
-    start_time = time.time()
-    while not tfl.canTransform(frame, header.frame_id, header.stamp) \
-            and (time.time() - start_time) < duration \
-            and not rospy.is_shutdown():
-        rospy.sleep(0.0001) # 100 us
-    # print("Ive been waiting %f"%(time.time() - start_time))
-
-def transformation(frame, header):
-    wait(frame, header)
-    position, quaternion = tfl.lookupTransform(frame, header.frame_id, header.stamp)
-    M = transformations.quaternion_matrix(quaternion)
-    M[:3, 3] = position[:3]
-    return M
-
-def cloud(msg):
-    assert(msg.height == 1)
-    assert(msg.point_step % 4 == 0) # make sure we wont truncate data
-    return np.ndarray(shape=(msg.width, msg.point_step / 4), dtype=np.float32, buffer=msg.data)
-
 def callback(msg):
     start = time.time()
     cov = np.array(covariance, dtype=np.float64).reshape(6, 6)
-    test.merge(cloud(msg), transformation("/map", msg.header), cov)
+    test.merge(cloud(msg), transformation(tfl, "/map", msg.header), cov)
     poses.append([pose_stamped.header.stamp.to_time(),
                   pose_stamped.pose.position.x,
                   pose_stamped.pose.position.y])
