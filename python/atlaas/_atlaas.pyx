@@ -1,5 +1,5 @@
-cimport numpy as np
-import numpy
+cimport numpy as cnp
+import numpy as np
 from libcpp cimport bool
 from libcpp.string cimport string
 from libc.stdlib cimport free
@@ -43,8 +43,8 @@ def merge(fglob, fout):
     merge_io(fglob, fout)
 
 def save(filepath,
-    np.ndarray[np.float32_t, ndim=2] cloud,
-    np.ndarray[np.double_t,  ndim=2] transformation):
+    cnp.ndarray[cnp.float32_t, ndim=2] cloud,
+    cnp.ndarray[cnp.double_t,  ndim=2] transformation):
     """ Use for test only (inefficient)
     since the point-cloud is copied 2 times:
     (float*) numpy.array -> atlaas::points -> pcl::PointCloud
@@ -66,9 +66,9 @@ def load(filepath):
     cdef double[16] transformation
     cdef float* cloud = c_load(filepath, length, transformation)
     cdef float[:,:] view_cd = <float[:length, :4]> cloud
-    np_cd = numpy.asarray(view_cd).copy()
+    np_cd = np.asarray(view_cd).copy()
     free(cloud) # free cloud from malloc
-    np_tr = numpy.array([transformation[i] for i in range(16)]).reshape(4, 4)
+    np_tr = np.array([transformation[i] for i in range(16)]).reshape(4, 4)
     return (np_tr, np_cd)
 
 cdef class Atlaas:
@@ -82,11 +82,11 @@ cdef class Atlaas:
         self.thisptr.init(size_x, size_y, scale, custom_x, custom_y, custom_z,
               utm_zone, utm_north)
     def merge(self,
-              np.ndarray[np.float32_t, ndim=2] cloud,
-              np.ndarray[np.double_t,  ndim=2] transformation,
-              np.ndarray[np.double_t,  ndim=2] covariance=None, dump=True):
+              cnp.ndarray[cnp.float32_t, ndim=2] cloud,
+              cnp.ndarray[cnp.double_t,  ndim=2] transformation,
+              cnp.ndarray[cnp.double_t,  ndim=2] covariance=None, dump=True):
         if covariance is None:
-            covariance = numpy.array([0]*36, dtype=numpy.float64).reshape(6, 6)
+            covariance = np.array([0]*36, dtype=np.float64).reshape(6, 6)
         if not covariance.size == 36:
             raise TypeError("array size must be 36, covariance: Matrix(6,6)")
         if not transformation.size == 16:
