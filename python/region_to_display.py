@@ -11,12 +11,9 @@ import os
 import sys
 import time
 import glob
-import atlaas
-import gdal
-import numpy
-import Image # aka PIL
+from atlaas.helpers.image import save, load
 # https://raw.githubusercontent.com/BIDS/colormap/master/colormaps.py
-import colormaps
+from colormaps import viridis
 # initialize the logger
 import logging
 logger = logging.getLogger(__name__) # or __file__
@@ -24,15 +21,6 @@ handler = logging.StreamHandler()
 handler.setFormatter( logging.Formatter('[%(asctime)s][%(name)s][%(levelname)s] %(message)s') )
 logger.addHandler( handler )
 logger.setLevel(logging.DEBUG)
-
-def save(path, data):
-    # in case of JPEG or WebP, set quality to 90%, else this option is ignored
-    Image.fromarray(numpy.uint8(colormaps.viridis(data)*255)).save(path, quality=90)
-
-def load(path):
-    img = Image.open(path)
-    arr = numpy.array(img.getdata(), numpy.uint8)
-    return arr.reshape(img.size[1], img.size[0], arr.shape[1])
 
 def run():
     mtime = {}
@@ -56,9 +44,9 @@ def run():
     for XxY in needup:
         img = load("region.%s.png"%XxY)
         alpha = img[:,:,1]
-        save("display.%s.precis.png"%XxY, alpha)
+        save("display.%s.precis.png"%XxY, (viridis(alpha)*255).astype('uint8'))
         alpha.fill(mtime_col(mtime[XxY])*255)
-        save("display.%s.mtime.png"%XxY,  alpha)
+        save("display.%s.mtime.png"%XxY, (viridis(alpha)*255).astype('uint8'))
 
 if __name__ == '__main__':
     tick = 1 if len(sys.argv) < 2 else float(sys.argv[1])

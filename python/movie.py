@@ -1,9 +1,8 @@
 #! /usr/bin/env python
 import gdal
-import Image
 import atlaas
+from atlaas.helper.image import save
 import subprocess
-import numpy as np
 from matplotlib import cm, pyplot
 
 cmin = -1
@@ -18,8 +17,7 @@ def convert(fin, fout, cmin, cmax, cmap=cm.spectral):
     img = (img - cmin) * (1./(cmax - cmin))
     img[img > 1] = 1
     img[img < 0] = 0
-    # in case of JPEG or WebP, set quality to 90%, else this option is ignored
-    Image.fromarray(np.uint8(cmap(img)*255)).save(fout, quality=90)
+    save(fout, (cmap(img)*255).astype('uint8'))
     #imgplot = pyplot.imshow( img )
     #imgplot.set_cmap(cmap)
     #pyplot.draw()
