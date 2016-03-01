@@ -3,7 +3,7 @@
 get_ipython().magic(u'matplotlib inline')
 filename = 'out.tif'
 
-from atlaas.helpers.gdal import gdal2
+from atlaas.helpers.gdal2 import gdal2
 from atlaas.helpers.matplot import show, hist
 
 g = gdal2(filename)

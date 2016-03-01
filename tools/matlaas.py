@@ -113,7 +113,7 @@ def process(tiles):
 
 graph = None
 try:
-    from atlaas.helpers.gladys import gladys2
+    from atlaas.helpers.gladys2 import gladys2
     try:
         graph = gladys2("%s/region.png"%atlaas_path,
                         "%s/robot.json"%atlaas_path)

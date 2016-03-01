@@ -12,7 +12,7 @@ in place, keeping image's resolution.
 usage: %s input.tif cmin cmax
 """
 import sys
-from atlaas.helpers.gdal import gdal2
+from atlaas.helpers.gdal2 import gdal2
 from atlaas.helpers.image import save
 from matplotlib import cm
 if 'viridis' in dir(cm):
