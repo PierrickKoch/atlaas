@@ -32,3 +32,6 @@ cdef extern from "atlaas/atlaas.hpp" namespace "atlaas":
         void region(const string& filepath) except +
         size_t c_closest_pcd(double x, double y, uint64_t tmax)
         string cloud_filepath(size_t seq)
+        string pcd_xy_str()
+        string pcd_map_str()
+        string pcd_time_str()

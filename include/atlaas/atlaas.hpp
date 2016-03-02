@@ -439,6 +439,15 @@ public:
             });
         heightmap.save(filepath);
     }
+    std::string pcd_xy_str() const {
+        return to_string(pcd_xy);
+    }
+    std::string pcd_map_str() const {
+        return to_string(pcd_map);
+    }
+    std::string pcd_time_str() const {
+        return to_string(pcd_time);
+    }
 };
 
 } // namespace atlaas

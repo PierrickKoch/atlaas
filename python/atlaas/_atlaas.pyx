@@ -90,3 +90,9 @@ cdef class Atlaas:
         return self.thisptr.c_closest_pcd(x, y, tmax)
     def cloud_filepath(self, seq):
         return self.thisptr.cloud_filepath(seq)
+    def pcd_xy(self):
+        return self.thisptr.pcd_xy_str()
+    def pcd_map(self):
+        return self.thisptr.pcd_map_str()
+    def pcd_time(self):
+        return self.thisptr.pcd_time_str()
