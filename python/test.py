@@ -32,7 +32,12 @@ def merge_test():
     >>> cloud = np.random.rand(200000, 3).astype('float32')
     >>> test.merge(cloud, transformation)
 
-    >>> filepath = 'test.pcd'
+    """
+    return
+
+def save_test():
+    """
+    >>> filepath = 'cloud.pcd'
     >>> cloud = np.random.rand(200000, 4).astype('float32')
     >>> atlaas.save(filepath, cloud, transformation)
     >>> tr, cd = atlaas.load(filepath)
