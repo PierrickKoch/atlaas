@@ -24,9 +24,9 @@ from tf import transformations
 # Exception: Lookup would require extrapolation into the future.
 # waitForTransform(frame, header.frame_id, header.stamp, rospy.Duration(3))
 def wait(tfl, frame, header, duration=3):
-    start_time = time.time()
+    start_time = rospy.Time.now().to_time()
     while not tfl.canTransform(frame, header.frame_id, header.stamp) \
-          and (time.time() - start_time) < duration \
+          and (rospy.Time.now().to_time() - start_time) < duration \
           and not rospy.is_shutdown():
         rospy.sleep(0.0001) # 100 us
     # print("Ive been waiting %f"%(time.time() - start_time))
