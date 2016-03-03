@@ -15,6 +15,7 @@
 #include <fstream> // {i,o}fstream
 #include <cassert> // assert
 #include <stdexcept> // std::runtime_error
+#include <cstdlib> // std::malloc
 
 #include <atlaas/common.hpp>
 
@@ -95,7 +96,7 @@ inline float* c_load(const std::string& filepath, size_t& length,
     points cd;
     load(filepath, cd, tr);
     length = cd.size();
-    float* cloud = (float*) malloc(length*4*sizeof(float));
+    float* cloud = (float*) std::malloc(length*4*sizeof(float));
     for (size_t i = 0; i < length; i++)
         std::copy(cd[i].begin(), cd[i].end(), &cloud[i*4]);
     std::copy(tr.begin(), tr.end(), transformation);
