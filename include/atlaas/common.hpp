@@ -48,37 +48,6 @@ std::string to_string(const T& t)
     return oss.str();
 }
 
-template<typename Container>
-inline std::ostream& stream_it(std::ostream& os, Container& c)
-{
-    bool first = true;
-    os << "[";
-    for (auto& v : c) {
-        if (first)
-            first = false;
-        else
-            os << ", ";
-        os << v;
-    }
-    return os << "]";
-}
-
-template <typename T>
-inline std::ostream& operator<<(std::ostream& os, const std::vector<T>& v) {
-    return stream_it(os, v);
-}
-
-template <typename T, size_t N>
-inline std::ostream& operator<<(std::ostream& os, const std::array<T, N>& v) {
-    return stream_it(os, v);
-}
-
-template <typename T1, typename T2>
-inline std::ostream& operator<<(std::ostream& os, const std::pair<T1, T2>& v) {
-    os << "(" << v.first << ", " << v.second << ")";
-    return os;
-}
-
 /**
  * System helpers
  */
@@ -245,5 +214,44 @@ double sum(const Container& c) {
 }
 
 } // namespace atlaas
+
+
+
+template<typename Container>
+inline std::ostream& stream_it(std::ostream& os, Container& c)
+{
+    bool first = true;
+    os << "[";
+    for (auto& v : c) {
+        if (first)
+            first = false;
+        else
+            os << ", ";
+        os << v;
+    }
+    return os << "]";
+}
+
+
+
+namespace std {
+
+template <typename T>
+inline std::ostream& operator<<(std::ostream& os, const std::vector<T>& v) {
+    return stream_it(os, v);
+}
+
+template <typename T, size_t N>
+inline std::ostream& operator<<(std::ostream& os, const std::array<T, N>& v) {
+    return stream_it(os, v);
+}
+
+template <typename T1, typename T2>
+inline std::ostream& operator<<(std::ostream& os, const std::pair<T1, T2>& v) {
+    os << "(" << v.first << ", " << v.second << ")";
+    return os;
+}
+
+} // namespace std
 
 #endif // ATLAAS_COMMON_HPP
