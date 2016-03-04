@@ -25,7 +25,7 @@ bool allclose(T a, T b, T eps = std::numeric_limits<T>::epsilon()) {
 
 template <typename T, size_t N>
 bool allclose(const std::array<T, N>& a, const std::array<T, N>& b) {
-    for (size_t i = 0; i < a.size(); i++)
+    for (size_t i = 0; i < N; i++)
         if (! allclose(a[i], b[i]) )
             return false;
     return true;
