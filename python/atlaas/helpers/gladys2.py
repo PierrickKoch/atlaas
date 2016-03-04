@@ -5,6 +5,14 @@ class gladys2:
         self.ctmap = gladys.costmap(region, robot)
         self.graph = gladys.nav_graph(self.ctmap)
         self.gdmap = self.ctmap.get_map()
+    def u2p(self, x, y):
+        return gladys.point_utm2pix(self.gdmap, x, y)
+    def p2u(self, x, y):
+        return gladys.point_pix2utm(self.gdmap, x, y)
+    def c2p(self, x, y):
+        return gladys.point_custom2pix(self.gdmap, x, y)
+    def p2c(self, x, y):
+        return gladys.point_pix2custom(self.gdmap, x, y)
     def c2u(self, x, y):
         return gladys.point_custom2utm(self.gdmap, x, y)
     def u2c(self, x, y):
