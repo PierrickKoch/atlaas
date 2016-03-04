@@ -16,7 +16,7 @@ from nav_msgs.msg import OccupancyGrid
 mtime = 0
 jpg_pose = None
 rospy.init_node("atlaas_grid")
-atlaas_path = os.environ.get("ATLAAS_PATH", ".")
+atlaas_path = rospy.get_param("atlaas_path", os.environ.get("ATLAAS_PATH", "."))
 filepath = os.path.join(atlaas_path, "atlaas.jpg")
 mergedpath = os.path.join(atlaas_path, "out.tif")
 pub = rospy.Publisher("/grid", OccupancyGrid, queue_size=5, latch=True)
