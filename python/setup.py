@@ -44,5 +44,6 @@ setup(name='atlaas',
       license='BSD',
       packages=['atlaas', 'atlaas.helpers'],
       requires=['numpy'],
+      scripts=['tools/matlaas.py'],
       ext_modules=cythonize(extensions),
 )
