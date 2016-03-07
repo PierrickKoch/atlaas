@@ -93,7 +93,7 @@ void atlaas::tile_save(int sx, int sy) const {
         tile.bands[DIST_SQ][idx]  = (*it)[DIST_SQ];
         it++;
     }
-    if (sum(tile.bands[N_POINTS]) > 0) { // dont save empty tiles
+    if (any_gt_zero(tile.bands[N_POINTS])) { // dont save empty tiles
         const auto& utm = meta.point_pix2utm( sx * sw, sy * sh);
         // update map transform used for merging the pointcloud
         tile.set_transform(utm[0], utm[1], meta.get_scale_x(), meta.get_scale_y());

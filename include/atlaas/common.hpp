@@ -16,6 +16,7 @@
 #include <vector>
 #include <string>
 #include <numeric> // accumulate
+#include <algorithm> // any_of
 #include <sstream> // ostringstream
 #include <iomanip> // setfill,setw
 #include <sys/stat.h> // stat, file_exists
@@ -211,6 +212,15 @@ double average(const Container& c) {
 template <typename Container>
 double sum(const Container& c) {
     return std::accumulate(c.begin(), c.end(), 0);
+}
+
+/**
+ * Return true if any element is greater than zero.
+ */
+template <typename Container>
+bool any_gt_zero(const Container& c) {
+    // TODO in C++14: s/float/auto/
+    return std::any_of(c.begin(), c.end(), [](float elt){ return elt > 0; });
 }
 
 } // namespace atlaas
