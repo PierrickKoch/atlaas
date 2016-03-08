@@ -96,3 +96,11 @@ cdef class Atlaas:
         return self.thisptr.pcd_map_str()
     def pcd_time(self):
         return self.thisptr.pcd_time_str()
+    def closest_pcd_id(self, stamp):
+        """ Get the closest PCD identifier to a given time-stamp
+        :param stamp: time-stamp in milliseconds
+        :type stamp: int
+        :returns: pcd identifier
+        :rtype: int
+        """
+        return self.thisptr.get_closest_pcd_id(stamp)
