@@ -21,6 +21,13 @@
 #include <iomanip> // setfill,setw
 #include <sys/stat.h> // stat, file_exists
 #include <chrono> // system_clock
+#include <iostream> // cout,endl
+
+#ifdef NDEBUG
+#define LOG(msg)
+#else
+#define LOG(msg) std::cout << msg << std::endl;
+#endif
 
 namespace atlaas {
 
