@@ -283,7 +283,7 @@ inline void tile_to_region(gdalwrap::gdal& tile, const std::string& filepath,
     std::vector<uint8_t> alph(tile.bands[1].size());
     std::transform(tile.bands[1].begin(), tile.bands[1].end(), alph.begin(),
         [](float v) -> uint8_t { return v > 255 ? 0 : v < 0 ? 0 : 255 - v; });
-    // tile set meta COVERAGE = band(alpha=confidence=id2 where > 1) / size
+    // tile set meta COVERAGE = band(alpha=precision=id2 where > 1) / size
     float coverage = std::count_if(alph.begin(), alph.end(),
         [](float f) { return f > 0; });
     coverage /= (float) tile.bands[1].size();
@@ -302,7 +302,7 @@ inline void tile_to_region_io(const std::string& in, const std::string& out,
  * 1st is 8 bit grayscale representation of traversability:
  *  0 = unknown, [1..255] roughness, 1 = flat, 255 = obstacle.
  * 2nd is 8 bit alpha/transparency representation of uncertainty:
- *  [0..255] confidence, 0 = high uncertainty, 255 = low uncertainty.
+ *  [0..255] precision, 0 = high uncertainty, 255 = low uncertainty.
  * PNG comes with .aux.xml file containing georeferenced metadata (GDAL).
  */
 inline void region(std::vector<gdalwrap::gdal>& tiles,
@@ -355,7 +355,7 @@ inline void merge_io(const std::string& pattern_in,
         (*it++).load(file);
     }
     gdalwrap::gdal result = gdalwrap::merge(tiles, 0);
-    // result set meta COVERAGE = band(alpha=confidence=id2 where > 1) / size
+    // result set meta COVERAGE = band(alpha=precision=id2 where > 1) / size
     float coverage = std::count_if(result.bands[1].begin(), result.bands[1].end(),
         [](float f) { return f > 0; }) / (float) result.bands[1].size();
     result.metadata["COVERAGE"] = std::to_string(coverage);
