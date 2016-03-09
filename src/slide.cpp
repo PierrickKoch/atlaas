@@ -7,7 +7,6 @@
  * created: 2014-03-19
  * license: BSD
  */
-#include <iostream>         // std::{cout,endl}
 #include <algorithm>        // std::copy{,_backward}
 
 #include <atlaas/atlaas.hpp>
@@ -146,7 +145,7 @@ bool atlaas::slide() {
     const auto& utm = meta.point_pix2utm(sw * dx, sh * dy);
     // update map transform used for merging the pointcloud
     meta.set_transform(utm[0], utm[1], meta.get_scale_x(), meta.get_scale_y());
-    std::cout << __func__ << " utm " << utm[0] << ", " << utm[1] << std::endl;
+    LOG( __func__ << " utm " << utm[0] << ", " << utm[1] );
 
     return true;
 }
