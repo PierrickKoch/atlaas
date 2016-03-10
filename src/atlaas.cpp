@@ -26,13 +26,14 @@ void atlaas::merge(points& cloud, const matrix& transformation,
         const covmat& covariance, bool dump) {
     if (cloud.size() < 1)
         return; // pcl writeBinaryCompressed crash with empty cloud
+    if (dump)
+        save_inc(cloud, transformation);
+    else if (reprocess_in_progress)
+        return;
+
     sensor_xy = matrix_to_point(transformation);
     // slide map while needed
     do_slide();
-
-    if (dump)
-        save_inc(cloud, transformation);
-
     // use dynamic merge
     // clear the dynamic map (zeros)
     cell_info_t zeros{}; // value-initialization w/empty initializer

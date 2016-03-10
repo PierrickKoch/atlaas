@@ -73,6 +73,11 @@ class atlaas {
     uint64_t time_base;
 
     /**
+     * reprocess in progress
+     */
+    bool reprocess_in_progress;
+
+    /**
      * milliseconds since the base time.
      *
      * Since we'll store datas as float32, time since epoch would give
@@ -136,6 +141,7 @@ public:
         gndinter.resize( width * height );
         variance_threshold = 0.05;
         atlaas_path = getenv("ATLAAS_PATH", ".");
+        reprocess_in_progress = false;
     }
 
     std::string get_atlaas_path() {
@@ -286,6 +292,42 @@ public:
         std::fill(dyninter.begin(), dyninter.end(), zeros);
         std::fill(gndinter.begin(), gndinter.end(), zeros);
         std::fill(internal.begin(), internal.end(), zeros);
+    }
+
+    size_t reprocess2(std::vector<matrix> alltr, size_t start = 0) {
+        reprocess_in_progress = true; // "lock" merge, do not fuse anymore
+        size_t nscans = alltr.size();
+        size_t lscans = start+nscans;
+        assert(pcd_time.size() >= lscans);
+        points cloud;
+        matrix transformation;
+        // 4. overwrite correct pcd pose
+        for (size_t i = start; i < lscans; i++) {
+            std::string filepath = cloud_filepath( i );
+            load(filepath, cloud, transformation);
+            save(filepath, cloud, alltr[i]);
+        }
+        // 5. backup all atlaas.*.tif from map_id related to the fix
+        for (size_t i = start; i < lscans; i++) {
+            for (uint sx=0; sx <= 2; sx++)
+            for (uint sy=0; sy <= 2; sy++) {
+                std::string tile_path = tilepath(pcd_map[i][0]+sx,
+                                                 pcd_map[i][1]+sy);
+                if ( file_exists(tile_path) ) {
+                    std::ostringstream oss;
+                    oss << tile_path << "." << nscans << ".bak";
+                    std::rename( tile_path.c_str() , oss.str().c_str() );
+                }
+            }
+        }
+        // 6. clear internal
+        clear_all();
+        // 7. process all pcds from start to last
+        //    (even the ones after reprocess call)
+        size_t result = process(start);
+        reprocess_in_progress = false;
+        assert(result == nscans);
+        return result;
     }
 
     /**
