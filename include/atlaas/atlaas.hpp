@@ -305,7 +305,7 @@ public:
         for (size_t i = start; i < lscans; i++) {
             std::string filepath = cloud_filepath( i );
             load(filepath, cloud, transformation);
-            save(filepath, cloud, alltr[i]);
+            save(filepath, cloud, alltr[i-start]);
         }
         // 5. backup all atlaas.*.tif from map_id related to the fix
         for (size_t i = start; i < lscans; i++) {
@@ -326,7 +326,7 @@ public:
         //    (even the ones after reprocess call)
         size_t result = process(start);
         reprocess_in_progress = false;
-        assert(result == nscans);
+        assert(result >= nscans);
         return result;
     }
 
