@@ -31,13 +31,24 @@ def wait(tfl, frame, header, duration=3):
         rospy.sleep(0.0001) # 100 us
     # print("Ive been waiting %f"%(time.time() - start_time))
 
-def transformation(tfl, frame, header):
-    wait(tfl, frame, header)
-    # TODO return tfl.asMatrix(frame, header)
-    position, quaternion = tfl.lookupTransform(frame, header.frame_id,
-                                               header.stamp)
+def transformation(tflistener_or_tf2buffer, frame, header):
+    if 'lookup_transform' in dir(tflistener_or_tf2buffer):
+        # tf2 use lower_case_with_underscores (PEP8)
+        # tf2 lookup_transform returns a geometry_msgs/TransformStamped Message
+        tf = tflistener_or_tf2buffer.lookup_transform(frame,
+            header.frame_id, header.stamp, rospy.Duration(3))
+        t, r = tf.transform.translation, tf.transform.rotation
+        translation = (t.x, t.y, t.z)
+        quaternion = (r.x, r.y, r.z, r.w)
+    else:
+        wait(tfl, frame, header)
+        # we could use return tfl.asMatrix(frame, header)
+        # tf lookupTransform returns a geometry_msgs/Transform Message
+        translation, quaternion = tflistener_or_tf2buffer.lookupTransform(frame,
+            header.frame_id, header.stamp)
+
     M = transformations.quaternion_matrix(quaternion)
-    M[:3, 3] = position[:3]
+    M[:3, 3] = translation[:3]
     return M
 
 def cloud(msg):
