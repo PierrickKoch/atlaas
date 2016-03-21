@@ -1,5 +1,3 @@
-# need to get tile on straight line as well (Bresenham)
-# since gladys does not give points outside region
 def line(x0, y0, x1, y1):
     """ Bresenham line from (x0,y0) -> (x1,y1)
 
