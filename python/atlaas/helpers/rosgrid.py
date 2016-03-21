@@ -2,12 +2,11 @@ import numpy
 from atlaas.helpers.gdal2 import gdal2
 from nav_msgs.msg import OccupancyGrid
 
-def atlaas8u_grid(filepath, seq=None, stamp=None, frame_id='/map'):
+def atlaas8u_grid(filepath, stamp=None, frame_id='/map'):
     g = gdal2(filepath)
     b = g.bands[0] if len(g.bands.shape) > 2 else g.bands
     og = OccupancyGrid()
     og.data = (b.astype('float')/2.55).astype('uint8').flatten()
-    if seq: og.header.seq = seq
     if stamp: og.header.stamp = stamp
     og.header.frame_id = frame_id
     og.info.resolution = g.scale_x
@@ -16,7 +15,7 @@ def atlaas8u_grid(filepath, seq=None, stamp=None, frame_id='/map'):
     og.info.origin.orientation.x = 1 # flip to transform UTM-ROS (scale_y < 0)
     return og
 
-def atlaas_grid(filepath, var_threshold=0.1, seq=None, stamp=None, frame_id='/map'):
+def atlaas_grid(filepath, var_threshold=0.1, stamp=None, frame_id='/map'):
     """ Usage:
     atlaas.merge("atlaas.*x*.tif", "out.tif")
     if os.path.isfile("out.tif"):
@@ -33,7 +32,6 @@ def atlaas_grid(filepath, var_threshold=0.1, seq=None, stamp=None, frame_id='/ma
     ddis[bnp < 1] = 0 # no points, unknown
     og = OccupancyGrid()
     og.data = ddis.flatten()
-    if seq: og.header.seq = seq
     if stamp: og.header.stamp = stamp
     og.header.frame_id = frame_id
     og.info.resolution = g.scale_x
