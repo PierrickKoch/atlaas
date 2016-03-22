@@ -13,6 +13,7 @@
 #include <array> // C++11
 #include <cstdlib> // std::getenv
 #include <cmath> // std::sqrt
+#include <map>
 #include <vector>
 #include <string>
 #include <numeric> // accumulate
@@ -267,6 +268,20 @@ template <typename T1, typename T2>
 inline std::ostream& operator<<(std::ostream& os, const std::pair<T1, T2>& v) {
     os << "(" << v.first << ", " << v.second << ")";
     return os;
+}
+
+template <typename T1, typename T2>
+inline std::ostream& operator<<(std::ostream& os, const std::map<T1, T2>& m) {
+    bool first = true;
+    os << "{";
+    for (auto& v : m) {
+        if (first)
+            first = false;
+        else
+            os << ", ";
+        os << v.first << ": " << v.second;
+    }
+    return os << "}";
 }
 
 } // namespace std

@@ -96,6 +96,8 @@ cdef class Atlaas:
         return self.thisptr.pcd_map_str()
     def pcd_time(self):
         return self.thisptr.pcd_time_str()
+    def pcd_overlap(self, id):
+        return self.thisptr.get_pcd_overlap_str(id)
     def closest_pcd_id(self, stamp):
         """ Get the closest PCD identifier to a given time-stamp
         :param stamp: time-stamp in milliseconds

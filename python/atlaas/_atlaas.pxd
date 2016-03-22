@@ -35,4 +35,5 @@ cdef extern from "atlaas/atlaas.hpp" namespace "atlaas":
         string pcd_xy_str()
         string pcd_map_str()
         string pcd_time_str()
+        string get_pcd_overlap_str(size_t id)
         size_t get_closest_pcd_id(uint64_t)

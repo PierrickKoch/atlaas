@@ -286,6 +286,51 @@ public:
     size_t c_closest_pcd(double x, double y, uint64_t tmax) const {
         return get_closest_pcd_id_pose({{x,y}}, tmax);
     }
+
+    std::vector<size_t> get_pcd_same_map(size_t id) {
+        std::vector<size_t> pcd_same_map;
+        for (size_t inc = 0; inc < pcd_map.size(); inc++) {
+            if (inc != id and
+                pcd_map[inc][0] == pcd_map[id][0] and
+                pcd_map[inc][1] == pcd_map[id][1]) {
+                pcd_same_map.push_back(inc);
+            }
+        }
+        return pcd_same_map;
+    }
+    std::map<size_t, float> get_pcd_overlap(size_t id) {
+        std::map<size_t, float> overlap_score;
+        std::vector<size_t> pcd_same_map = get_pcd_same_map(id);
+        cells_info_t c_ref( width * height ); // reference
+        cells_info_t c_cmp( width * height ); // to compare
+        points cloud;
+        matrix transformation;
+        load(cloud_filename(id), cloud, transformation);
+        transform(cloud, transformation);
+        rasterize(cloud, c_ref); // XXX assume meta is in the map ref id
+        for (size_t pcd_id : pcd_same_map) {
+            load(cloud_filename(pcd_id), cloud, transformation);
+            transform(cloud, transformation);
+            // clear the dynamic map (zeros)
+            cell_info_t zeros{}; // value-initialization w/empty initializer
+            std::fill(c_cmp.begin(), c_cmp.end(), zeros);
+            rasterize(cloud, c_cmp); // XXX assume meta is in the map ref id
+            // get overlap between c_ref and c_cmp
+            float overlap = 0;
+            for (size_t i = 0; i < c_ref.size(); i++) {
+                if (c_ref[i][N_POINTS] > 0 and c_cmp[i][N_POINTS] > 0)
+                    overlap += 1;
+            }
+            overlap /= c_ref.size();
+            overlap_score[pcd_id] = overlap;
+        }
+        return overlap_score;
+    }
+    std::string get_pcd_overlap_str(size_t id) {
+        return to_string(get_pcd_overlap(id));
+    }
+
+
     void clear_all() {
         // clear the dynamic map (zeros)
         cell_info_t zeros{}; // value-initialization w/empty initializer
