@@ -8,8 +8,10 @@ find_path(GSL_INCLUDE_DIR gsl/gsl_math.h
     PATH_SUFFIXES gsl)
 find_library(GSL_LIBRARY NAME gsl
     HINTS ${PC_GSL_LIBDIR} ${PC_GSL_LIBRARY_DIRS} )
+find_library(GSLCBLAS_LIBRARY NAME gslcblas
+    HINTS ${PC_GSL_LIBDIR} ${PC_GSL_LIBRARY_DIRS} )
 set(GSL_INCLUDE_DIRS ${GSL_INCLUDE_DIR})
-set(GSL_LIBRARIES ${GSL_LIBRARY})
+set(GSL_LIBRARIES ${GSL_LIBRARY} ${GSLCBLAS_LIBRARY})
 ##
 
 include(FindPackageHandleStandardArgs)
