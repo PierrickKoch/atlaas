@@ -19,6 +19,7 @@ Usage example:
 import rospy
 import numpy
 from tf import transformations
+from tf2_ros import Buffer, LookupException, ConnectivityException, ExtrapolationException
 
 # Fix broken TransformListener.waitForTransform
 # Exception: Lookup would require extrapolation into the future.
@@ -31,10 +32,20 @@ def wait(tfl, frame, header, duration=3):
         rospy.sleep(0.0001) # 100 us
     # print("Ive been waiting %f"%(time.time() - start_time))
 
-def transformation(tfl, frame, header):
-    wait(tfl, frame, header)
-    position, quaternion = tfl.lookupTransform(frame, header.frame_id,
-                                               header.stamp)
+def wait_tf2(tf2buffer, frame, header, duration=3):
+    trans = tf2buffer.lookup_transform(frame, header.frame_id, header.stamp, rospy.Duration(duration))
+    t, r = trans.transform.translation, trans.transform.rotation
+    position = (t.x, t.y, t.z)
+    quaternion = (r.x, r.y, r.z, r.w)
+    return position, quaternion
+
+def transformation(tfl_or_tf2buffer, frame, header):
+    if isinstance(tfl_or_tf2buffer, Buffer):
+        position, quaternion = wait_tf2(tfl_or_tf2buffer, frame, header)
+    else:
+        wait(tfl, frame, header)
+        position, quaternion = tfl_or_tf2buffer.lookupTransform(frame, header.frame_id, header.stamp)
+
     M = transformations.quaternion_matrix(quaternion)
     M[:3, 3] = position[:3]
     return M
