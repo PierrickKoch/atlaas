@@ -32,9 +32,9 @@ void atlaas::merge(points& cloud, const matrix& transformation,
             return;
     }
 
-    sensor_xy = matrix_to_point(transformation);
+    point_xy_t sensor_xy = matrix_to_point(transformation);
     // slide map while needed
-    do_slide();
+    do_slide(sensor_xy);
     // use dynamic merge
     // clear the dynamic map (zeros)
     cell_info_t zeros{}; // value-initialization w/empty initializer
@@ -42,7 +42,7 @@ void atlaas::merge(points& cloud, const matrix& transformation,
     // transform the cloud from sensor to custom frame
     transform(cloud, transformation);
     // merge the point-cloud
-    rasterize(cloud, dyninter);
+    rasterize(cloud, dyninter, meta, sensor_xy);
 
     // merge the dynamic atlaas with internal data
     merge();
@@ -109,12 +109,13 @@ void atlaas::tile_save(int sx, int sy) const {
  * @param cloud: point cloud in the custom frame
  * @param inter: an internal container of cells
  */
-void atlaas::rasterize(const points& cloud, cells_info_t& inter) const {
+void rasterize(const points& cloud, cells_info_t& inter,
+        const gdalwrap::gdal& geometa, const point_xy_t& sensor_xy) {
     size_t index;
     float z_mean, n_pts, new_z;
     // merge point-cloud in internal structure
     for (const auto& point : cloud) {
-        index = meta.index_custom(point[0], point[1]);
+        index = geometa.index_custom(point[0], point[1]);
         if (index >= inter.size() )
             continue; // point is outside the map
 

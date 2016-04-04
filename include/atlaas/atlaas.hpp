@@ -21,6 +21,12 @@
 namespace atlaas {
 
 /**
+ * merge point-cloud in internal structure
+ */
+void rasterize(const points& cloud, cells_info_t& infos,
+        const gdalwrap::gdal &geometa, const point_xy_t& sensor_xy = {{0,0}});
+
+/**
  * atlaas
  */
 class atlaas {
@@ -47,7 +53,6 @@ class atlaas {
     cells_info_t gndinter; // ground info for vertical/flat unknown state
     cells_info_t dyninter; // to merge point cloud
     float        variance_threshold;
-    point_xy_t   sensor_xy;
 
     /**
      * position of the current most North-West tile (0, 0)
@@ -187,11 +192,6 @@ public:
     }
 
     /**
-     * merge point-cloud in internal structure
-     */
-    void rasterize(const points& cloud, cells_info_t& infos) const;
-
-    /**
      * transform, merge, slide, save, load tiles
      */
     void merge(points& cloud, const matrix& transformation,
@@ -301,20 +301,25 @@ public:
     std::map<size_t, float> get_pcd_overlap(size_t id) {
         std::map<size_t, float> overlap_score;
         std::vector<size_t> pcd_same_map = get_pcd_same_map(id);
-        cells_info_t c_ref( width * height ); // reference
-        cells_info_t c_cmp( width * height ); // to compare
+        gdalwrap::gdal gmeta;
+        gmeta.copy_meta_only(meta);
+        auto p = meta.point_custom2utm(pcd_map[id][0] * sw, pcd_map[id][1] * sh);
+        gmeta.set_transform(p[0], p[1], 1, -1);
+        gmeta.set_size(width * meta.get_scale_x(), height * meta.get_scale_x());
+        cells_info_t c_ref( gmeta.get_width() * gmeta.get_height() ); // reference
+        cells_info_t c_cmp( gmeta.get_width() * gmeta.get_height() ); // to compare
         points cloud;
         matrix transformation;
         load(cloud_filename(id), cloud, transformation);
         transform(cloud, transformation);
-        rasterize(cloud, c_ref); // XXX assume meta is in the map ref id
+        rasterize(cloud, c_ref, gmeta);
         for (size_t pcd_id : pcd_same_map) {
             load(cloud_filename(pcd_id), cloud, transformation);
             transform(cloud, transformation);
             // clear the dynamic map (zeros)
             cell_info_t zeros{}; // value-initialization w/empty initializer
             std::fill(c_cmp.begin(), c_cmp.end(), zeros);
-            rasterize(cloud, c_cmp); // XXX assume meta is in the map ref id
+            rasterize(cloud, c_cmp, gmeta);
             // get overlap between c_ref and c_cmp
             float overlap = 0;
             for (size_t i = 0; i < c_ref.size(); i++) {
@@ -447,9 +452,9 @@ public:
     /**
      * slide, save, load tiles
      */
-    bool slide();
-    void do_slide() {
-        while ( slide() );
+    bool slide(const point_xy_t& sensor_xy);
+    void do_slide(const point_xy_t& sensor_xy) {
+        while ( slide(sensor_xy) );
     }
 
     void tile_load(int sx, int sy);

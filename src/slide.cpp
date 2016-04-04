@@ -19,7 +19,7 @@ namespace atlaas {
  * @returns whether we did slide or not,
  *          useful to check if we need multiple slide at init
  */
-bool atlaas::slide() {
+bool atlaas::slide(const point_xy_t& sensor_xy) {
     const point_xy_t& pixr = meta.point_custom2pix(sensor_xy[0], sensor_xy[1]);
     float cx = pixr[0] / width;
     float cy = pixr[1] / height;
