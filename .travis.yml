@@ -1,11 +1,9 @@
-language: cpp
-compiler:
-  - clang
-  - gcc
+language: generic
 
-before_install:
+before_script:
  - sudo add-apt-repository ppa:cython-dev/master-ppa -y
- - sudo apt-get update -qq
- - sudo apt-get install -qq cmake cython python-numpy libgdal1h libgdal-dev libgsl0-dev
+ - sudo apt-get update -qy
+ - sudo apt-get install -qy cmake cython python-numpy libgdal1h libgdal-dev libgsl0-dev
 
-script: "time ./.travis.bash"
+script:
+ - "time ./.travis.bash"
