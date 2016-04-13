@@ -33,6 +33,7 @@ def wait(tfl, frame, header, duration=3):
 
 def transformation(tfl, frame, header):
     wait(tfl, frame, header)
+    # TODO return tfl.asMatrix(frame, header)
     position, quaternion = tfl.lookupTransform(frame, header.frame_id,
                                                header.stamp)
     M = transformations.quaternion_matrix(quaternion)
@@ -42,5 +43,12 @@ def transformation(tfl, frame, header):
 def cloud(msg):
     assert(msg.height == 1)
     assert(msg.point_step % 4 == 0) # make sure we wont truncate data
+    # PCL stores XYZI on 32 bytes (XYZ on 16 bytes, for SSE alignment)
+    # while atlaas does it on 16 (using Intensity as padding)
+    # following is a workaround TODO proper point-cloud conversion
+    #    see sensor_msgs.point_cloud2.read_points(msg, 'XYZI') ?
+    if msg.point_step > 16:
+        return numpy.ndarray(shape=(msg.width, msg.point_step / 4),
+                             dtype='float32', buffer=msg.data)[:,:4]
     return numpy.ndarray(shape=(msg.width, msg.point_step / 4),
                          dtype='float32', buffer=msg.data)
