@@ -26,6 +26,8 @@ while not rospy.is_shutdown():
     rospy.sleep(0.1)
     if not pub.get_num_connections() and not pub_glob.get_num_connections():
         continue # skip if no client
+    if not os.path.isfile(filepath):
+        continue
     filestat = os.stat(filepath)
     if filestat.st_mtime == mtime:
         continue # skip if not modified
