@@ -106,3 +106,7 @@ cdef class Atlaas:
         :rtype: int
         """
         return self.thisptr.get_closest_pcd_id(stamp)
+    def set_use_swap(self, value):
+        self.thisptr.set_use_swap(value)
+    def set_variance_threshold(self, threshold):
+        self.thisptr.set_variance_threshold(threshold)

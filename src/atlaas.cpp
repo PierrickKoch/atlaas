@@ -171,27 +171,31 @@ void atlaas::merge() {
                     (*it)[DIST_SQ] - dyninfo[DIST_SQ] > 4 ) ) {
                 // init
                 *it = dyninfo;
-            } else if ( is_vertical == ( (*it)[VARIANCE] > variance_threshold) ) {
-                // same state
-                // if the cells are flat and differ more than 10cm, swap
-                if (!is_vertical && (( (*it)[Z_MEAN] - dyninfo[Z_MEAN] ) > 0.1 )) {
+            } else if (use_swap) {
+                if ( is_vertical == ( (*it)[VARIANCE] > variance_threshold) ) {
+                    // same state
+                    // if the cells are flat and differ more than 10cm, swap
+                    if (!is_vertical && (( (*it)[Z_MEAN] - dyninfo[Z_MEAN] ) > 0.1 )) {
+                        gndinter[index] = *it;
+                        *it = dyninfo;
+                        // TODO (*it)[DYNAMIC] += 1.0;
+                    } else {
+                        merge(*it, dyninfo);
+                    }
+                } else if ( is_vertical ) {
+                    // was flat, backup the cell in ground swap
                     gndinter[index] = *it;
                     *it = dyninfo;
                     // TODO (*it)[DYNAMIC] += 1.0;
                 } else {
+                    // was vertical, revert ground and merge
+                    *it = gndinter[index];
                     merge(*it, dyninfo);
+                    // TODO (*it)[DYNAMIC] += 1.0;
+                    // TODO gndinter[index] = zeros; ???
                 }
-            } else if ( is_vertical ) {
-                // was flat, backup the cell in ground swap
-                gndinter[index] = *it;
-                *it = dyninfo;
-                // TODO (*it)[DYNAMIC] += 1.0;
             } else {
-                // was vertical, revert ground and merge
-                *it = gndinter[index];
                 merge(*it, dyninfo);
-                // TODO (*it)[DYNAMIC] += 1.0;
-                // TODO gndinter[index] = zeros; ???
             }
             (*it)[TIME] = time_ref;
         }

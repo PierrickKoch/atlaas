@@ -76,6 +76,7 @@ class atlaas {
      * reprocess in progress
      */
     bool reprocess_in_progress;
+    bool use_swap;
 
     /**
      * milliseconds since the base time.
@@ -142,6 +143,11 @@ public:
         variance_threshold = 0.05;
         atlaas_path = getenv("ATLAAS_PATH", ".");
         reprocess_in_progress = false;
+        use_swap = true;
+    }
+
+    void set_use_swap(bool value) {
+        use_swap = value;
     }
 
     std::string get_atlaas_path() {
