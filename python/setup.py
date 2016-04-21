@@ -8,10 +8,9 @@ def pkg_config(*packages, **kw):
     command = ['pkg-config', '--libs', '--cflags']+list(packages)
     for token in subprocess.check_output(command).decode().split():
         kw.setdefault(flag_map.get(token[:2]), []).append(token[2:])
+    kw.pop(None, None) # in case of unwanted result, eg. -Wl,-rpath,
+    kw['runtime_library_dirs'] = kw['library_dirs'] # configure rpath
     return kw
-
-pkg_config_dict = pkg_config("atlaas")
-pkg_config_dict.pop(None, None) # in case of unwanted result, eg. -Wl,-rpath,
 
 extensions = [
     Extension(
@@ -19,9 +18,7 @@ extensions = [
         sources = ["atlaas/_atlaas.pyx"],
         language = "c++",
         extra_compile_args = ["-std=c++0x", "-Wno-unused-function"],
-        # configure rpath
-        runtime_library_dirs = pkg_config_dict['library_dirs'],
-        **pkg_config_dict
+        **pkg_config("atlaas")
     ),
 ]
 
