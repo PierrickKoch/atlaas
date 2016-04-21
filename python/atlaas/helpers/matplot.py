@@ -18,4 +18,4 @@ def show(data, cmin=0, cmax=1, cmap='viridis', fsize=(14, 12), x=[], y=[],
     if title:
         plt.title(title)
     if fname:
-        plt.savefig(fname)
+        plt.savefig(fname, bbox_inches='tight')#, pad_inches=0)
