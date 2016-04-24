@@ -1,5 +1,8 @@
-import Image # aka PIL
 import numpy
+try:
+    from PIL import Image
+except ImportError:
+    import Image # aka Pillow
 
 def save(path, data, quality=90):
     # in case of JPEG or WebP, set quality to 90%, else this option is ignored
