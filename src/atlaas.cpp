@@ -157,6 +157,7 @@ void atlaas::merge() {
     size_t index = 0;
     float time_ref = get_reference_time();
     auto it = internal.begin();
+    std::cout<<".";
 
     for (auto& dyninfo : dyninter) {
         if ( dyninfo[N_POINTS] > 0 && (
@@ -167,11 +168,11 @@ void atlaas::merge() {
 
             is_vertical = dyninfo[VARIANCE] > variance_threshold;
 
-            if ( (*it)[N_POINTS] < 1 || ( dyninfo[N_POINTS] > 2 &&
-                    (*it)[DIST_SQ] - dyninfo[DIST_SQ] > 4 ) ) {
+            if ( (*it)[N_POINTS] < 1 ) { // || ( dyninfo[N_POINTS] > 2 &&
+//                    (*it)[DIST_SQ] - dyninfo[DIST_SQ] > 4 ) ) {
                 // init
                 *it = dyninfo;
-            } else if (use_swap) {
+            } else if (use_dynanic_test) {
                 if ( is_vertical == ( (*it)[VARIANCE] > variance_threshold) ) {
                     // same state
                     // if the cells are flat and differ more than 10cm, swap
@@ -189,8 +190,12 @@ void atlaas::merge() {
                     // TODO (*it)[DYNAMIC] += 1.0;
                 } else {
                     // was vertical, revert ground and merge
-                    *it = gndinter[index];
-                    merge(*it, dyninfo);
+                    if (use_swap) {
+                        *it = gndinter[index];
+                        merge(*it, dyninfo);
+                    } else {
+                        *it = dyninfo;
+                    }
                     // TODO (*it)[DYNAMIC] += 1.0;
                     // TODO gndinter[index] = zeros; ???
                 }

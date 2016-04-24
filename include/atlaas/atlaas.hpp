@@ -76,6 +76,7 @@ class atlaas {
      * reprocess in progress
      */
     bool reprocess_in_progress;
+    bool use_dynanic_test;
     bool use_swap;
 
     /**
@@ -143,7 +144,8 @@ public:
         variance_threshold = 0.05;
         atlaas_path = getenv("ATLAAS_PATH", ".");
         reprocess_in_progress = false;
-        use_swap = true;
+        use_swap = false;
+        use_dynanic_test = true;
     }
 
     void set_use_swap(bool value) {
