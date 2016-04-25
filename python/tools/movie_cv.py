@@ -1,11 +1,8 @@
 #! /usr/bin/env python
-import gdal
-import Image
-import atlaas
-import subprocess
-import numpy as np
-from matplotlib import cm, pyplot
 import os
+import gdal
+import atlaas
+from matplotlib import cm
 import cv2
 
 class TrackbarData:
@@ -28,7 +25,7 @@ def convert(fin, cmin, cmax, cmap=cm.spectral):
     img = (img - cmin) * (1./(cmax - cmin))
     img[img > 1] = 1
     img[img < 0] = 0
-    return np.uint8(cmap(img)*255)
+    return (cmap(img)*255).astype('uint8')
 
 pcd_id = 0
 patern = 'cloud.%05i.pcd'
@@ -50,3 +47,5 @@ while os.path.isfile(patern%pcd_id):
     pcd_id += 1
     if cv2.waitKey(1) & 0xFF == 27: # aka ESCAPE
         break
+
+video.release()
