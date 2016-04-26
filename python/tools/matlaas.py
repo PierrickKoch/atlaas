@@ -31,6 +31,7 @@ import socket
 import logging
 from urllib import urlopen, urlretrieve # urllib.request in Python 3
 from lxml import etree
+from lxml.html import parse
 import gdal
 import atlaas
 from atlaas.region import merge_or_copy
@@ -57,6 +58,15 @@ def check(filepath):
     geotiff = gdal.Open(filepath)
     npoints = geotiff.GetRasterBand(2).ReadAsArray()
     return npoints[npoints>0].size / float(npoints.size)
+
+# TODO instead of wating for 404, parse index as:
+def index(host='http://127.0.0.1:8000/', xpath='/html/body/ul/li/a'):
+    """
+    XPath can be:
+    * '/html/body/table/tr/td/a' for Apache
+    * '/html/body/ul/li/a' for python SimpleHTTPServer
+    """
+    return [elt.text for elt in parse(host).xpath(xpath)]
 
 def get(url):
     try:
