@@ -14,4 +14,4 @@ tmux att -t simple || tmux \
     send-keys "rosrun rviz rviz -d simple-rviz.rviz" C-m \; \
     new-window \; \
     send-keys "source /opt/ros/indigo/setup.bash" C-m \; \
-    send-keys "python simple-ros.py mana" C-m \; \
+    send-keys "python simple-ros-repro.py mana" C-m \; \
