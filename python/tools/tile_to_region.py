@@ -12,7 +12,7 @@ import sys
 import time
 import glob
 import atlaas
-from atlaas.helpers.region import merge
+from atlaas.region import merge
 
 # initialize the logger
 import logging
