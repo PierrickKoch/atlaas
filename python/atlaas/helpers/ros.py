@@ -41,7 +41,7 @@ def transformation(tflistener_or_tf2buffer, frame, header):
         translation = (t.x, t.y, t.z)
         quaternion = (r.x, r.y, r.z, r.w)
     else:
-        wait(tfl, frame, header)
+        wait(tflistener_or_tf2buffer, frame, header)
         # we could use return tfl.asMatrix(frame, header)
         # tf lookupTransform returns a geometry_msgs/Transform Message
         translation, quaternion = tflistener_or_tf2buffer.lookupTransform(frame,
