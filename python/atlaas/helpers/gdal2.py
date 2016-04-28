@@ -32,3 +32,18 @@ class gdal2:
     def u2c(self, x, y):
         return (x - self.custom_x_origin,
                 y - self.custom_y_origin)
+    def save(self, filepath=None):
+        if filepath is None:
+            filepath = self.filepath
+        driver = self.geodata.GetDriver()
+        out = driver.CreateCopy(filepath, self.geodata)
+        if len(self.bands.shape) == 2:
+            band = out.GetRasterBand(1)
+            band.WriteArray(self.bands)
+        elif len(self.bands.shape) == 3:
+            for i_band in range(self.bands.shape[0]):
+                band = out.GetRasterBand(i_band+1)
+                band.WriteArray(self.bands[i_band])
+        else:
+            raise TypeError('bands.shape: %s'%str(self.bands.shape))
+        out.FlushCache()
