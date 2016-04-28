@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 import os
+import sys
 import gdal
 import atlaas
 from matplotlib import cm
@@ -13,8 +14,8 @@ class TrackbarData:
     def update(self, val):
         self.value = val
 
-T1 = TrackbarData(0)
-T2 = TrackbarData(10)
+T1 = TrackbarData(0  if len(sys.argv) < 2 else int(sys.argv[1]))
+T2 = TrackbarData(10 if len(sys.argv) < 3 else int(sys.argv[2]))
 cv2.namedWindow('image')
 T1.create('T1', 'image')
 T2.create('T2', 'image')
@@ -22,7 +23,8 @@ T2.create('T2', 'image')
 def convert(fin, cmin, cmax, cmap=cm.spectral):
     geo = gdal.Open(fin)
     img = geo.ReadAsArray() # get band as a numpy.array
-    img = (img - cmin) * (1./(cmax - cmin))
+    rng = 1 if cmax == cmin else cmax - cmin
+    img = (img - cmin) * (1./rng)
     img[img > 1] = 1
     img[img < 0] = 0
     return (cmap(img)*255).astype('uint8')
@@ -41,7 +43,7 @@ while os.path.isfile(patern%pcd_id):
     if not pcd_id:
         fourcc = cv2.cv.CV_FOURCC(*'FMP4')
         size = (image.shape[1], image.shape[0]) # tuple(reversed(image.shape))
-        video = cv2.VideoWriter('atlaas.zmean.avi', fourcc, 100, size)
+        video = cv2.VideoWriter('atlaas.zmean.avi', fourcc, 20.0, size)
     video.write( image )
     cv2.imshow('image', image)
     pcd_id += 1
