@@ -22,3 +22,11 @@ class gladys2:
         res_utm, cost = self.graph.search_with_cost(self.c2u(*a), self.c2u(*b))
         res = [self.u2c(x, y) for x, y in res_utm]
         return cost, res
+    def map(self):
+        m = self.ctmap.get_map()
+        b = m.get_bands()
+        width = m.get_width()
+        height = m.get_height()
+        data = b['WEIGHT']
+        # arr = np.array(data).reshape(height, width)
+        return width, height, data
