@@ -6,7 +6,7 @@ cdef extern from "stdint.h":
 
 cdef extern from "atlaas/atlaas.hpp" namespace "atlaas":
     cdef void tile_to_region_io(const string&, const string&) except +
-    cdef void merge_io(const string&, const string&) except +
+    cdef void merge_io(const string&, const string&, bool) except +
     cdef void c_save(const string& filepath, const float* cloud,
                      size_t cloud_len1, size_t cloud_len2,
                      const double* transformation) except +

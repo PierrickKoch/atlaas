@@ -346,7 +346,7 @@ inline void glob_region(const std::string& pattern_in,
 }
 
 inline void merge_io(const std::string& pattern_in,
-                     const std::string& file_out) {
+                     const std::string& file_out, bool compress = false) {
     std::vector<std::string> files = glob(pattern_in);
     if (files.size() < 1) return;
     std::vector<gdalwrap::gdal> tiles(files.size());
@@ -365,7 +365,7 @@ inline void merge_io(const std::string& pattern_in,
         result.export8u(file_out, { gdalwrap::raster2bytes(result.bands[0]),
                 gdalwrap::raster2bytes(result.bands[1]) }, "PNG");
     } else {
-        result.save(file_out);
+        result.save(file_out, compress);
     }
 }
 

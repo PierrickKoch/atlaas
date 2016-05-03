@@ -5,8 +5,8 @@ from libc.stdlib cimport free
 def tile_to_region(fin, fout):
     tile_to_region_io(fin, fout)
 
-def merge(fglob, fout):
-    merge_io(fglob, fout)
+def merge(fglob, fout, compress=False):
+    merge_io(fglob, fout, compress)
 
 def save(filepath,
     cnp.ndarray[cnp.float32_t, ndim=2] cloud,
