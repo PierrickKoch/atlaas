@@ -23,10 +23,42 @@ class gladys2:
         res = [self.u2c(x, y) for x, y in res_utm]
         return cost, res
     def map(self):
-        m = self.ctmap.get_map()
-        b = m.get_bands()
-        width = m.get_width()
-        height = m.get_height()
-        data = b['WEIGHT']
         # arr = np.array(data).reshape(height, width)
-        return width, height, data
+        return {
+            'data': self.gdmap.get_band('WEIGHT'),
+            'width': self.gdmap.get_width(),
+            'height': self.gdmap.get_height(),
+            'scale_x': self.gdmap.get_scale_x(),
+            'scale_y': self.gdmap.get_scale_y(),
+            'utm_x': self.gdmap.get_utm_pose_x(),
+            'utm_y': self.gdmap.get_utm_pose_y(),
+            'custom_x_origin': self.gdmap.get_custom_x_origin(),
+            'custom_y_origin': self.gdmap.get_custom_y_origin(),
+        }
+    def map_numpy(self):
+        import numpy
+        return numpy.array(self.gdmap.get_band('WEIGHT'), 'float32').reshape(
+            self.gdmap.get_height(), self.gdmap.get_width())
+    def map_gdal(self, filename):
+        ''' Same as:
+        m = self.map()
+        import gdal, osr, numpy
+        driver = gdal.GetDriverByName('GTiff')
+        dst_ds = driver.Create( filename, m['width'], m['height'], 1,
+            gdal.GDT_Float32 )
+        dst_ds.SetGeoTransform( [ m['utm_x'], m['scale_x'], 0,
+            m['utm_y'], 0, m['scale_y'] ] )
+        dst_ds.SetMetadataItem('CUSTOM_X_ORIGIN', m['custom_x_origin'])
+        dst_ds.SetMetadataItem('CUSTOM_Y_ORIGIN', m['custom_y_origin'])
+        srs = osr.SpatialReference()
+        srs.SetUTM( 31, 1 ) # FIXME
+        srs.SetWellKnownGeogCS( 'WGS84' )
+        dst_ds.SetProjection( srs.ExportToWkt() )
+        arr = numpy.array(m['data'], 'float32').reshape(m['height'], m['width'])
+        dst_ds.GetRasterBand(1).WriteArray( arr )
+        dst_ds.FlushCache()
+        return dst_ds
+        '''
+        import gdal
+        self.gdmap.save(filename)
+        return gdal.Open(filename)
