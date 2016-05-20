@@ -1,6 +1,6 @@
 #!/bin/sh
 
-NEW_VER=0.1.5
+NEW_VER=0.1.6
 
 PKGTYPE=wip
 RPKROOT=$HOME/robotpkg
