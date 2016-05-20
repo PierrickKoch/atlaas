@@ -10,7 +10,7 @@ g = gdal2('merged.atlaas.00000.tif')
 xy_atlaas = [tuple(map(int, g.c2p(x,y))) for x,y in poses]
 
 inc = 0
-while os.path.isfile('movie4region.%05i.png'%inc):
+while os.path.isfile('movie4atlaas.%05i.png'%inc):
     im = Image.open('movie4atlaas.%05i.png'%inc)
     dr = ImageDraw.Draw(im)
     dr.line(xy_atlaas[:inc+1], fill=(255,0,0,255)) # , width=2)

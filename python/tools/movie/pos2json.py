@@ -1,3 +1,4 @@
+import os
 poses = []
 patern = 'cloud.%05i.pos'
 while os.path.isfile(patern%len(poses)):
