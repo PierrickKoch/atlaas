@@ -22,3 +22,13 @@ def line(x0, y0, x1, y1):
         if error < 0:
             y += ystep
             error += deltax
+
+def line100(*args):
+    """ Bresenham line from (x0,y0) -> (x1,y1)
+
+    with 100th precision (centimetric if you use SI).
+
+    line100(1.21, 1.22, 1.23, 1.24)
+    >> [[1.21, 1.22], [1.22, 1.23], [1.23, 1.24]]
+    """
+    return [[x/100., y/100.] for x,y in line(*[int(v*100.) for v in args])]
