@@ -1,3 +1,4 @@
+import numpy
 import gdal
 
 class gdal2:
@@ -47,3 +48,11 @@ class gdal2:
         else:
             raise TypeError('bands.shape: %s'%str(self.bands.shape))
         out.FlushCache()
+    def dtm(self, variance_threshold=0.01):
+        bn = self.bands[self.names['N_POINTS']]
+        bv = self.bands[self.names['VARIANCE']]
+        be = self.bands[self.names['Z_MEAN']]
+        ba = self.bands[self.names['Z_MAX']]
+        bd = numpy.where(bv > variance_threshold, ba, be)
+        bd[bn < 1] = numpy.nan
+        return bd
