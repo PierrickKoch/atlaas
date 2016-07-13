@@ -403,14 +403,15 @@ public:
         // 3. get path length
         float dist = 0;
         std::vector<float> inc_dist(path.size());
-        for (size_t i = 0; i < path.size() - 1; i++) {
-            dist += distance(path[i], path[i+1]);
+        inc_dist[0] = 0; // first good pose no diff
+        for (size_t i = 1; i < path.size(); i++) {
+            dist += distance(path[i-1], path[i]);
             inc_dist[i] = dist;
         }
         // 4. overwrite correct pcd pose
         double dx = fixed_pose_x - path[path.size()-1][0],
                dy = fixed_pose_y - path[path.size()-1][1];
-        for (size_t i = last_good_pcd_id, j = 0; i <= fixed_pcd_id; i++) {
+        for (size_t i = last_good_pcd_id + 1, j = 0; i <= fixed_pcd_id; i++) {
             std::string filepath = cloud_filepath( i );
             load(filepath, cloud, transformation);
             float factor = inc_dist[j++] / dist;
@@ -419,7 +420,7 @@ public:
             save(filepath, cloud, transformation);
         }
         // 5. backup all atlaas.*.tif from map_id related to the fix
-        for (size_t i = last_good_pcd_id; i <= fixed_pcd_id; i++) {
+        for (size_t i = last_good_pcd_id + 1; i <= fixed_pcd_id; i++) {
             for (uint sx=0; sx <= 2; sx++)
             for (uint sy=0; sy <= 2; sy++) {
                 std::string tile_path = tilepath(pcd_map[i][0]+sx,
