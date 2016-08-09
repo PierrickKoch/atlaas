@@ -2,6 +2,8 @@ import numpy as np
 cimport numpy as cnp
 from libc.stdlib cimport free
 
+cnp.import_array()
+
 def tile_to_region(fin, fout):
     tile_to_region_io(fin, fout)
 
