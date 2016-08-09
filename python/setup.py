@@ -1,3 +1,4 @@
+import numpy
 import subprocess
 from distutils.core import setup
 from Cython.Build import cythonize
@@ -18,7 +19,7 @@ extensions = [
         sources = ["atlaas/_atlaas.pyx"],
         language = "c++",
         extra_compile_args = ["-std=c++0x", "-Wno-unused-function"],
-        **pkg_config("atlaas")
+        **pkg_config("atlaas", include_dirs=[numpy.get_include()])
     ),
 ]
 
