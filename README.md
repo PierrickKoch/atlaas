@@ -5,8 +5,8 @@ ATLAAS
 
 [![Build Status](https://travis-ci.org/pierriko/atlaas.png?branch=master)]
 (https://travis-ci.org/pierriko/atlaas)
-[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.15485.svg)]
-(http://dx.doi.org/10.5281/zenodo.15485)
+[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.51720.svg)]
+(http://dx.doi.org/10.5281/zenodo.51720)
 
 * http://www.openrobots.org/wiki
 * http://trac.laas.fr/git/atlaas
