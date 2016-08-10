@@ -23,9 +23,9 @@ tmux att -t multi || tmux \
     split-window \; \
     send-keys "cd momo; python -m SimpleHTTPServer 8043" C-m \; \
     new-window \; \
-    send-keys "cd mana; python ~/work/atlaas/python/tile_to_region.py" C-m \; \
+    send-keys "cd mana; python ~/work/atlaas/python/tools/tile_to_region.py" C-m \; \
     split-window \; \
-    send-keys "cd momo; python ~/work/atlaas/python/tile_to_region.py" C-m \; \
+    send-keys "cd momo; python ~/work/atlaas/python/tools/tile_to_region.py" C-m \; \
     new-window \; \
     send-keys "ln -s \$(pwd)/mana/atlaas.jpg /tmp" C-m \; \
     send-keys "cd ~/work/threeviz" C-m \; \

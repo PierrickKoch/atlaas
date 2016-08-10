@@ -11,7 +11,7 @@ class AGV(ATRV):
     def __init__(self, base_name):
         ATRV.__init__(self)
         self.velodyne = Velodyne()
-        self.velodyne.properties(cam_width=128, cam_height=128)
+        self.velodyne.properties(cam_width=128, cam_height=128, cam_far=70)
         self.velodyne.translate(z=1)
         self.append(self.velodyne)
         #self.set_mass(20)
