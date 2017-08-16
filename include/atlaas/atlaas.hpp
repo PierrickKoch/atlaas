@@ -311,11 +311,11 @@ public:
         cells_info_t c_cmp( width * height ); // to compare
         points cloud;
         matrix transformation;
-        load(cloud_filename(id), cloud, transformation);
+        load(cloud_filepath(id), cloud, transformation);
         transform(cloud, transformation);
         rasterize(cloud, c_ref); // XXX assume meta is in the map ref id
         for (size_t pcd_id : pcd_same_map) {
-            load(cloud_filename(pcd_id), cloud, transformation);
+            load(cloud_filepath(pcd_id), cloud, transformation);
             transform(cloud, transformation);
             // clear the dynamic map (zeros)
             cell_info_t zeros{}; // value-initialization w/empty initializer
@@ -327,7 +327,7 @@ public:
                 if (c_ref[i][N_POINTS] > 0 and c_cmp[i][N_POINTS] > 0)
                     overlap += 1;
             }
-            overlap /= c_ref.size();
+            // overlap /= c_ref.size();
             overlap_score[pcd_id] = overlap;
         }
         return overlap_score;
@@ -448,7 +448,16 @@ public:
         points cloud;
         matrix transformation;
         load(filepath, cloud, transformation);
-        merge(cloud, transformation, {}, dump);
+        points cloud_filtered;
+        cloud_filtered.reserve(cloud.size());
+        for (const auto& point : cloud)
+        {
+          if (point[0] < 10 and point[1] < 10)
+          {
+            cloud_filtered.push_back(point);
+          }
+        }
+        merge(cloud_filtered, transformation, {}, dump);
     }
 
     /**
