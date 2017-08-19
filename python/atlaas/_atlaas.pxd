@@ -20,7 +20,7 @@ cdef extern from "atlaas/atlaas.hpp" namespace "atlaas":
         void c_merge(const float* cloud, size_t cloud_len1, size_t cloud_len2,
                      const double* transformation, const double* covariance,
                      bool dump) except +
-        void merge(const string& filepath, bool dump)
+        void merge(const string& filepath, bool dump, float dist, float noise)
         void save_currents()
         void export8u(const string& filepath) except +
         void export_zmean(const string& filepath) except +

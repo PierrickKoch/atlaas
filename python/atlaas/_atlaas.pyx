@@ -65,8 +65,8 @@ cdef class Atlaas:
                              cloud.shape[0], cloud.shape[1],
                              <const double*> transformation.data,
                              <const double*> covariance.data, dump)
-    def merge_file(self, filepath, dump=False):
-        self.thisptr.merge(filepath, dump)
+    def merge_file(self, filepath, dump=False, dist=12.0, noise=0.0):
+        self.thisptr.merge(filepath, dump, dist, noise)
     def save_currents(self):
         self.thisptr.save_currents()
     def export8u(self, filepath):

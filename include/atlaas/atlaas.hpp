@@ -444,7 +444,8 @@ public:
     /**
      * Load a cloud and a transformation from file for replay
      */
-    void merge(const std::string& filepath, bool dump = false) {
+    void merge(const std::string& filepath, bool dump = false,
+      float dist = 12.0f, float noise = 0.0f) {
         points cloud;
         matrix transformation;
         load(filepath, cloud, transformation);
@@ -452,11 +453,13 @@ public:
         cloud_filtered.reserve(cloud.size());
         for (const auto& point : cloud)
         {
-          if (point[0] < 10 and point[1] < 10)
+          if (std::abs(point[0]) < dist and std::abs(point[1]) < dist)
           {
             cloud_filtered.push_back(point);
           }
         }
+        transformation[3] += noise; // transformation.x
+        transformation[7] += noise; // transformation.y
         merge(cloud_filtered, transformation, {}, dump);
     }
 
