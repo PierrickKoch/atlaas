@@ -88,12 +88,13 @@ inline void select(std::vector<gdalwrap::gdal>& files,
 
 /**
  * a,b,c define plan f(x,y,z) = a*x + b*y + c
- * chisq: sum squared diff between points and plan(a,b,c)
+ * residual: mean absdiff between points and plan(a,b,c)
  */
-inline float class_cell(double a, double b, double c, double chisq) {
+inline float class_cell(double a, double b, double c, double residual) {
     // Nz = 1 / np.sqrt(a**2 + b**2 + 1) # normal in Z
     // T = np.arccos(Nz) # normal angle
-    return a*a + b*b + chisq; // TODO
+    double alpha = std::acos(1.0 / std::sqrt(a*a + b*b + 1));
+    return std::sqrt(residual + alpha);
 }
 
 class lstsq {
@@ -241,8 +242,8 @@ inline void decimate(gdalwrap::gdal& region, size_t scale = DEFAULT_SCALE) {
             *it_a = a;
             *it_b = b;
             *it_c = c;
-            *it_d = chisq;
-            *it_gray = class_cell(a,b,c,chisq);
+            *it_d = std::sqrt(chisq / (scale*scale - no_data));
+            *it_gray = class_cell(a, b, c, *it_d);
             *it_alph /= scale*scale;
         }
     }
