@@ -3,10 +3,8 @@ ATLAAS
 
 *digital terrain modeling library*
 
-[![Build Status](https://travis-ci.org/pierriko/atlaas.png?branch=master)]
-(https://travis-ci.org/pierriko/atlaas)
-[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.51720.svg)]
-(http://dx.doi.org/10.5281/zenodo.51720)
+[![Build Status](https://travis-ci.org/pierriko/atlaas.png?branch=master)](https://travis-ci.org/pierriko/atlaas)
+[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.51720.svg)](http://dx.doi.org/10.5281/zenodo.51720)
 
 * http://www.openrobots.org/wiki
 * http://trac.laas.fr/git/atlaas
@@ -19,7 +17,7 @@ INSTALL
 
 First, install [`gdalwrap`](https://github.com/pierriko/gdalwrap#install), then
 
-    git clone http://trac.laas.fr/git/atlaas && cd atlaas
+    git clone https://github.com/PierrickKoch/atlaas.git && cd atlaas
     mkdir build && cd build
     cmake -DCMAKE_INSTALL_PREFIX=$HOME/devel ..
     make -j8 && make install
